@@ -123,7 +123,7 @@
 <body>
 
 <div class="container">
-    <h1>🎭 Control de Teatro Pro (Secure v2)</h1>
+    <h1>🎭 Control de Teatro Pro (Secure v2.1)</h1>
 
     <!-- Menú de Pestañas -->
     <div class="tabs">
@@ -134,11 +134,11 @@
     <!-- PESTAÑA 1: GENERADOR EN LOTE Y TOKENIZADO -->
     <div id="tab-generador" class="tab-content active">
         <h3>Generador de Boletos por Lote (Protección Anti-Fraude)</h3>
-        <p>Define el prefijo del boleto y cuántos necesitas generar en total:</p>
+        <p>Define el prefijo del boleto y cuántos necesitas generar en total (Máx. 500 por lote):</p>
         <div class="input-group">
             <div class="input-row">
                 <input type="text" id="qr-prefix" placeholder="Ej: OBRALUNES o VVIP" autocomplete="off">
-                <input type="number" id="qr-quantity" min="1" max="100" value="5" placeholder="Cant.">
+                <input type="number" id="qr-quantity" min="1" max="500" value="200" placeholder="Cant.">
             </div>
             <button style="width: 100%;" onclick="generarLoteBoletos()">⚡ Generar Todos los Boletos</button>
         </div>
@@ -213,23 +213,20 @@
         }
     }
 
-    // NUEVA FUNCIÓN: Genera múltiples boletos con un solo clic
+    // Genera múltiples boletos con un solo clic - Límite ampliado a 500
     function generarLoteBoletos() {
         const prefijo = document.getElementById('qr-prefix').value.trim().toUpperCase() || "BOLETO";
         const cantidad = parseInt(document.getElementById('qr-quantity').value);
 
-        if(!cantidad || cantidad < 1) return alert("Por favor pon una cantidad válida.");
+        if(!cantidad || cantidad < 1 || cantidad > 500) return alert("Por favor pon una cantidad válida (entre 1 y 500).");
 
         const wrapper = document.getElementById('qr-output');
         wrapper.innerHTML = ""; // Limpiar lote anterior
         wrapper.style.display = "flex";
 
         for (let i = 1; i <= cantidad; i++) {
-            // Creamos un folio estético consecutivo, ej: OBRALUNES-001
             let numeroFolio = String(i).padStart(3, '0');
             let textoVisibleBoleto = `${prefijo}-${numeroFolio}`;
-            
-            // Ciframos el contenido del QR para que no sea legible externamente
             let tokenOculto = generarToken(textoVisibleBoleto);
 
             let cardId = `card-${i}`;
@@ -245,7 +242,7 @@
             // Forzar el renderizado inmediato del QR en memoria
             setTimeout(() => {
                 new QRCode(document.getElementById(qrId), {
-                    text: tokenOculto, // El QR guarda el token indescifrable
+                    text: tokenOculto,
                     width: 160,
                     height: 160,
                     correctLevel : QRCode.CorrectLevel.H
@@ -257,7 +254,7 @@
         document.getElementById('btn-descargar-bloque').style.display = "block";
     }
 
-    // NUEVA FUNCIÓN: Descarga recursiva automática en ráfaga de todo el lote
+    // Descarga recursiva automática optimizada
     function descargarTodosLosBoletos() {
         const tarjetas = document.querySelectorAll(".qr-card");
         if(tarjetas.length === 0) return;
@@ -279,8 +276,8 @@
                 document.body.removeChild(enlace);
 
                 index++;
-                // Pequeño delay de 250ms para que el navegador no bloquee las descargas múltiples
-                setTimeout(descargarSiguiente, 250); 
+                // Delay optimizado a 150ms para acelerar lotes grandes (200+)
+                setTimeout(descargarSiguiente, 150); 
             });
         }
 
@@ -288,9 +285,7 @@
     }
 
     function registrarBoleto(codigoBruto) {
-        // Desencriptamos el código para saber qué boleto real es
         let codigoReal = desencriptarToken(codigoBruto);
-
         const statusDiv = document.getElementById('status');
         statusDiv.style.display = "block";
 
@@ -316,7 +311,6 @@
         }
     }
 
-    // FUNCIÓN PARA LIMPIAR PRUEBAS
     function reiniciarTodo() {
         if (confirm("🚨 ATENCIÓN: ¿Quieres vaciar el historial por completo?\nHaz esto ÚNICAMENTE si ya terminaste tus pruebas de escaneo y vas a empezar la función real.")) {
             boletosRegistrados.clear();
@@ -377,13 +371,11 @@
 
     function inicializarEscaner() {
         document.getElementById('btn-encender-camara').style.display = "none";
-        
         window.html5QrcodeScanner = new Html5QrcodeScanner("reader", { 
             fps: 15, 
             qrbox: { width: 250, height: 250 },
             rememberLastUsedCamera: true
         });
-        
         html5QrcodeScanner.render(onScanSuccess, (errorMessage) => {});
     }
 </script>
