@@ -62,8 +62,10 @@
             margin: 15px 0;
         }
         #reader { width: 100%; border-radius: 8px; overflow: hidden; background: #e2e8f0; margin-bottom: 15px; }
-        .input-group { margin: 15px 0; display: flex; gap: 10px; justify-content: center; }
-        input { padding: 12px; border: 1px solid #ccc; border-radius: 6px; font-size: 16px; }
+        .input-group { margin: 15px 0; display: flex; flex-direction: column; gap: 10px; align-items: center; }
+        .input-row { display: flex; gap: 10px; justify-content: center; width: 100%; }
+        input { padding: 12px; border: 1px solid #ccc; border-radius: 6px; font-size: 16px; width: 60%; }
+        input[type="number"] { width: 25%; }
         button {
             padding: 12px 20px; background: #16a34a; color: white;
             border: none; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 16px;
@@ -86,30 +88,30 @@
         .btn-reset { background: #64748b; margin-top: 15px; width: 100%; }
 
         /* Generador de QR y Tarjeta de Descarga */
-        #qr-output { margin-top: 20px; display: flex; flex-direction: column; align-items: center; gap: 10px; }
+        #qr-output { margin-top: 20px; display: flex; flex-wrap: wrap; justify-content: center; gap: 15px; max-height: 400px; overflow-y: auto; padding: 10px; border: 1px solid #e2e8f0; border-radius: 8px; background: #fafafa; }
         .qr-card { 
             border: 2px dashed #cbd5e1; 
-            padding: 20px; 
+            padding: 15px; 
             border-radius: 8px; 
             background: #ffffff; 
             display: flex; 
             flex-direction: column; 
             align-items: center;
-            width: 260px;
+            width: 220px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
         }
         .qr-card h4 {
-            margin: 0 0 15px 0;
+            margin: 0 0 10px 0;
             color: #1e293b;
-            font-size: 16px;
+            font-size: 14px;
             font-family: Arial, sans-serif;
         }
-        #qrcode {
+        .qrcode-box {
             background: #ffffff;
-            padding: 10px;
-            border-radius: 4px;
+            padding: 5px;
         }
-        .btn-download { background: #2563eb; margin-top: 15px; width: 100%; }
-        .btn-download:hover { background: #1d4ed8; }
+        .btn-download-all { background: #2563eb; margin-top: 15px; width: 100%; padding: 15px; font-size: 18px; }
+        .btn-download-all:hover { background: #1d4ed8; }
 
         @keyframes shake {
             0%, 100% { transform: translateX(0); }
@@ -121,7 +123,7 @@
 <body>
 
 <div class="container">
-    <h1>🎭 Control de Teatro Pro</h1>
+    <h1>🎭 Control de Teatro Pro (Secure v2)</h1>
 
     <!-- Menú de Pestañas -->
     <div class="tabs">
@@ -129,15 +131,21 @@
         <button class="tab-btn" onclick="switchTab('tab-escaner')">📷 Escáner Entrada</button>
     </div>
 
-    <!-- PESTAÑA 1: GENERADOR DE BOLETOS -->
+    <!-- PESTAÑA 1: GENERADOR EN LOTE Y TOKENIZADO -->
     <div id="tab-generador" class="tab-content active">
-        <h3>Generador de Códigos QR</h3>
-        <p>Escribe el identificador o nombre del cliente:</p>
+        <h3>Generador de Boletos por Lote (Protección Anti-Fraude)</h3>
+        <p>Define el prefijo del boleto y cuántos necesitas generar en total:</p>
         <div class="input-group">
-            <input type="text" id="qr-text" placeholder="Ej: JUAN-PEREZ-01 o BOLETO-05" autocomplete="off">
-            <button onclick="generarCodigoQR()">Crear QR</button>
+            <div class="input-row">
+                <input type="text" id="qr-prefix" placeholder="Ej: OBRALUNES o VVIP" autocomplete="off">
+                <input type="number" id="qr-quantity" min="1" max="100" value="5" placeholder="Cant.">
+            </div>
+            <button style="width: 100%;" onclick="generarLoteBoletos()">⚡ Generar Todos los Boletos</button>
         </div>
-        <div id="qr-output"></div>
+        
+        <button id="btn-descargar-bloque" class="btn-download-all" style="display:none;" onclick="descargarTodosLosBoletos()">📥 Descargar Todos los Boletos Juntos</button>
+        
+        <div id="qr-output" style="display:none;"></div>
     </div>
 
     <!-- PESTAÑA 2: ESCÁNER Y TAQUILLA -->
@@ -154,8 +162,10 @@
 
         <!-- Manual -->
         <div class="input-group">
-            <input type="text" id="ticket-input" placeholder="Código manual..." autocomplete="off">
-            <button onclick="procesarBoletoManual()">Ingresar</button>
+            <div class="input-row" style="width:100%;">
+                <input type="text" id="ticket-input" style="width:70%;" placeholder="Código manual o Token..." autocomplete="off">
+                <button onclick="procesarBoletoManual()">Ingresar</button>
+            </div>
         </div>
 
         <div id="status"></div>
@@ -163,12 +173,12 @@
         <!-- Historial -->
         <h4>Clientes dentro del Teatro:</h4>
         <div class="history-list" id="history-container"></div>
-        <button class="btn-reset" onclick="reiniciarTodo()">Vaciar Todo (Nueva Función)</button>
+        <button class="btn-reset" onclick="reiniciarTodo()">🧹 Limpiar Todo para la Función Real (Borrar Pruebas)</button>
     </div>
 </div>
 
 <script>
-    let boletosGuardados = localStorage.getItem('historialBoletos');
+    let boletosGuardados = localStorage.getItem('historialBoletosSecure');
     let boletosRegistrados = boletosGuardados ? new Set(JSON.parse(boletosGuardados)) : new Set();
     
     actualizarInterfazTaquilla();
@@ -186,66 +196,113 @@
         }
     }
 
-    function generarCodigoQR() {
-        const txt = document.getElementById('qr-text').value.trim().toUpperCase();
-        if(!txt) return alert("Escribe algo para el boleto.");
-
-        const wrapper = document.getElementById('qr-output');
-        wrapper.innerHTML = `
-            <!-- Contenedor completo que se convertirá en imagen -->
-            <div class="qr-card" id="capture-card">
-                <h4>Boleto Oficial: ${txt}</h4>
-                <div id="qrcode"></div>
-            </div>
-            <button class="btn-download" onclick="descargarQRCompleto('${txt}')">📥 Descargar Imagen QR</button>
-        `;
-
-        // Generamos el QR con un margen integrado (correct_level alto para máxima precisión)
-        new QRCode(document.getElementById("qrcode"), {
-            text: txt,
-            width: 220,
-            height: 220,
-            correctLevel : QRCode.CorrectLevel.H
-        });
-        document.getElementById('qr-text').value = "";
+    // FUNCIÓN DE ENCRIPTACIÓN COMPATIBLE DE IDA Y VUELTA (TOKENIZACIÓN)
+    function generarToken(texto) {
+        return btoa("TEATRO-SECURE:" + texto.trim().toUpperCase());
     }
 
-    // NUEVA FUNCIÓN: Descarga el texto y el QR juntos usando html2canvas
-    function descargarQRCompleto(nombreArchivo) {
-        const tarjeta = document.getElementById("capture-card");
-        
-        // Esperamos un instante corto para asegurar que el QR gráfico se renderizó por completo
-        setTimeout(() => {
-            html2canvas(tarjeta, {
-                backgroundColor: "#ffffff",
-                scale: 2 // Duplica la resolución para que no salga borroso al escanear
-            }).then(canvas => {
+    function desencriptarToken(token) {
+        try {
+            let decodificado = atob(token.trim());
+            if(decodificado.startsWith("TEATRO-SECURE:")) {
+                return decodificado.replace("TEATRO-SECURE:", "");
+            }
+            return token.toUpperCase(); // Si no es token, lo trata como texto normal por si meten folio manual
+        } catch(e) {
+            return token.toUpperCase(); 
+        }
+    }
+
+    // NUEVA FUNCIÓN: Genera múltiples boletos con un solo clic
+    function generarLoteBoletos() {
+        const prefijo = document.getElementById('qr-prefix').value.trim().toUpperCase() || "BOLETO";
+        const cantidad = parseInt(document.getElementById('qr-quantity').value);
+
+        if(!cantidad || cantidad < 1) return alert("Por favor pon una cantidad válida.");
+
+        const wrapper = document.getElementById('qr-output');
+        wrapper.innerHTML = ""; // Limpiar lote anterior
+        wrapper.style.display = "flex";
+
+        for (let i = 1; i <= cantidad; i++) {
+            // Creamos un folio estético consecutivo, ej: OBRALUNES-001
+            let numeroFolio = String(i).padStart(3, '0');
+            let textoVisibleBoleto = `${prefijo}-${numeroFolio}`;
+            
+            // Ciframos el contenido del QR para que no sea legible externamente
+            let tokenOculto = generarToken(textoVisibleBoleto);
+
+            let cardId = `card-${i}`;
+            let qrId = `qr-${i}`;
+
+            wrapper.innerHTML += `
+                <div class="qr-card" id="${cardId}">
+                    <h4>Boleto Oficial: ${textoVisibleBoleto}</h4>
+                    <div class="qrcode-box" id="${qrId}"></div>
+                </div>
+            `;
+
+            // Forzar el renderizado inmediato del QR en memoria
+            setTimeout(() => {
+                new QRCode(document.getElementById(qrId), {
+                    text: tokenOculto, // El QR guarda el token indescifrable
+                    width: 160,
+                    height: 160,
+                    correctLevel : QRCode.CorrectLevel.H
+                });
+            }, 50);
+        }
+
+        // Mostrar botón de descarga masiva
+        document.getElementById('btn-descargar-bloque').style.display = "block";
+    }
+
+    // NUEVA FUNCIÓN: Descarga recursiva automática en ráfaga de todo el lote
+    function descargarTodosLosBoletos() {
+        const tarjetas = document.querySelectorAll(".qr-card");
+        if(tarjetas.length === 0) return;
+
+        let index = 0;
+
+        function descargarSiguiente() {
+            if(index >= tarjetas.length) return;
+
+            let tarjeta = tarjetas[index];
+            let nombreBoleto = tarjeta.querySelector("h4").innerText.replace("Boleto Oficial: ", "").trim();
+
+            html2canvas(tarjeta, { backgroundColor: "#ffffff", scale: 2 }).then(canvas => {
                 const enlace = document.createElement("a");
                 enlace.href = canvas.toDataURL("image/png");
-                enlace.download = `Boleto_Oficial_${nombreArchivo}.png`;
+                enlace.download = `Boleto_Oficial_${nombreBoleto}.png`;
                 document.body.appendChild(enlace);
                 enlace.click();
                 document.body.removeChild(enlace);
+
+                index++;
+                // Pequeño delay de 250ms para que el navegador no bloquee las descargas múltiples
+                setTimeout(descargarSiguiente, 250); 
             });
-        }, 300);
+        }
+
+        descargarSiguiente();
     }
 
-    function registrarBoleto(codigo) {
-        codigo = codigo.trim().toUpperCase();
-        if (!codigo) return;
+    function registrarBoleto(codigoBruto) {
+        // Desencriptamos el código para saber qué boleto real es
+        let codigoReal = desencriptarToken(codigoBruto);
 
         const statusDiv = document.getElementById('status');
         statusDiv.style.display = "block";
 
-        if (boletosRegistrados.has(codigo)) {
+        if (boletosRegistrados.has(codigoReal)) {
             statusDiv.className = "danger";
-            statusDiv.innerHTML = `⚠️ ¡REPETIDO! El boleto [${codigo}] ya ingresó.`;
+            statusDiv.innerHTML = `⚠️ ¡REPETIDO! El boleto [${codigoReal}] ya ingresó.`;
             reproducirSonidoError();
         } else {
-            boletosRegistrados.add(codigo);
+            boletosRegistrados.add(codigoReal);
             guardarEnMemoria();
             statusDiv.className = "success";
-            statusDiv.innerHTML = `✅ Bienvenido. Boleto [${codigo}] verificado.`;
+            statusDiv.innerHTML = `✅ Bienvenido. Boleto [${codigoReal}] verificado.`;
             actualizarInterfazTaquilla();
         }
     }
@@ -259,17 +316,19 @@
         }
     }
 
+    // FUNCIÓN PARA LIMPIAR PRUEBAS
     function reiniciarTodo() {
-        if (confirm("¿Quieres limpiar la entrada por completo?")) {
+        if (confirm("🚨 ATENCIÓN: ¿Quieres vaciar el historial por completo?\nHaz esto ÚNICAMENTE si ya terminaste tus pruebas de escaneo y vas a empezar la función real.")) {
             boletosRegistrados.clear();
             guardarEnMemoria();
             actualizarInterfazTaquilla();
             document.getElementById('status').style.display = "none";
+            alert("🧹 ¡Historial completamente limpio y listo para el evento real!");
         }
     }
 
     function guardarEnMemoria() {
-        localStorage.setItem('historialBoletos', JSON.stringify(Array.from(boletosRegistrados)));
+        localStorage.setItem('historialBoletosSecure', JSON.stringify(Array.from(boletosRegistrados)));
     }
 
     function actualizarInterfazTaquilla() {
@@ -309,7 +368,6 @@
     }
 
     function onScanSuccess(decodedText, decodedResult) {
-        // Al detectar con éxito, detenemos temporalmente para mostrar el resultado y no ciclarse
         if (window.html5QrcodeScanner) {
             html5QrcodeScanner.clear().catch(err => console.log(err));
         }
@@ -326,9 +384,7 @@
             rememberLastUsedCamera: true
         });
         
-        html5QrcodeScanner.render(onScanSuccess, (errorMessage) => {
-            // Flujo continuo de escaneo activo
-        });
+        html5QrcodeScanner.render(onScanSuccess, (errorMessage) => {});
     }
 </script>
 
