@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Taquilla Integral - Teatro</title>
+    <!-- Librería para escanear QR -->
+    <script src="https://unpkg.com/html5-qrcode"></script>
+    <!-- Librería para generar QR dentro de la página -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f4f6f9;
+            margin: 0;
+            padding: 20px;
+            text-align: center;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+        h1 { color: #333; margin-bottom: 20px; }
+        
+        /* Pestañas (Tabs) */
+        .tabs {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #e2e8f0;
+        }
+        .tab-btn {
+            background: none;
+            border: none;
+            padding: 10px 20px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            color: #64748b;
+        }
+        .tab-btn.active {
+            color: #2563eb;
+            border-bottom: 3px solid #2563eb;
+        }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+
+        /* Estilos Generales */
+        .counter-box {
+            background: #2563eb;
+            color: white;
+            padding: 15px;
+            border-radius: 8px;
+            font-size: 22px;
+            font-weight: bold;
+            margin: 15px 0;
+        }
+        #reader { width: 100%; border-radius: 8px; overflow: hidden; }
+        .input-group { margin: 15px 0; display: flex; gap: 10px; justify-content: center; }
+        input { padding: 12px; border: 1px solid #ccc; border-radius: 6px; font-size: 16px; }
+        button {
+            padding: 12px 20px; background: #16a34a; color: white;
+            border: none; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 16px;
+        }
+        button:hover { background: #15803d; }
+        
+        /* Alertas */
+        #status { padding: 15px; border-radius: 6px; font-weight: bold; margin-top: 15px; display: none; font-size: 18px; }
+        .success { background-color: #dcfce7; color: #15803d; border: 2px solid #16a34a; }
+        .danger { background-color: #fee2e2; color: #b91c1c; border: 2px solid #ef4444; animation: shake 0.3s; }
+        
+        /* Historial de Boletos */
+        .history-list { text-align: left; background: #f8fafc; padding: 10px; border-radius: 6px; max-height: 150px; overflow-y: auto; margin-top: 15px; }
+        .history-item { display: flex; justify-content: space-between; align-items: center; padding: 5px 0; border-bottom: 1px solid #e2e8f0; }
+        .btn-delete { background: #ef4444; padding: 4px 8px; font-size: 12px; }
+        .btn-delete:hover { background: #dc2626; }
+        .btn-reset { background: #64748b; margin-top: 15px; width: 100%; }
+
+        /* Generador de QR */
+        #qr-output { margin-top: 20px; display: flex; flex-direction: column; align-items: center; gap: 10px; }
+        .qr-card { border: 2px dashed #cbd5e1; padding: 15px; border-radius: 8px; background: #fff; display: flex; flex-direction: column; align-items: center; }
+        .btn-download { background: #2563eb; margin-top: 15px; width: 100%; }
+        .btn-download:hover { background: #1d4ed8; }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-8px); }
+            75% { transform: translateX(8px); }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>🎭 Control de Teatro Pro</h1>
+
+    <!-- Menú de Pestañas -->
+    <div class="tabs">
+        <button class="tab-btn active" onclick="switchTab('tab-generador')">🎟️ Crear Boletos</button>
+        <button class="tab-btn" onclick="switchTab('tab-escaner')">📷 Escáner Entrada</button>
+    </div>
+
+    <!-- PESTAÑA 1: GENERADOR DE BOLETOS -->
+    <div id="tab-generador" class="tab-content active">
+        <h3>Generador de Códigos QR</h3>
+        <p>Escribe el identificador o nombre del cliente:</p>
+        <div class="input-group">
+            <input type="text" id="qr-text" placeholder="Ej: JUAN-PEREZ-01 o BOLETO-05" autocomplete="off">
+            <button onclick="generarCodigoQR()">Crear QR</button>
+        </div>
+        <div id="qr-output">
+            <!-- Aquí aparecerá el QR generado con su botón de descarga -->
+        </div>
+    </div>
+
+    <!-- PESTAÑA 2: ESCÁNER Y TAQUILLA -->
+    <div id="tab-escaner" class="tab-content">
+        <div class="counter-box">
+            Ingresados: <span id="total-count">0</span>
+        </div>
+
+        <!-- Cámara -->
+        <div id="reader"></div>
+
+        <!-- Manual -->
+        <div class="input-group">
+            <input type="text" id="ticket-input" placeholder="Código manual..." autocomplete="off">
+            <button onclick="procesarBoletoManual()">Ingresar</button>
+        </div>
+
+        <div id="status"></div>
+
+        <!-- Historial -->
+        <h4>Clientes dentro del Teatro:</h4>
+        <div class="history-list" id="history-container"></div>
+        <button class="btn-reset" onclick="reiniciarTodo()">Vaciar Todo (Nueva Función)</button>
+    </div>
+</div>
+
+<script>
+    let boletosGuardados = localStorage.getItem('historialBoletos');
+    let boletosRegistrados = boletosGuardados ? new Set(JSON.parse(boletosGuardados)) : new Set();
+    
+    actualizarInterfazTaquilla();
+
+    function switchTab(tabId) {
+        document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+        document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+        
+        document.getElementById(tabId).classList.add('active');
+        event.currentTarget.classList.add('active');
+
+        if (tabId === 'tab-escaner') {
+            inicializarEscaner();
+        } else {
+            if (window.html5QrcodeScanner) {
+                html5QrcodeScanner.clear();
+            }
+        }
+    }
+
+    // GENERAR CÓDIGO QR Y BOTÓN DE DESCARGA
+    function generarCodigoQR() {
+        const txt = document.getElementById('qr-text').value.trim().toUpperCase();
+        if(!txt) return alert("Escribe algo para el boleto.");
+
+        const wrapper = document.getElementById('qr-output');
+        wrapper.innerHTML = `
+            <div class="qr-card">
+                <h4>Boleto Oficial: ${txt}</h4>
+                <div id="qrcode"></div>
+                <button class="btn-download" onclick="descargarQR('${txt}')">📥 Descargar Imagen QR</button>
+            </div>
+        `;
+
+        // Genera el QR técnicamente
+        new QRCode(document.getElementById("qrcode"), {
+            text: txt,
+            width: 200,
+            height: 200
+        });
+        document.getElementById('qr-text').value = "";
+    }
+
+    // FUNCIÓN PARA DESCARGAR LA IMAGEN
+    function descargarQR(nombreArchivo) {
+        // Busca la imagen generada dentro del componente QR
+        const img = document.querySelector("#qrcode img");
+        if (img) {
+            const enlace = document.createElement("a");
+            enlace.href = img.src;
+            enlace.download = `QR_${nombreArchivo}.png`;
+            document.body.appendChild(enlace);
+            enlace.click();
+            document.body.removeChild(enlace);
+        } else {
+            alert("Espera un segundo a que cargue el código e intenta de nuevo.");
+        }
+    }
+
+    // LÓGICA DE CONTROL
+    function registrarBoleto(codigo) {
+        codigo = codigo.trim().toUpperCase();
+        if (!codigo) return;
+
+        const statusDiv = document.getElementById('status');
+        statusDiv.style.display = "block";
+
+        if (boletosRegistrados.has(codigo)) {
+            statusDiv.className = "danger";
+            statusDiv.innerHTML = `⚠️ ¡REPETIDO! El boleto [${codigo}] ya ingresó.`;
+            reproducirSonidoError();
+        } else {
+            boletosRegistrados.add(codigo);
+            guardarEnMemoria();
+            statusDiv.className = "success";
+            statusDiv.innerHTML = `✅ Bienvenido. Boleto [${codigo}] verificado.`;
+            actualizarInterfazTaquilla();
+        }
+    }
+
+    function eliminarBoletoIndividual(codigo) {
+        if(confirm(`¿Quitar el boleto [${codigo}] del historial? (Podrá volver a entrar)`)){
+            boletosRegistrados.delete(codigo);
+            guardarEnMemoria();
+            actualizarInterfazTaquilla();
+            document.getElementById('status').style.display = "none";
+        }
+    }
+
+    function reiniciarTodo() {
+        if (confirm("¿Quieres limpiar la entrada por completo?")) {
+            boletosRegistrados.clear();
+            guardarEnMemoria();
+            actualizarInterfazTaquilla();
+            document.getElementById('status').style.display = "none";
+        }
+    }
+
+    function guardarEnMemoria() {
+        localStorage.setItem('historialBoletos', JSON.stringify(Array.from(boletosRegistrados)));
+    }
+
+    function actualizarInterfazTaquilla() {
+        document.getElementById('total-count').innerText = boletosRegistrados.size;
+        const container = document.getElementById('history-container');
+        container.innerHTML = "";
+        
+        boletosRegistrados.forEach(boleto => {
+            container.innerHTML += `
+                <div class="history-item">
+                    <span>🎟️ ${boleto}</span>
+                    <button class="btn-delete" onclick="eliminarBoletoIndividual('${boleto}')">Eliminar prueba</button>
+                </div>
+            `;
+        });
+    }
+
+    function procesarBoletoManual() {
+        const input = document.getElementById('ticket-input');
+        registrarBoleto(input.value);
+        input.value = "";
+        input.focus();
+    }
+
+    document.getElementById('ticket-input').addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') procesarBoletoManual();
+    });
+
+    function reproducirSonidoError() {
+        const ctx = new (window.AudioContext || window.webkitAudioContext)();
+        const osc = ctx.createOscillator();
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(130, ctx.currentTime);
+        osc.connect(ctx.destination);
+        osc.start();
+        osc.stop(ctx.currentTime + 0.3);
+    }
+
+    function onScanSuccess(decodedText, decodedResult) {
+        html5QrcodeScanner.clear();
+        registrarBoleto(decodedText);
+        setTimeout(() => { inicializarEscaner(); }, 2000);
+    }
+
+    function inicializarEscaner() {
+        if(document.getElementById('tab-escaner').classList.contains('active')){
+            window.html5QrcodeScanner = new Html5QrcodeScanner("reader", { fps: 10, qrbox: 240 });
+            html5QrcodeScanner.render(onScanSuccess);
+        }
+    }
+</script>
+
+</body>
+</html>
