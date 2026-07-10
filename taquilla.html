@@ -8,6 +8,8 @@
     <script src="https://unpkg.com/html5-qrcode"></script>
     <!-- Librería para generar QR dentro de la página -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <!-- Librería para convertir HTML a Imagen en la descarga -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <style>
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -59,7 +61,7 @@
             font-weight: bold;
             margin: 15px 0;
         }
-        #reader { width: 100%; border-radius: 8px; overflow: hidden; }
+        #reader { width: 100%; border-radius: 8px; overflow: hidden; background: #e2e8f0; margin-bottom: 15px; }
         .input-group { margin: 15px 0; display: flex; gap: 10px; justify-content: center; }
         input { padding: 12px; border: 1px solid #ccc; border-radius: 6px; font-size: 16px; }
         button {
@@ -68,6 +70,9 @@
         }
         button:hover { background: #15803d; }
         
+        .btn-camera { background: #4f46e5; width: 100%; margin-bottom: 15px; padding: 15px; font-size: 18px; }
+        .btn-camera:hover { background: #4338ca; }
+
         /* Alertas */
         #status { padding: 15px; border-radius: 6px; font-weight: bold; margin-top: 15px; display: none; font-size: 18px; }
         .success { background-color: #dcfce7; color: #15803d; border: 2px solid #16a34a; }
@@ -80,9 +85,29 @@
         .btn-delete:hover { background: #dc2626; }
         .btn-reset { background: #64748b; margin-top: 15px; width: 100%; }
 
-        /* Generador de QR */
+        /* Generador de QR y Tarjeta de Descarga */
         #qr-output { margin-top: 20px; display: flex; flex-direction: column; align-items: center; gap: 10px; }
-        .qr-card { border: 2px dashed #cbd5e1; padding: 15px; border-radius: 8px; background: #fff; display: flex; flex-direction: column; align-items: center; }
+        .qr-card { 
+            border: 2px dashed #cbd5e1; 
+            padding: 20px; 
+            border-radius: 8px; 
+            background: #ffffff; 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center;
+            width: 260px;
+        }
+        .qr-card h4 {
+            margin: 0 0 15px 0;
+            color: #1e293b;
+            font-size: 16px;
+            font-family: Arial, sans-serif;
+        }
+        #qrcode {
+            background: #ffffff;
+            padding: 10px;
+            border-radius: 4px;
+        }
         .btn-download { background: #2563eb; margin-top: 15px; width: 100%; }
         .btn-download:hover { background: #1d4ed8; }
 
@@ -112,9 +137,7 @@
             <input type="text" id="qr-text" placeholder="Ej: JUAN-PEREZ-01 o BOLETO-05" autocomplete="off">
             <button onclick="generarCodigoQR()">Crear QR</button>
         </div>
-        <div id="qr-output">
-            <!-- Aquí aparecerá el QR generado con su botón de descarga -->
-        </div>
+        <div id="qr-output"></div>
     </div>
 
     <!-- PESTAÑA 2: ESCÁNER Y TAQUILLA -->
@@ -123,7 +146,10 @@
             Ingresados: <span id="total-count">0</span>
         </div>
 
-        <!-- Cámara -->
+        <!-- Botón Manual para encender la cámara -->
+        <button class="btn-camera" id="btn-encender-camara" onclick="inicializarEscaner()">📷 Activar Cámara Escáner</button>
+
+        <!-- Contenedor de la cámara -->
         <div id="reader"></div>
 
         <!-- Manual -->
@@ -154,55 +180,56 @@
         document.getElementById(tabId).classList.add('active');
         event.currentTarget.classList.add('active');
 
-        if (tabId === 'tab-escaner') {
-            inicializarEscaner();
-        } else {
-            if (window.html5QrcodeScanner) {
-                html5QrcodeScanner.clear();
-            }
+        if (tabId !== 'tab-escaner' && window.html5QrcodeScanner) {
+            html5QrcodeScanner.clear().catch(err => console.log(err));
+            document.getElementById('btn-encender-camara').style.display = "block";
         }
     }
 
-    // GENERAR CÓDIGO QR Y BOTÓN DE DESCARGA
     function generarCodigoQR() {
         const txt = document.getElementById('qr-text').value.trim().toUpperCase();
         if(!txt) return alert("Escribe algo para el boleto.");
 
         const wrapper = document.getElementById('qr-output');
         wrapper.innerHTML = `
-            <div class="qr-card">
+            <!-- Contenedor completo que se convertirá en imagen -->
+            <div class="qr-card" id="capture-card">
                 <h4>Boleto Oficial: ${txt}</h4>
                 <div id="qrcode"></div>
-                <button class="btn-download" onclick="descargarQR('${txt}')">📥 Descargar Imagen QR</button>
             </div>
+            <button class="btn-download" onclick="descargarQRCompleto('${txt}')">📥 Descargar Imagen QR</button>
         `;
 
-        // Genera el QR técnicamente
+        // Generamos el QR con un margen integrado (correct_level alto para máxima precisión)
         new QRCode(document.getElementById("qrcode"), {
             text: txt,
-            width: 200,
-            height: 200
+            width: 220,
+            height: 220,
+            correctLevel : QRCode.CorrectLevel.H
         });
         document.getElementById('qr-text').value = "";
     }
 
-    // FUNCIÓN PARA DESCARGAR LA IMAGEN
-    function descargarQR(nombreArchivo) {
-        // Busca la imagen generada dentro del componente QR
-        const img = document.querySelector("#qrcode img");
-        if (img) {
-            const enlace = document.createElement("a");
-            enlace.href = img.src;
-            enlace.download = `QR_${nombreArchivo}.png`;
-            document.body.appendChild(enlace);
-            enlace.click();
-            document.body.removeChild(enlace);
-        } else {
-            alert("Espera un segundo a que cargue el código e intenta de nuevo.");
-        }
+    // NUEVA FUNCIÓN: Descarga el texto y el QR juntos usando html2canvas
+    function descargarQRCompleto(nombreArchivo) {
+        const tarjeta = document.getElementById("capture-card");
+        
+        // Esperamos un instante corto para asegurar que el QR gráfico se renderizó por completo
+        setTimeout(() => {
+            html2canvas(tarjeta, {
+                backgroundColor: "#ffffff",
+                scale: 2 // Duplica la resolución para que no salga borroso al escanear
+            }).then(canvas => {
+                const enlace = document.createElement("a");
+                enlace.href = canvas.toDataURL("image/png");
+                enlace.download = `Boleto_Oficial_${nombreArchivo}.png`;
+                document.body.appendChild(enlace);
+                enlace.click();
+                document.body.removeChild(enlace);
+            });
+        }, 300);
     }
 
-    // LÓGICA DE CONTROL
     function registrarBoleto(codigo) {
         codigo = codigo.trim().toUpperCase();
         if (!codigo) return;
@@ -224,7 +251,7 @@
     }
 
     function eliminarBoletoIndividual(codigo) {
-        if(confirm(`¿Quitar el boleto [${codigo}] del historial? (Podrá volver a entrar)`)){
+        if(confirm(`¿Quitar el boleto [${codigo}] del historial?`)){
             boletosRegistrados.delete(codigo);
             guardarEnMemoria();
             actualizarInterfazTaquilla();
@@ -254,7 +281,7 @@
             container.innerHTML += `
                 <div class="history-item">
                     <span>🎟️ ${boleto}</span>
-                    <button class="btn-delete" onclick="eliminarBoletoIndividual('${boleto}')">Eliminar prueba</button>
+                    <button class="btn-delete" onclick="eliminarBoletoIndividual('${boleto}')">X</button>
                 </div>
             `;
         });
@@ -282,16 +309,26 @@
     }
 
     function onScanSuccess(decodedText, decodedResult) {
-        html5QrcodeScanner.clear();
+        // Al detectar con éxito, detenemos temporalmente para mostrar el resultado y no ciclarse
+        if (window.html5QrcodeScanner) {
+            html5QrcodeScanner.clear().catch(err => console.log(err));
+        }
+        document.getElementById('btn-encender-camara').style.display = "block";
         registrarBoleto(decodedText);
-        setTimeout(() => { inicializarEscaner(); }, 2000);
     }
 
     function inicializarEscaner() {
-        if(document.getElementById('tab-escaner').classList.contains('active')){
-            window.html5QrcodeScanner = new Html5QrcodeScanner("reader", { fps: 10, qrbox: 240 });
-            html5QrcodeScanner.render(onScanSuccess);
-        }
+        document.getElementById('btn-encender-camara').style.display = "none";
+        
+        window.html5QrcodeScanner = new Html5QrcodeScanner("reader", { 
+            fps: 15, 
+            qrbox: { width: 250, height: 250 },
+            rememberLastUsedCamera: true
+        });
+        
+        html5QrcodeScanner.render(onScanSuccess, (errorMessage) => {
+            // Flujo continuo de escaneo activo
+        });
     }
 </script>
 
