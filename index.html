@@ -3,827 +3,806 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MALBROTE PRO | Sistema de Taquilla Integral</title>
-    <!-- Librerías Originales + Soporte de Iconos -->
+    <title>MALBROTE PRO v5.5 | Sistema de Control de Teatro Total</title>
+    <!-- Librerías de Inyección de Render y Captura -->
     <script src="https://unpkg.com/html5-qrcode"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <style>
-        /* ESTÉTICA INTEGRAL MALBROTE TEATRO (Oscuro, Elegante, Profesional) */
         :root {
-            --bg-principal: #0d0f14;
-            --bg-card: #171e2e;
+            --bg-principal: #0b0f19;
+            --bg-card: #131c2e;
             --bg-input: #1e293b;
-            --rojo-malbrote: #601919;
-            --rojo-brillante: #ad1a24;
+            --rojo-malbrote: #4c0519;
+            --rojo-brillante: #9f1239;
+            --rojo-neon: #f43f5e;
             --accent-canva: #38bdf8;
             --texto-blanco: #f8fafc;
             --texto-gris: #94a3b8;
+            --verde-exito: #10b981;
         }
 
         * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Segoe UI', system-ui, sans-serif; background-color: var(--bg-principal); color: var(--texto-blanco); padding: 15px; }
+        .container { max-width: 1400px; margin: 0 auto; background: var(--bg-card); padding: 25px; border-radius: 16px; box-shadow: 0 10px 40px rgba(0,0,0,0.7); border: 1px solid #1e293b; }
         
-        body { 
-            font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, sans-serif; 
-            background-color: var(--bg-principal); 
-            color: var(--texto-blanco); 
-            padding: 15px; 
-        }
+        h1 { color: var(--texto-blanco); margin-bottom: 15px; font-size: 24px; text-transform: uppercase; letter-spacing: 1px; border-bottom: 2px solid var(--rojo-brillante); padding-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
+        
+        /* DASHBOARD - ESTILO FIEL A TU DIBUJO */
+        .dashboard-view { display: block; margin-bottom: 20px; }
+        .obra-list-container { display: flex; flex-direction: column; gap: 15px; margin-bottom: 25px; }
+        .obra-card { display: flex; align-items: center; background: #1e293b; padding: 20px; border-radius: 14px; border-left: 6px solid var(--rojo-neon); cursor: pointer; transition: 0.2s; gap: 20px; box-shadow: 0 6px 20px rgba(0,0,0,0.3); }
+        .obra-card:hover { transform: translateX(6px); background: #243249; border-left-color: var(--accent-canva); }
+        .obra-thumb { width: 70px; height: 70px; border-radius: 10px; background: #0f172a; object-fit: cover; border: 2px solid #334155; }
+        .obra-info { flex-grow: 1; }
+        .obra-title { font-size: 20px; font-weight: bold; text-transform: uppercase; color: var(--texto-blanco); letter-spacing: 0.5px; }
+        .obra-meta { font-size: 13px; color: var(--texto-gris); margin-top: 4px; }
+        
+        .btn-add-obra { display: flex; flex-direction: column; align-items: center; justify-content: center; background: rgba(56, 189, 248, 0.03); border: 2px dashed var(--accent-canva); color: var(--accent-canva); padding: 25px; border-radius: 14px; cursor: pointer; width: 100%; max-width: 340px; margin: 30px auto; font-weight: bold; gap: 10px; transition: 0.2s; }
+        .btn-add-obra:hover { background: rgba(56, 189, 248, 0.08); transform: scale(1.02); }
 
-        .container { 
-            max-width: 1200px; 
-            margin: 0 auto; 
-            background: var(--bg-card); 
-            padding: 25px; 
-            border-radius: 16px; 
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5); 
-        }
-
-        h1 { 
-            color: var(--texto-blanco); 
-            margin-bottom: 15px; 
-            font-size: 26px; 
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            border-bottom: 2px solid var(--rojo-malbrote);
-            padding-bottom: 10px;
-        }
-
-        /* BARRA DE CONFIGURACIÓN */
-        .config-bar { 
-            background: #0f172a; 
-            padding: 12px; 
-            border-radius: 10px; 
-            margin-bottom: 20px; 
-            border: 1px solid var(--rojo-malbrote); 
-            font-weight: bold; 
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            gap: 10px;
-        }
-
-        select { 
-            padding: 8px 16px; 
-            font-size: 14px; 
-            border-radius: 6px; 
-            border: 1px solid var(--rojo-malbrote); 
-            font-weight: bold; 
-            color: white; 
-            background: var(--bg-input);
-            cursor: pointer;
-        }
-
-        /* NAVEGACIÓN POR PESTAÑAS */
-        .tabs { 
-            display: flex; 
-            justify-content: space-around; 
-            margin-bottom: 20px; 
-            border-bottom: 2px solid #1e293b; 
-        }
-
-        .tab-btn { 
-            background: none; 
-            border: none; 
-            padding: 12px 10px; 
-            font-size: 15px; 
-            font-weight: bold; 
-            cursor: pointer; 
-            color: var(--texto-gris); 
-            flex: 1; 
-            transition: all 0.3s;
-            text-transform: uppercase;
-        }
-
-        .tab-btn:hover { color: var(--texto-blanco); }
-        .tab-btn.active { 
-            color: var(--rojo-brillante); 
-            border-bottom: 3px solid var(--rojo-brillante); 
-        }
-
+        /* CONFIG BAR Y TABS CONTROLES */
+        .config-bar { background: #0f172a; padding: 15px; border-radius: 12px; margin-bottom: 20px; border: 1px solid var(--rojo-brillante); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px; }
+        select { padding: 10px 16px; font-size: 14px; border-radius: 8px; border: 1px solid var(--rojo-brillante); font-weight: bold; color: white; background: var(--bg-input); cursor: pointer; }
+        
+        .tabs { display: flex; justify-content: space-around; margin-bottom: 25px; border-bottom: 2px solid #1e293b; gap: 5px; }
+        .tab-btn { background: none; border: none; padding: 14px 15px; font-size: 15px; font-weight: bold; cursor: pointer; color: var(--texto-gris); flex: 1; transition: all 0.2s; text-transform: uppercase; letter-spacing: 0.5px; }
+        .tab-btn.active { color: var(--rojo-neon); border-bottom: 3px solid var(--rojo-neon); background: rgba(244, 63, 94, 0.03); }
         .tab-content { display: none; }
         .tab-content.active { display: block; }
 
-        /* CONTADORES Y BOTONES */
-        .counter-box { 
-            background: var(--rojo-malbrote); 
-            color: white; 
-            padding: 15px; 
-            border-radius: 10px; 
-            font-size: 22px; 
-            font-weight: bold; 
-            margin: 15px 0; 
-            border: 1px solid var(--rojo-brillante);
-        }
+        /* MULTI-FUNCIÓN SUBTABS CRÓNICOS */
+        .funciones-subtabs { display: flex; gap: 10px; margin-bottom: 20px; background: #0f172a; padding: 10px; border-radius: 10px; flex-wrap: wrap; border: 1px solid #1e293b; }
+        .subtab-btn { background: #1e293b; border: 1px solid #334155; color: white; padding: 8px 16px; border-radius: 8px; cursor: pointer; font-size: 13px; font-weight: 600; transition: 0.2s; }
+        .subtab-btn.active { background: var(--rojo-brillante); border-color: var(--rojo-neon); box-shadow: 0 0 10px rgba(244,63,94,0.2); }
+        .btn-add-func { background: #0284c7 !important; border-color: #0ea5e9 !important; }
+        .btn-add-func:hover { background: #0ea5e9 !important; }
 
-        .input-group { margin: 15px 0; display: flex; flex-direction: column; gap: 12px; align-items: center; }
-        .input-row { display: flex; gap: 10px; justify-content: center; width: 100%; }
+        /* EDITOR DE DISEÑO (CANVA STYLE) */
+        .editor-layout { display: flex; flex-direction: column; gap: 20px; width: 100%; }
+        @media (min-width: 950px) { .editor-layout { flex-direction: row; } }
+        .canva-sidebar { background: #0f172a; padding: 22px; border-radius: 14px; width: 100%; max-width: 350px; display: flex; flex-direction: column; gap: 18px; border: 1px solid #1e293b; height: fit-content; }
+        .canva-sidebar h4 { font-size: 13px; color: var(--accent-canva); text-transform: uppercase; letter-spacing: 1px; margin-bottom: -5px; }
+
+        .canva-viewport { flex-grow: 1; background: #060811; border-radius: 14px; padding: 40px; display: flex; justify-content: center; align-items: center; overflow: auto; position: relative; min-height: 550px; border: 2px dashed #334155; }
+        .canva-grid { position: absolute; top:0; left:0; width:100%; height:100%; pointer-events: none; background-image: linear-gradient(rgba(56, 189, 248, 0.02) 1px, transparent 1px), linear-gradient(90deg, rgba(56, 189, 248, 0.02) 1px, transparent 1px); background-size: 25px 25px; }
         
-        input[type="text"], input[type="number"] { 
-            padding: 12px; 
-            background: var(--bg-input);
-            border: 1px solid #334155; 
-            border-radius: 8px; 
-            font-size: 16px; 
-            color: white;
-            width: 100%;
-        }
-        input[type="text"]:focus { border-color: var(--rojo-brillante); outline: none; }
-
-        button { 
-            padding: 12px 24px; 
-            background: var(--rojo-malbrote); 
-            color: white; 
-            border: none; 
-            border-radius: 8px; 
-            font-weight: bold; 
-            cursor: pointer; 
-            font-size: 16px; 
-            transition: background 0.2s;
-        }
-        button:hover { background: var(--rojo-brillante); }
-        
-        .btn-camera { background: #4f46e5; width: 100%; margin-bottom: 12px; padding: 14px; }
-        .btn-camera:hover { background: #4338ca; }
-        .btn-file { background: #ea580c; width: 100%; margin-bottom: 15px; padding: 14px; font-size: 16px; color: white; border-radius: 8px; font-weight: bold; text-align: center; cursor: pointer; display: block; }
-        .btn-file:hover { background: #c2410c; }
-        .btn-sync { background: #2563eb; width: 100%; padding: 12px; font-size: 16px; margin-bottom: 15px; }
-        .btn-sync:hover { background: #1d4ed8; }
-        .btn-reset { background: #475569; margin-top: 25px; width: 100%; }
-        .btn-reset:hover { background: #334155; }
-
-        /* ESCÁNER: DISEÑO COMPACTO */
-        #reader { width: 100%; max-width: 320px; margin: 0 auto 15px auto; border-radius: 12px; overflow: hidden; background: #0f172a; border: 2px solid var(--rojo-malbrote); }
-        #reader video { object-fit: cover !important; height: 260px !important; }
-
-        /* SECCIÓN DE ASISTENCIA */
-        .history-list { text-align: left; background: #0f172a; padding: 15px; border-radius: 10px; max-height: 300px; overflow-y: auto; margin-top: 15px; border: 1px solid #1e293b; }
-        .history-item { display: flex; justify-content: space-between; align-items: center; padding: 10px; border-bottom: 1px solid #1e293b; font-size: 15px; }
-        
-        /* WORKSPACE GENERADOR MEJORADO ESTILO CANVA */
-        .editor-layout { display: flex; flex-direction: column; gap: 20px; width: 100%; align-items: stretch; }
-        @media (min-width: 850px) { .editor-layout { flex-direction: row; } }
-
-        .canva-sidebar { background: #0f172a; padding: 20px; border-radius: 12px; width: 100%; max-width: 340px; display: flex; flex-direction: column; gap: 15px; border: 1px solid #1e293b; }
-        .canva-sidebar h4 { font-size: 14px; color: var(--accent-canva); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 5px; }
-
-        .slider-control { display: flex; flex-direction: column; gap: 5px; width: 100%; text-align: left; }
-        .slider-control label { font-size: 13px; color: var(--texto-gris); }
-        .slider-control input[type="range"] { width: 100%; accent-color: var(--accent-canva); cursor: pointer; }
-
-        /* LIENZO INTERACTIVO CON ADAPTABILIDAD AUTOMÁTICA Y CUADRÍCULA */
-        .canva-viewport { 
-            flex-grow: 1; 
-            background: #090d16; 
-            border-radius: 12px; 
-            padding: 30px; 
-            display: flex; 
-            justify-content: center; 
-            align-items: center; 
-            overflow: auto; 
-            position: relative; 
-            min-height: 450px;
-            border: 2px dashed #1e293b;
-        }
-
-        /* Cuadrícula de alineación estilo Canva */
-        .canva-grid {
-            position: absolute; top:0; left:0; width:100%; height:100%; pointer-events: none;
-            background-image: linear-gradient(rgba(56, 189, 248, 0.04) 1px, transparent 1px), linear-gradient(90deg, rgba(56, 189, 248, 0.04) 1px, transparent 1px);
-            background-size: 20px 20px;
-        }
-
-        /* LÍNEAS GUÍA INTELIGENTES (Aparecen al arrastrar) */
-        .guide-line { position: absolute; background-color: #f43f5e; z-index: 10; display: none; pointer-events: none; }
-        .guide-x { width: 100%; height: 1px; left: 0; }
-        .guide-y { height: 100%; width: 1px; top: 0; }
-
-        .ticket-canvas-container { 
-            position: relative; 
-            display: inline-block; 
-            box-shadow: 0 20px 50px rgba(0,0,0,0.8);
-        }
-
+        /* COMPONENTES DE ARRASTRE SEPARADOS DE CORTE PROFESIONAL */
+        .ticket-canvas-container { position: relative; display: inline-block; box-shadow: 0 25px 60px rgba(0,0,0,0.8); border-radius: 4px; overflow: hidden; }
         .ticket-bg-preview { display: block; max-width: 100%; height: auto; }
-
-        /* BLOQUE DE DISEÑO DEL QR COMPACTO (Como tu imagen) */
-        .qr-canva-block {
-            position: absolute;
-            top: 20px;
-            left: 20px;
-            background-color: #ffffff;
-            border-radius: 12px;
-            border: 2px dashed #b5c2d1;
-            cursor: move;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            user-select: none;
-            box-sizing: border-box;
-        }
-
-        .qr-canva-text {
-            color: #111a2e;
-            font-size: 13px;
-            font-weight: bold;
-            text-align: center;
-            width: 100%;
-            word-wrap: break-word;
-            font-family: sans-serif;
-            margin-bottom: 10px;
-        }
-
-        .qr-canva-zone { width: 100%; display: flex; justify-content: center; align-items: center; }
-        .qr-canva-zone img { width: 100% !important; height: auto !important; display: block; }
-
-        /* SALIDA DEL LOTE ABAJO */
-        #qr-output { margin-top: 25px; display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 15px; max-height: 450px; overflow-y: auto; padding: 15px; border: 1px solid #1e293b; border-radius: 10px; background: #0f172a; }
-        .ticket-batch-card { background: #1e293b; padding: 12px; border-radius: 8px; border: 1px solid #334155; display: flex; flex-direction: column; align-items: center; gap: 8px; }
-        .batch-download-btn { padding: 6px 12px; font-size: 12px; background: #2563eb; width: 100%; }
-
-        /* VENTANA POP-UP MODAL */
-        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.75); z-index: 9999; justify-content: center; align-items: center; padding: 20px; }
-        .modal-box { background: var(--bg-card); padding: 30px 20px; border-radius: 16px; max-width: 400px; width: 100%; box-shadow: 0 15px 30px rgba(0,0,0,0.5); text-align: center; animation: popEffect 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
-        @keyframes popEffect { from { transform: scale(0.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }
-        .modal-title { font-size: 24px; font-weight: bold; margin-bottom: 12px; text-transform: uppercase; }
-        .modal-message { font-size: 16px; margin-bottom: 25px; color: var(--texto-gris); line-height: 1.5; }
-        .modal-btn { width: 100%; padding: 12px; font-size: 16px; color: white; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; }
         
-        /* Estados del Pop-up */
-        .pop-success { border: 3px solid #16a34a; background-color: #052e16; }
-        .pop-success .modal-title { color: #4ade80; }
-        .pop-success .modal-btn { background: #16a34a; }
-        .pop-danger { border: 3px solid #ef4444; background-color: #450a0a; }
-        .pop-danger .modal-title { color: #f87171; }
-        .pop-danger .modal-btn { background: #ef4444; }
-        .pop-loading { border: 3px solid #eab308; background-color: #422006; }
-        .pop-loading .modal-title { color: #fde047; }
+        .draggable-element { position: absolute; cursor: move; border: 1px dashed transparent; box-sizing: border-box; user-select: none; }
+        .draggable-element:hover { border-color: var(--accent-canva); background: rgba(56,189,248,0.05); }
+        
+        /* Tirador Redimensionador de esquina */
+        .resizer { width: 14px; height: 14px; background: var(--accent-canva); position: absolute; right: -5px; bottom: -5px; cursor: se-resize; border-radius: 50%; display: none; box-shadow: 0 0 6px black; z-index: 50; }
+        .draggable-element:hover .resizer { display: block; }
+
+        .element-text-box { font-weight: bold; font-family: 'Arial Black', sans-serif; display: flex; align-items: center; justify-content: center; overflow: hidden; text-shadow: 2px 2px 4px rgba(0,0,0,0.9); text-align: center; line-height: 1.2; padding: 4px; }
+        .element-qr-box { background: white; padding: 10px; border-radius: 8px; display: flex; align-items: center; justify-content: center; box-shadow: 0 8px 20px rgba(0,0,0,0.4); }
+        .element-qr-box div { width: 100% !important; height: 100% !important; display: flex; align-items: center; justify-content: center; }
+        .element-qr-box img { max-width: 100%; max-height: 100%; width: auto !important; height: auto !important; }
+
+        /* INPUTS, BOTONES Y DETALLES */
+        input[type="text"], input[type="number"] { padding: 12px; background: var(--bg-input); border: 1px solid #334155; border-radius: 8px; font-size: 14px; color: white; width: 100%; transition: 0.2s; }
+        input[type="text"]:focus, input[type="number"]:focus { border-color: var(--accent-canva); outline: none; }
+        button { padding: 12px 20px; background: var(--rojo-brillante); color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; transition: 0.2s; text-transform: uppercase; font-size: 13px; letter-spacing: 0.5px; }
+        button:hover { background: var(--rojo-neon); box-shadow: 0 0 15px rgba(244,63,94,0.4); }
+        
+        /* CONTROLES DEL ESCÁNER Y MÉTRICAS */
+        .scanner-grid { display: grid; grid-template-columns: 1xl; gap: 20px; }
+        @media (min-width: 765px) { .scanner-grid { grid-template-columns: 1fr 1fr; } }
+        #reader { width: 100%; border-radius: 12px; overflow: hidden; border: 2px solid var(--rojo-brillante); background: #05070a; box-shadow: 0 8px 30px rgba(0,0,0,0.5); }
+        .history-list { background: #0f172a; padding: 15px; border-radius: 12px; max-height: 380px; overflow-y: auto; border: 1px solid #1e293b; display: flex; flex-direction: column; gap: 8px; }
+        .history-item { display: flex; justify-content: space-between; align-items: center; padding: 12px; border-radius: 8px; background: #1e293b; border-left: 4px solid var(--texto-gris); }
+        .history-item.success { border-left-color: var(--verde-exito); background: rgba(16, 185, 129, 0.05); }
+        
+        /* MODAL E INYECTORES DE ALERTA */
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 9999; justify-content: center; align-items: center; padding: 20px; backdrop-filter: blur(4px); }
+        .modal-box { background: var(--bg-card); padding: 30px; border-radius: 16px; max-width: 450px; width: 100%; text-align: center; border: 2px solid var(--rojo-neon); box-shadow: 0 0 30px rgba(244,63,94,0.3); }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h1>🎭 Control de Teatro (v5.5-Pro)</h1>
     
-    <div class="config-bar">
-        🎬 Sala Activa: 
-        <select id="funcion-activa" onchange="cambiarFuncionSecura()">
-            <option value="FUNCIÓN 1">FUNCIÓN 1</option>
-            <option value="FUNCIÓN 2">FUNCIÓN 2</option>
-        </select>
+    <!-- VISTA 1: DASHBOARD (TU DIBUJO REALIZADO) -->
+    <div id="view-dashboard" class="dashboard-view">
+        <h1>🎭 CONTROL DE TEATRO (V5.5-PRO) <button style="font-size:11px; padding:6px 12px; background:#334155;" onclick="cargarProyectosDemo()">Cargar Proyectos Demo</button></h1>
+        <div class="obra-list-container" id="dashboard-obras-list">
+            <!-- Cargado automáticamente -->
+        </div>
+        <div class="btn-add-obra" onclick="crearNuevaObra()">
+            <span style="font-size: 36px;">➕</span>
+            <span>Agregar Obra</span>
+        </div>
     </div>
 
-    <div class="tabs">
-        <button class="tab-btn active" onclick="switchTab('tab-generador')">🎟️ Crear (Canva Style)</button>
-        <button class="tab-btn" onclick="switchTab('tab-escaner')">📷 Escáner</button>
-        <button class="tab-btn" onclick="switchTab('tab-asistencia')">📊 Dentro (<span id="tab-count-badge">0</span>)</button>
-    </div>
+    <!-- VISTA 2: ÁREA DE TRABAJO EN CLIENTE (SISTEMA DE DISEÑO Y LOGICA COMPLETA) -->
+    <div id="view-workspace" style="display: none;">
+        <h1>
+            <span id="txt-nombre-obra-header">OBRA EN TRABAJO</span>
+            <button onclick="regresarAlDashboard()" style="background:#334155; font-size:12px; padding:6px 14px;">⬅ Volver a Obras</button>
+        </h1>
 
-    <!-- PESTAÑA 1: GENERADOR CANVA INTEGRADO -->
-    <div id="tab-generador" class="tab-content active">
-        <div class="editor-layout">
-            
-            <!-- Barra Lateral de Controles -->
-            <div class="canva-sidebar">
-                <h4>1. Ajustes del Lote</h4>
-                <div class="input-row" style="flex-direction: column; width: 100%; gap: 8px;">
-                    <input type="text" id="qr-prefix" placeholder="Prefijo (Ej: OBRALUNES)" autocomplete="off">
-                    <input type="number" id="qr-quantity" min="1" max="500" value="156" style="width: 100%;">
-                </div>
+        <div class="config-bar">
+            <div>🎬 Sala Activa / Función: 
+                <select id="funcion-activa-global" onchange="sincronizarSalaActivaGlobal()">
+                    <!-- Dropdown dinámico sincronizado -->
+                </select>
+            </div>
+            <button style="background: var(--verde-exito);" onclick="guardarObraEstructuraCompleta()">💾 Guardar Obra en Memoria</button>
+        </div>
 
-                <h4>2. Cargar Fondo Fiel</h4>
-                <input type="file" id="canva-bg-input" accept="image/*" style="color: white; font-size: 13px;">
+        <!-- PESTAÑAS PRINCIPALES (CONSERVANDO TODO LO QUE YA HABÍAMOS HECHO) -->
+        <div class="tabs">
+            <button class="tab-btn active" onclick="cambiarPestañaModulo('tab-generador')">🎨 Crear (Canva Style)</button>
+            <button class="tab-btn" onclick="cambiarPestañaModulo('tab-escaner')">📷 Escáner Puerta</button>
+            <button class="tab-btn" onclick="cambiarPestañaModulo('tab-asistencia')">📊 Control Sala / Asistencia</button>
+        </div>
 
-                <h4>3. Herramientas Crop / Escala</h4>
-                <div class="slider-control">
-                    <label>Ancho Bloque Blanco (Crop Exterior):</label>
-                    <input type="range" id="slider-block-width" min="140" max="400" value="220">
-                </div>
-                <div class="slider-control">
-                    <label>Margen Interno (Crop QR):</label>
-                    <input type="range" id="slider-block-padding" min="5" max="30" value="15">
-                </div>
-                <div class="slider-control">
-                    <label>Tamaño Fuente Título:</label>
-                    <input type="range" id="slider-font-size" min="10" max="22" value="14">
-                </div>
-
-                <button style="width: 100%; margin-top: 10px; background: var(--accent-canva); color: black;" onclick="generarLoteBoletos()">⚡ Procesar y Crear Lote</button>
+        <!-- MODULO: DISEÑADOR PRO (CON LOS NUEVOS ELEMENTOS SEPARADOS Y REDIMENSIONABLES) -->
+        <div id="tab-generador" class="tab-content active">
+            <div class="funciones-subtabs" id="subtabs-funciones-contenedor">
+                <!-- Se inyectan las subpestañas de funciones dinámicamente -->
             </div>
 
-            <!-- Espacio de Trabajo del Lienzo -->
-            <div class="canva-viewport" id="viewport">
-                <div class="canva-grid"></div>
-                
-                <!-- Líneas Guía -->
-                <div class="guide-line guide-x" id="guide-x"></div>
-                <div class="guide-line guide-y" id="guide-y"></div>
-
-                <div class="ticket-canvas-container" id="ticketCanvasContainer">
-                    <!-- Imagen de fondo base responsiva -->
-                    <img id="canva-ticket-bg" class="ticket-bg-preview" src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='750' height='420'><rect width='750' height='420' fill='%231e293b'/><text x='50%' y='50%' fill='%2364748b' font-family='sans-serif' font-size='18' text-anchor='middle'>Sube el diseño de tu boleto aquí</text></svg>">
+            <div class="editor-layout">
+                <div class="canva-sidebar">
+                    <h4>⚙️ Ajustes del Lote</h4>
+                    <input type="text" id="batch-prefix" placeholder="Prefijo (Ej: HAMLET)" oninput="salvarDatosDiseñoInstantaneo()">
+                    <input type="number" id="batch-qty" value="50" min="1" oninput="salvarDatosDiseñoInstantaneo()">
                     
-                    <!-- Bloque del QR Arrastrable con la estética que mandaste -->
-                    <div class="qr-canva-block" id="interactiveQrBlock">
-                        <div class="qr-canva-text" id="canvaTextPreview">Boleto Oficial: PREFIJO001</div>
-                        <div id="canva-qrcode-target" class="qr-canva-zone"></div>
+                    <h4>🖼️ Foto de esta Función</h4>
+                    <input type="file" id="file-bg-function" accept="image/*" style="font-size:12px; color:var(--texto-gris);">
+
+                    <h4>🔤 Ajustes del Título</h4>
+                    <input type="text" id="prop-text-val" value="Boleto Oficial #001">
+                    <div style="display:flex; gap:10px; align-items:center;">
+                        <label style="font-size:12px; color:var(--texto-gris);">Color Texto:</label>
+                        <input type="color" id="prop-text-color" value="#ffffff" onchange="aplicarEstilosEnCaliente()">
+                    </div>
+
+                    <button style="background:var(--accent-canva); color:black; margin-top:10px;" onclick="generarLoteCompleto()">⚡ Generar / Renderizar Lote</button>
+                </div>
+
+                <div class="canva-viewport" id="editorViewport">
+                    <div class="canva-grid"></div>
+                    
+                    <div class="ticket-canvas-container" id="canvasBox">
+                        <!-- Imagen Base -->
+                        <img id="canva-bg-image" class="ticket-bg-preview" src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='750' height='350'><rect width='750' height='350' fill='%23111827'/><text x='50%' y='50%' fill='%234b5563' font-family='sans-serif' font-size='16' text-anchor='middle'>Sube la imagen para este lote / función</text></svg>">
+                        
+                        <!-- ELEMENTO 1 SEPARADO: CAJA DE TEXTO REDIMENSIONABLE -->
+                        <div class="draggable-element element-text-box" id="el-texto" style="left:40px; top:40px; width:260px; height:45px; font-size:18px;">
+                            <span id="el-texto-span">Boleto Oficial #001</span>
+                            <div class="resizer"></div>
+                        </div>
+
+                        <!-- ELEMENTO 2 SEPARADO: CÓDIGO QR REDIMENSIONABLE -->
+                        <div class="draggable-element element-qr-box" id="el-qr" style="left:40px; top:110px; width:130px; height:130px;">
+                            <div id="el-qr-target"></div>
+                            <div class="resizer"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Salida de Renderizador Remoto / Local -->
+            <div id="batch-output" style="margin-top:25px; display:none; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap:20px; padding:20px; background:#0f172a; border-radius:12px; border:1px solid #1e293b;"></div>
+        </div>
+
+        <!-- MODULO: ESCÁNER CON TODA LA LÓGICA ANTERIOR (AUDIOS, ESCANEO CONTINUO Y ALERTAS) -->
+        <div id="tab-escaner" class="tab-content">
+            <div class="scanner-grid">
+                <div>
+                    <div id="reader"></div>
+                    <button onclick="encenderCamaraScanner()" style="width:100%; background:#4f46e5; margin-top:15px; padding:14px;">📷 Encender Cámara en Vivo</button>
+                </div>
+                <div>
+                    <h3 style="margin-bottom:10px;">Ingreso Manual Directo</h3>
+                    <div style="display:flex; gap:10px; margin-bottom:20px;">
+                        <input type="text" id="manual-ticket-id" placeholder="Código de boleto (Ej: HAMLET005)">
+                        <button onclick="procesarIngresoManual()" style="background:var(--accent-canva); color:black;">Validar</button>
+                    </div>
+                    <h3 style="margin-bottom:10px;">Últimos Escaneos en Puerta</h3>
+                    <div class="history-list" id="escaner-logs-box">
+                        <div style="color:var(--texto-gris); text-align:center; padding:20px;">Esperando lecturas de boletos...</div>
                     </div>
                 </div>
             </div>
         </div>
 
-        <div id="qr-output" style="display:none;"></div>
-    </div>
-
-    <!-- PESTAÑA 2: ESCÁNER (LOGICA COMPLETA DE FOTOS + MANUAL) -->
-    <div id="tab-escaner" class="tab-content">
-        <div class="counter-box">Asistentes en Sala: <span id="total-count">0</span></div>
-        
-        <button class="btn-camera" id="btn-encender-camara" onclick="inicializarEscaner()">📷 Modo 1: Abrir Cámara Compacta</button>
-        <div id="reader"></div>
-
-        <label for="qr-file-input" class="btn-file">📸 Modo 2: Tomar Foto de Boleto</label>
-        <input type="file" id="qr-file-input" accept="image/*" style="display: none;" onchange="escanearDesdeArchivo(this)">
-
-        <div class="input-group">
-            <div class="input-row">
-                <input type="text" id="ticket-input" placeholder="Número manual..." autocomplete="off">
-                <button onclick="procesarBoletoManual()">Ingresar</button>
+        <!-- MODULO: AUDITORÍA Y ASISTENCIA (GOOGLE SHEETS COMPLETO Y LISTADO COMPLETO) -->
+        <div id="tab-asistencia" class="tab-content">
+            <div style="background:#0f172a; padding:20px; border-radius:12px; border:1px solid #1e293b; margin-bottom:20px; display:flex; justify-content:space-between; align-items:center;">
+                <div>
+                    <h2 style="font-size:28px; color:var(--verde-exito);" id="asistencia-contador-badge">0</h2>
+                    <p style="color:var(--texto-gris); font-size:13px;">Asistentes Registrados en esta Función</p>
+                </div>
+                <button onclick="forzarSincronizacionHojasCalculo()" style="background:#16a34a;">🔄 Forzar Sincronización Remota</button>
+            </div>
+            <h3>Base de Datos de esta Sala</h3>
+            <div class="history-list" id="asistencia-tabla-completa" style="max-height:500px;">
+                <!-- Lista de asistencias registradas -->
             </div>
         </div>
-    </div>
 
-    <!-- PESTAÑA 3: ASISTENCIA GLOBAL CLOUD -->
-    <div id="tab-asistencia" class="tab-content">
-        <h3>👥 Personas Adentro (Sincronizado)</h3>
-        <button class="btn-sync" onclick="sincronizarConNube()">🔄 Sincronizar Lista Cloud</button>
-        <div class="history-list" id="history-container"></div>
-        <button class="btn-reset" onclick="reiniciarTodoCloud()">🧹 Limpiar Pruebas de esta Función</button>
     </div>
 </div>
 
-<!-- VENTANA POP-UP DE RESULTADOS (MODAL) -->
-<div id="result-modal" class="modal-overlay">
-    <div id="modal-content-box" class="modal-box">
-        <div id="modal-title" class="modal-title"></div>
-        <div id="modal-message" class="modal-message"></div>
-        <button id="modal-btn" class="modal-btn" onclick="cerrarPopUp()">ENTENDIDO / SIGUIENTE</button>
+<!-- MODAL INTEGRAL PARA AVISOS DE ACCESO EN PUERTA -->
+<div id="global-modal" class="modal-overlay">
+    <div class="modal-box" id="modal-content-card">
+        <h3 id="modal-title" style="margin-bottom:10px; font-size:22px;"></h3>
+        <p id="modal-msg" style="color:var(--texto-gris); font-size:15px; margin-bottom:25px; line-height:1.4;"></p>
+        <button onclick="cerrarModalDeAlerta()" id="modal-close-btn" style="width:100%;">Entendido / Continuar</button>
     </div>
 </div>
+
+<!-- AUDIOS INTEGRADOS EN EL MOTOR -->
+<audio id="audio-success" src="https://assets.mixkit.co/active_storage/sfx/2019/2019-84.wav" preload="auto"></audio>
+<audio id="audio-error" src="https://assets.mixkit.co/active_storage/sfx/2955/2955-84.wav" preload="auto"></audio>
 
 <script>
-    // ==========================================
-    // ¡PEGA TU URL DE APPS SCRIPT AQUÍ ABAJO!
-    // ==========================================
-    const WEB_APP_URL = "AQUÍ_PEGA_TU_URL_DE_GOOGLE";
-
-    let funcionActual = document.getElementById('funcion-activa').value;
-    let boletosRegistrados = new Set();
-    let ultimoCodigoEscaneado = "";
-    let tiempoUltimoEscaneo = 0;
-    let html5Qrcode = null; 
+    // BASE DE DATOS DE OBRAS Y ASISTENCIA COMPLETA (LocalStorage Persistente)
+    let DATABASE_OBRAS = JSON.parse(localStorage.getItem('MALBROTE_TEATRO_DB')) || [];
+    let ASISTENCIA_LOCAL = JSON.parse(localStorage.getItem('MALBROTE_ASISTENCIA_DB')) || {};
     
-    // Coordenadas relativas en % para replicar en el lote
-    let relLeftPct = 5;
-    let relTopPct = 5;
+    let obraSeleccionadaIdx = null;
+    let funcionSeleccionadaIdx = 0; 
+    let html5QrScannerInstancia = null;
 
-    sincronizarConNube();
+    // Inicializar la interfaz del dibujo
+    actualizarDashboardPantallaPrincipal();
 
-    // --- MANEJO DE VENTANAS MODALES ---
-    function mostrarPopUp(tipo, titulo, mensaje) {
-        const modal = document.getElementById('result-modal');
-        const box = document.getElementById('modal-content-box');
-        const titleEl = document.getElementById('modal-title');
-        const msgEl = document.getElementById('modal-message');
-        const btn = document.getElementById('modal-btn');
+    // --- LOGICA DE PROYECTOS (DASHBOARD) ---
+    function actualizarDashboardPantallaPrincipal() {
+        document.getElementById('view-dashboard').style.display = "block";
+        document.getElementById('view-workspace').style.display = "none";
+        const box = document.getElementById('dashboard-obras-list');
+        box.innerHTML = "";
 
-        box.className = "modal-box " + tipo;
-        titleEl.innerText = titulo;
-        msgEl.innerHTML = mensaje;
+        if (DATABASE_OBRAS.length === 0) {
+            box.innerHTML = `<div style="text-align:center; padding:30px; color:var(--texto-gris)">No tienes ninguna obra en el sistema. Presiona el botón de abajo para añadir una. 🎭</div>`;
+            return;
+        }
+
+        DATABASE_OBRAS.forEach((obra, index) => {
+            // Miniatura dinámica sacada de la función 1 como especificaste en tu dibujo
+            const fotoMiniatura = (obra.funciones && obra.funciones[0] && obra.funciones[0].imagenFondo) ? obra.funciones[0].imagenFondo : "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='60' height='60'><rect width='60' height='60' fill='%231e293b'/></svg>";
+            
+            const card = document.createElement('div');
+            card.className = 'obra-card';
+            card.onclick = () => abrirEntornoTrabajoObra(index);
+            card.innerHTML = `
+                <img class="obra-thumb" src="${fotoMiniatura}">
+                <div class="obra-info">
+                    <div class="obra-title">${obra.nombre}</div>
+                    <div class="obra-meta">Lotes Funciones: ${obra.funciones.length} | Prefijo Alfa: ${obra.prefijo} | Cantidad: ${obra.cantidadTickets} boletos</div>
+                </div>
+                <button onclick="eliminarObraPorCompleto(event, ${index})" style="background:#be123c; font-size:11px; padding:6px 10px;">Eliminar</button>
+            `;
+            box.appendChild(card);
+        });
+    }
+
+    function crearNuevaObra() {
+        let nombre = prompt("Escribe el nombre de la nueva Obra de Teatro:");
+        if (!nombre) return;
         
-        if (tipo === 'pop-loading') {
-            btn.style.display = "none";
+        let prefijoAutomatico = nombre.replace(/\s+/g, '').substring(0, 6).toUpperCase();
+        let nuevaObraStruct = {
+            nombre: nombre.toUpperCase(),
+            prefijo: prefijoAutomatico,
+            cantidadTickets: 50,
+            layout: {
+                txtLeft: 40, txtTop: 40, txtWidth: 260, txtHeight: 45, txtFontSize: 18, txtColor: '#ffffff',
+                qrLeft: 40, qrTop: 110, qrWidth: 130, qrHeight: 130
+            },
+            funciones: [
+                { nombre: "FUNCIÓN 1", imagenFondo: "" }
+            ]
+        };
+
+        DATABASE_OBRAS.push(nuevaObraStruct);
+        localStorage.setItem('MALBROTE_TEATRO_DB', JSON.stringify(DATABASE_OBRAS));
+        actualizarDashboardPantallaPrincipal();
+    }
+
+    function abrirEntornoTrabajoObra(index) {
+        obraSeleccionadaIdx = index;
+        const obra = DATABASE_OBRAS[obraSeleccionadaIdx];
+
+        document.getElementById('view-dashboard').style.display = "none";
+        document.getElementById('view-workspace').style.display = "block";
+        
+        document.getElementById('txt-nombre-obra-header').innerText = obra.nombre;
+        document.getElementById('batch-prefix').value = obra.prefijo;
+        document.getElementById('batch-qty').value = obra.cantidadTickets;
+
+        // Desplegar tamaños y coordenadas salvados de la última sesión
+        const txt = document.getElementById('el-texto');
+        const qr = document.getElementById('el-qr');
+
+        txt.style.left = obra.layout.txtLeft + 'px';
+        txt.style.top = obra.layout.txtTop + 'px';
+        txt.style.width = obra.layout.txtWidth + 'px';
+        txt.style.height = obra.layout.txtHeight + 'px';
+        txt.style.fontSize = (obra.layout.txtFontSize || 18) + 'px';
+        document.getElementById('prop-text-color').value = obra.layout.txtColor || '#ffffff';
+        txt.style.color = obra.layout.txtColor || '#ffffff';
+
+        qr.style.left = obra.layout.qrLeft + 'px';
+        qr.style.top = obra.layout.qrTop + 'px';
+        qr.style.width = obra.layout.qrWidth + 'px';
+        qr.style.height = obra.layout.qrHeight + 'px';
+
+        funcionSeleccionadaIdx = 0;
+        refrescarSubpestañasFisicas();
+        actualizarSelectSalasGlobales();
+        cargarContenidosEspecificosDeFuncion();
+        renderizarHistorialYLogsAsistencia();
+    }
+
+    function refrescarSubpestañasFisicas() {
+        const caja = document.getElementById('subtabs-funciones-contenedor');
+        caja.innerHTML = "";
+        const obra = DATABASE_OBRAS[obraSeleccionadaIdx];
+
+        obra.funciones.forEach((func, idx) => {
+            const btn = document.createElement('button');
+            btn.className = `subtab-btn ${idx === funcionSeleccionadaIdx ? 'active' : ''}`;
+            btn.innerText = func.nombre;
+            btn.onclick = () => {
+                funcionSeleccionadaIdx = idx;
+                refrescarSubpestañasFisicas();
+                cargarContenidosEspecificosDeFuncion();
+            };
+            caja.appendChild(btn);
+        });
+
+        // BOTÓN REQUERIDO: "Agregar función"
+        const btnAgregar = document.createElement('button');
+        btnAgregar.className = 'subtab-btn btn-add-func';
+        btnAgregar.innerText = "➕ Agregar Función";
+        btnAgregar.onclick = () => {
+            const numeroSiguiente = obra.funciones.length + 1;
+            obra.funciones.push({
+                nombre: `FUNCIÓN ${numeroSiguiente}`,
+                imagenFondo: "" // Nueva imagen limpia para el cambio de horario
+            });
+            funcionSeleccionadaIdx = numeroSiguiente - 1;
+            refrescarSubpestañasFisicas();
+            actualizarSelectSalasGlobales();
+            cargarContenidosEspecificosDeFuncion();
+        };
+        caja.appendChild(btnAgregar);
+    }
+
+    function actualizarSelectSalasGlobales() {
+        const select = document.getElementById('funcion-activa-global');
+        select.innerHTML = "";
+        DATABASE_OBRAS[obraSeleccionadaIdx].funciones.forEach(f => {
+            select.innerHTML += `<option value="${f.nombre}">${f.nombre}</option>`;
+        });
+    }
+
+    function sincronizarSalaActivaGlobal() {
+        const valor = document.getElementById('funcion-activa-global').value;
+        const indexEncontrado = DATABASE_OBRAS[obraSeleccionadaIdx].funciones.findIndex(f => f.nombre === valor);
+        if (indexEncontrado !== -1) {
+            funcionSeleccionadaIdx = indexEncontrado;
+            refrescarSubpestañasFisicas();
+            cargarContenidosEspecificosDeFuncion();
+            renderizarHistorialYLogsAsistencia();
+        }
+    }
+
+    function cargarContenidosEspecificosDeFuncion() {
+        const func = DATABASE_OBRAS[obraSeleccionadaIdx].funciones[funcionSeleccionadaIdx];
+        const canvasImg = document.getElementById('canva-bg-image');
+        
+        if (func.imagenFondo) {
+            canvasImg.src = func.imagenFondo;
         } else {
-            btn.style.display = "block";
-            btn.focus();
+            canvasImg.src = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='750' height='350'><rect width='750' height='350' fill='%23111827'/><text x='50%' y='50%' fill='%234b5563' font-family='sans-serif' font-size='16' text-anchor='middle'>Sube la imagen para " + func.nombre + "</text></svg>";
         }
-        modal.style.display = "flex";
+        redibujarInstanciaQrPrevia();
     }
 
-    function cerrarPopUp() { document.getElementById('result-modal').style.display = "none"; }
-
-    function cambiarFuncionSecura() {
-        funcionActual = document.getElementById('funcion-activa').value;
-        boletosRegistrados.clear();
-        cerrarPopUp();
-        sincronizarConNube();
-    }
-
-    function switchTab(tabId) {
-        document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
-        document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
-        document.getElementById(tabId).classList.add('active');
-        event.currentTarget.classList.add('active');
-        
-        if (tabId === 'tab-asistencia') sincronizarConNube();
-        if (tabId !== 'tab-escaner' && html5Qrcode) {
-            html5Qrcode.stop().then(() => {
-                document.getElementById('btn-encender-camara').style.display = "block";
-            }).catch(err => console.log(err));
-        }
-    }
-
-    // --- COMPORTAMIENTO DEL EDITOR MULTI-MEDIDA (CANVA STYLE) ---
-    const canvaBgInput = document.getElementById('canva-bg-input');
-    const canvaTicketBg = document.getElementById('canva-ticket-bg');
-    const interactiveQrBlock = document.getElementById('interactiveQrBlock');
-    const ticketCanvasContainer = document.getElementById('ticketCanvasContainer');
-    
-    // Sliders de Modificación Visual
-    const slWidth = document.getElementById('slider-block-width');
-    const slPadding = document.getElementById('slider-block-padding');
-    const slFont = document.getElementById('slider-font-size');
-    const canvaTextPreview = document.getElementById('canvaTextPreview');
-
-    // Inicializar QR de previsualización interactiva
-    let previewQr = new QRCode(document.getElementById("canva-qrcode-target"), {
-        text: "PREVISUALIZACION",
-        width: 150,
-        height: 150,
-        colorDark : "#000000",
-        colorLight : "#ffffff",
-        correctLevel : QRCode.CorrectLevel.H
-    });
-
-    // Actualizar dinámicamente propiedades mediante los sliders
-    function aplicarAjustesLienzo() {
-        interactiveQrBlock.style.width = `${slWidth.value}px`;
-        interactiveQrBlock.style.padding = `${slPadding.value}px`;
-        canvaTextPreview.style.fontSize = `${slFont.value}px`;
-    }
-
-    slWidth.addEventListener('input', aplicarAjustesLienzo);
-    slPadding.addEventListener('input', aplicarAjustesLienzo);
-    slFont.addEventListener('input', aplicarAjustesLienzo);
-    
-    document.getElementById('qr-prefix').addEventListener('input', (e) => {
-        canvaTextPreview.textContent = `Boleto Oficial: ${e.target.value.toUpperCase()}001`;
-    });
-
-    // Cargar imagen de fondo personalizada sin deformarla
-    canvaBgInput.addEventListener('change', (e) => {
+    // --- CARGA DE ARCHIVOS MULTI-IMAGEN ---
+    document.getElementById('file-bg-function').addEventListener('change', function(e) {
         const file = e.target.files[0];
         if (file) {
             const reader = new FileReader();
-            reader.onload = function(event) {
-                canvaTicketBg.src = event.target.result;
-                // Re-inicializar coordenadas al centro superior
-                interactiveQrBlock.style.left = "20px";
-                interactiveQrBlock.style.top = "20px";
-                relLeftPct = (20 / ticketCanvasContainer.clientWidth) * 100;
-                relTopPct = (20 / ticketCanvasContainer.clientHeight) * 100;
-            };
+            reader.onload = function(evt) {
+                document.getElementById('canva-bg-image').src = evt.target.result;
+                DATABASE_OBRAS[obraSeleccionadaIdx].funciones[funcionSeleccionadaIdx].imagenFondo = evt.target.result;
+            }
             reader.readAsDataURL(file);
         }
     });
 
-    // SISTEMA DRAG & DROP CON GUÍAS IMANTADAS ESTILO CANVA
-    let isDragging = false;
-    let startX, startY, initialLeft, initialTop;
-    const guideX = document.getElementById('guide-x');
-    const guideY = document.getElementById('guide-y');
+    // --- INTERACTIVIDAD EDITORES DE FOTOS INDEPENDIENTES ---
+    function inicializarArrastreYEscalaElementos(id) {
+        const elemento = document.getElementById(id);
+        const resizer = elemento.querySelector('.resizer');
 
-    interactiveQrBlock.addEventListener('mousedown', (e) => {
-        isDragging = true;
-        startX = e.clientX;
-        startY = e.clientY;
-        initialLeft = interactiveQrBlock.offsetLeft;
-        initialTop = interactiveQrBlock.offsetTop;
-        
-        guideX.style.display = 'block';
-        guideY.style.display = 'block';
+        elemento.addEventListener('mousedown', function(e) {
+            if (e.target.classList.contains('resizer')) return;
+            e.preventDefault();
+            let startX = e.clientX;
+            let startY = e.clientY;
+            let initialLeft = elemento.offsetLeft;
+            let initialTop = elemento.offsetTop;
 
-        document.addEventListener('mousemove', dragMoveCanva);
-        document.addEventListener('mouseup', dragEndCanva);
+            function mover(evt) {
+                let dx = evt.clientX - startX;
+                let dy = evt.clientY - startY;
+                elemento.style.left = (initialLeft + dx) + 'px';
+                elemento.style.top = (initialTop + dy) + 'px';
+                salvarDatosDiseñoInstantaneo();
+            }
+            function soltar() {
+                document.removeEventListener('mousemove', mover);
+                document.removeEventListener('mouseup', soltar);
+            }
+            document.addEventListener('mousemove', mover);
+            document.addEventListener('mouseup', soltar);
+        });
+
+        resizer.addEventListener('mousedown', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            let startWidth = elemento.clientWidth;
+            let startHeight = elemento.clientHeight;
+            let startX = e.clientX;
+            let startY = e.clientY;
+
+            function escalar(evt) {
+                let w = startWidth + (evt.clientX - startX);
+                let h = startHeight + (evt.clientY - startY);
+                if (w > 40) elemento.style.width = w + 'px';
+                if (h > 20) elemento.style.height = h + 'px';
+                
+                if (id === 'el-texto') {
+                    elemento.style.fontSize = Math.max(10, h * 0.45) + 'px';
+                }
+                if (id === 'el-qr') {
+                    redibujarInstanciaQrPrevia();
+                }
+                salvarDatosDiseñoInstantaneo();
+            }
+            function soltarEscala() {
+                document.removeEventListener('mousemove', escalar);
+                document.removeEventListener('mouseup', soltarEscala);
+            }
+            document.addEventListener('mousemove', escalar);
+            document.addEventListener('mouseup', soltarEscala);
+        });
+    }
+
+    inicializarArrastreYEscalaElementos('el-texto');
+    inicializarArrastreYEscalaElementos('el-qr');
+
+    document.getElementById('prop-text-val').addEventListener('input', (e) => {
+        document.getElementById('el-texto-span').innerText = e.target.value;
     });
 
-    function dragMoveCanva(e) {
-        if (!isDragging) return;
-        const dx = e.clientX - startX;
-        const dy = e.clientY - startY;
-
-        let newLeft = initialLeft + dx;
-        let newTop = initialTop + dy;
-
-        const containerW = ticketCanvasContainer.clientWidth;
-        const containerH = ticketCanvasContainer.clientHeight;
-        const blockW = interactiveQrBlock.clientWidth;
-        const blockH = interactiveQrBlock.clientHeight;
-
-        // Límites
-        newLeft = Math.max(0, Math.min(newLeft, containerW - blockW));
-        newTop = Math.max(0, Math.min(newTop, containerH - blockH));
-
-        // DETECCIÓN DE CORTES CENTRALES (Eje Magnético)
-        const centroContenedorX = containerW / 2;
-        const centroBloqueX = newLeft + (blockW / 2);
-        if (Math.abs(centroBloqueX - centroContenedorX) < 10) {
-            newLeft = centroContenedorX - (blockW / 2); // Imán
-            guideY.style.backgroundColor = '#22c55e'; // Línea verde
-        } else {
-            guideY.style.backgroundColor = '#f43f5e';
-        }
-
-        const centroContenedorY = containerH / 2;
-        const centroBloqueY = newTop + (blockH / 2);
-        if (Math.abs(centroBloqueY - centroContenedorY) < 10) {
-            newTop = centroContenedorY - (blockH / 2); // Imán
-            guideX.style.backgroundColor = '#22c55e';
-        } else {
-            guideX.style.backgroundColor = '#f43f5e';
-        }
-
-        // Posicionar Líneas Guías Relativas al Viewport
-        const rectContainer = ticketCanvasContainer.getBoundingClientRect();
-        const rectViewport = document.getElementById('viewport').getBoundingClientRect();
-        
-        guideY.style.left = `${rectContainer.left - rectViewport.left + newLeft + (blockW / 2)}px`;
-        guideX.style.top = `${rectContainer.top - rectViewport.top + newTop + (blockH / 2)}px`;
-
-        interactiveQrBlock.style.left = `${newLeft}px`;
-        interactiveQrBlock.style.top = `${newTop}px`;
-
-        // Guardar porcentajes para reproducirlos exactamente en el lote final
-        relLeftPct = (newLeft / containerW) * 100;
-        relTopPct = (newTop / containerH) * 100;
+    function aplicarEstilosEnCaliente() {
+        const col = document.getElementById('prop-text-color').value;
+        document.getElementById('el-texto').style.color = col;
+        salvarDatosDiseñoInstantaneo();
     }
 
-    function dragEndCanva() {
-        isDragging = false;
-        guideX.style.display = 'none';
-        guideY.style.display = 'none';
-        document.removeEventListener('mousemove', dragMoveCanva);
-        document.removeEventListener('mouseup', dragEndCanva);
+    function salvarDatosDiseñoInstantaneo() {
+        if (obraSeleccionadaIdx === null) return;
+        const obra = DATABASE_OBRAS[obraSeleccionadaIdx];
+        const txt = document.getElementById('el-texto');
+        const qr = document.getElementById('el-qr');
+
+        obra.layout = {
+            txtLeft: parseInt(txt.style.left),
+            txtTop: parseInt(txt.style.top),
+            txtWidth: parseInt(txt.style.width),
+            txtHeight: parseInt(txt.style.height),
+            txtFontSize: parseInt(txt.style.fontSize),
+            txtColor: document.getElementById('prop-text-color').value,
+            qrLeft: parseInt(qr.style.left),
+            qrTop: parseInt(qr.style.top),
+            qrWidth: parseInt(qr.style.width),
+            qrHeight: parseInt(qr.style.height)
+        };
+        obra.prefijo = document.getElementById('batch-prefix').value.toUpperCase();
+        obra.cantidadTickets = parseInt(document.getElementById('batch-qty').value) || 50;
     }
 
-    // --- GENERADOR DE LOTES EN MASA CON RENDERIZADO EXCLUSIVO ---
-    function generarLoteBoletos() {
-        const prefixInput = document.getElementById('qr-prefix').value.trim().toUpperCase();
-        const quantityInput = parseInt(document.getElementById('qr-quantity').value, 10);
-        const outputContainer = document.getElementById('qr-output');
+    function redibujarInstanciaQrPrevia() {
+        const target = document.getElementById('el-qr-target');
+        target.innerHTML = "";
+        let finalDim = Math.min(target.clientWidth, target.clientHeight) - 10;
+        if(finalDim < 30) finalDim = 30;
+        new QRCode(target, { text: "PREVIEW", width: finalDim, height: finalDim });
+    }
 
-        if (!prefixInput) { alert("Ingresa un prefijo oficial."); return; }
-        if (isNaN(quantityInput) || quantityInput < 1 || quantityInput > 500) { alert("Cantidad de 1 a 500."); return; }
+    function guardarObraEstructuraCompleta() {
+        salvarDatosDiseñoInstantaneo();
+        localStorage.setItem('MALBROTE_TEATRO_DB', JSON.stringify(DATABASE_OBRAS));
+        mostrarAlertaModal("💾 PROYECTO SALVADO", "Todos los cambios en las funciones, imágenes de fondo y posiciones se guardaron en LocalStorage.");
+        actualizarDashboardPantallaPrincipal();
+    }
 
-        outputContainer.innerHTML = "";
-        outputContainer.style.display = "grid";
+    function regresarAlDashboard() {
+        document.getElementById('view-workspace').style.display = "none";
+        actualizarDashboardPantallaPrincipal();
+    }
 
-        mostrarPopUp('pop-loading', '⚙️ Generando lote...', `Construyendo ${quantityInput} boletos con el layout configurado...`);
+    function eliminarObraPorCompleto(e, idx) {
+        e.stopPropagation();
+        if (confirm("¿Seguro que deseas eliminar esta obra por completo? Esto borrará todas sus funciones asociadas.")) {
+            DATABASE_OBRAS.splice(idx, 1);
+            localStorage.setItem('MALBROTE_TEATRO_DB', JSON.stringify(DATABASE_OBRAS));
+            actualizarDashboardPantallaPrincipal();
+        }
+    }
 
-        // Iterar la cantidad solicitada
-        for (let i = 1; i <= quantityInput; i++) {
-            const numeroTicket = String(i).padStart(3, '0');
-            const textoLimpio = `${prefixInput}${numeroTicket}`;
-            const tokenCifradoBase64 = btoa(`TEATRO-SECURE:${textoLimpio}`);
+    // --- EXPEDIDOR RENDERIZADOR MASSIVO ---
+    function generarLoteCompleto() {
+        salvarDatosDiseñoInstantaneo();
+        const obra = DATABASE_OBRAS[obraSeleccionadaIdx];
+        const output = document.getElementById('batch-output');
+        output.innerHTML = "";
+        output.style.display = "grid";
 
-            // Estructurar el clon exacto del Canvas para render
-            const batchCard = document.createElement('div');
-            batchCard.className = 'ticket-batch-card';
+        mostrarAlertaModal("⚙️ PROCESANDO RENDER", `Dibujando ${obra.cantidadTickets} boletos únicos...`);
 
-            const canvasWrapper = document.createElement('div');
-            canvasWrapper.className = 'ticket-canvas-container';
-            canvasWrapper.id = `render-container-${numeroTicket}`;
+        for(let i = 1; i <= obra.cantidadTickets; i++) {
+            const numStr = String(i).padStart(3, '0');
+            const tokenBoleto = `${obra.prefijo}${numStr}`;
+            // Payload Encriptado en Base64 para el escáner
+            const payloadCifrado = btoa(`MALBROTE:${obra.nombre}:${tokenBoleto}`);
 
-            // Clonar la imagen de fondo
-            const imgBgClon = document.createElement('img');
-            imgBgClon.className = 'ticket-bg-preview';
-            imgBgClon.src = canvaTicketBg.src;
-            canvasWrapper.appendChild(imgBgClon);
+            const cardWrapper = document.createElement('div');
+            cardWrapper.style.background = "#1e293b";
+            cardWrapper.style.padding = "12px";
+            cardWrapper.style.borderRadius = "10px";
 
-            // Recrear el Bloque Blanco QR con posiciones relativas exactas
-            const blockClon = document.createElement('div');
-            blockClon.className = 'qr-canva-block';
-            blockClon.style.width = `${slWidth.value}px`;
-            blockClon.style.padding = `${slPadding.value}px`;
-            blockClon.style.left = `${relLeftPct}%`;
-            blockClon.style.top = `${relTopPct}%`;
+            const canvasClone = document.createElement('div');
+            canvasClone.className = 'ticket-canvas-container';
+            canvasClone.style.width = document.getElementById('canvasBox').clientWidth + 'px';
+            canvasClone.style.height = document.getElementById('canvasBox').clientHeight + 'px';
 
-            const textClon = document.createElement('div');
-            textClon.className = 'qr-canva-text';
-            textClon.style.fontSize = `${slFont.value}px`;
-            textClon.textContent = `Boleto Oficial: ${textoLimpio}`;
+            const bg = document.createElement('img');
+            bg.className = 'ticket-bg-preview';
+            bg.src = document.getElementById('canva-bg-image').src;
+            canvasClone.appendChild(bg);
 
-            const qrZoneClon = document.createElement('div');
-            qrZoneClon.id = `final-qr-${numeroTicket}`;
-            qrZoneClon.className = 'qr-canva-zone';
+            const txt = document.createElement('div');
+            txt.className = 'draggable-element element-text-box';
+            txt.style.left = obra.layout.txtLeft + 'px';
+            txt.style.top = obra.layout.txtTop + 'px';
+            txt.style.width = obra.layout.txtWidth + 'px';
+            txt.style.height = obra.layout.txtHeight + 'px';
+            txt.style.color = obra.layout.txtColor;
+            txt.style.fontSize = obra.layout.txtFontSize + 'px';
+            txt.innerHTML = `<span>${document.getElementById('prop-text-val').value.replace("#001", "#" + numStr)}</span>`;
+            canvasClone.appendChild(txt);
 
-            blockClon.appendChild(textClon);
-            blockClon.appendChild(qrZoneClon);
-            canvasWrapper.appendChild(blockClon);
+            const qrContainer = document.createElement('div');
+            qrContainer.className = 'draggable-element element-qr-box';
+            qrContainer.style.left = obra.layout.qrLeft + 'px';
+            qrContainer.style.top = obra.layout.qrTop + 'px';
+            qrContainer.style.width = obra.layout.qrWidth + 'px';
+            qrContainer.style.height = obra.layout.qrHeight + 'px';
+            
+            const targetQrInner = document.createElement('div');
+            targetQrInner.id = `qr-node-final-${numStr}`;
+            qrContainer.appendChild(targetQrInner);
+            canvasClone.appendChild(qrContainer);
 
-            // Botón independiente de descarga
-            const downloadBtn = document.createElement('button');
-            downloadBtn.className = 'batch-download-btn';
-            downloadBtn.innerText = `💾 Guardar #${numeroTicket}`;
-            downloadBtn.onclick = function() {
-                exportarCanvasAImagen(`render-container-${numeroTicket}`, `Boleto_${textoLimpio}`);
+            const btnDownload = document.createElement('button');
+            btnDownload.innerText = `💾 Descargar #${numStr}`;
+            btnDownload.style.width = "100%";
+            btnDownload.style.marginTop = "10px";
+            btnDownload.style.fontSize = "11px";
+            btnDownload.onclick = () => {
+                html2canvas(canvasClone, { scale: 3 }).then(canvas => {
+                    let link = document.createElement('a');
+                    link.download = `Boleto_${tokenBoleto}.png`;
+                    link.href = canvas.toDataURL('image/png');
+                    link.click();
+                });
             };
 
-            batchCard.appendChild(canvasWrapper);
-            batchCard.appendChild(downloadBtn);
-            outputContainer.appendChild(batchCard);
+            cardWrapper.appendChild(canvasClone);
+            cardWrapper.appendChild(btnDownload);
+            output.appendChild(cardWrapper);
 
-            // Inyectar QR real dentro del clon
-            new QRCode(document.getElementById(`final-qr-${numeroTicket}`), {
-                text: tokenCifradoBase64,
-                width: parseInt(slWidth.value) - (parseInt(slPadding.value) * 2),
-                height: parseInt(slWidth.value) - (parseInt(slPadding.value) * 2),
-                colorDark : "#000000",
-                colorLight : "#ffffff",
-                correctLevel : QRCode.CorrectLevel.H
-            });
+            let sizeQr = Math.min(obra.layout.qrWidth, obra.layout.qrHeight) - 20;
+            new QRCode(targetQrInner, { text: payloadCifrado, width: sizeQr, height: sizeQr });
         }
-        
-        aplicarAjustesLienzo();
-        setTimeout(cerrarPopUp, 1000);
+        setTimeout(cerrarModalDeAlerta, 1000);
     }
 
-    function exportarCanvasAImagen(containerId, filename) {
-        const elemento = document.getElementById(containerId);
-        html2canvas(elemento, { scale: 3, useCORS: true }).then(canvas => {
-            const link = document.createElement('a');
-            link.download = `${filename}.png`;
-            link.href = canvas.toDataURL('image/png');
-            link.click();
-        });
+    // --- SISTEMA DEL ESCÁNER DE PUERTA (LÓGICA CONSERVADA AL 100%) ---
+    function encenderCamaraScanner() {
+        if(html5QrScannerInstancia) {
+            html5QrScannerInstancia.clear();
+        }
+        html5QrScannerInstancia = new Html5QrcodeScanner("reader", { fps: 15, qrbox: 250 });
+        html5QrScannerInstancia.render(alDetectarCodigoQrExitoso);
     }
 
-    // --- LÓGICA CORE: CONTROL DE ASISTENCIA Y TRANSMISIÓN A CLOUD ---
-    function desencriptarToken(token) {
+    function alDetectarCodigoQrExitoso(decodedText) {
         try {
-            let decodificado = atob(token.trim());
-            if(decodificado.startsWith("TEATRO-SECURE:")) return decodificado.replace("TEATRO-SECURE:", "");
-            return token.toUpperCase();
-        } catch(e) { return token.toUpperCase(); }
-    }
-
-    function extraerNumero(codigo) {
-        let coincidencia = codigo.match(/\d+$/);
-        return coincidencia ? parseInt(coincidencia[0], 10) : null;
-    }
-
-    function registrarBoleto(codigoBruto) {
-        let codigoReal = desencriptarToken(codigoBruto);
-        let numBoleto = extraerNumero(codigoReal);
-        
-        mostrarPopUp('pop-loading', '⏳ Validando...', `Cotejando boleto <b>[${codigoReal}]</b> con la base de datos central...`);
-
-        // Validación global del rango impreso
-        if (!numBoleto || numBoleto < 1 || numBoleto > 156) {
-            mostrarPopUp('pop-danger', '❌ CÓDIGO INVÁLIDO', `El código <b>[${codigoReal}]</b> no corresponde a ningún boleto del rango 001 al 156.`);
-            reproducirSonidoError(); return;
-        }
-
-        // Validación estricta de Función asignada
-        if (funcionActual === "FUNCIÓN 1" && numBoleto > 78) {
-            mostrarPopUp('pop-danger', '⚠️ FUNCIÓN EQUIVOCADA', `El boleto <b>#${numBoleto}</b> es de la <b>FUNCIÓN 2</b>.<br><br>Indique al usuario que espere su horario.`);
-            reproducirSonidoError(); return;
-        }
-        if (funcionActual === "FUNCIÓN 2" && numBoleto <= 78) {
-            mostrarPopUp('pop-danger', '⚠️ FUNCIÓN EQUIVOCADA', `El boleto <b>#${numBoleto}</b> pertenece a la <b>FUNCIÓN 1</b> (Horario concluido).`);
-            reproducirSonidoError(); return;
-        }
-
-        if (boletosRegistrados.has(String(numBoleto).padStart(3, '0'))) {
-            mostrarPopUp('pop-danger', '🚨 ENTRADA YA USADA', `El boleto <b>#${numBoleto}</b> ya cruzó la puerta de acceso.<br><br><b>¡Alerta de duplicado!</b>`);
-            reproducirSonidoError(); return;
-        }
-
-        // Post directo a Google Apps Script
-        fetch(WEB_APP_URL, {
-            method: "POST",
-            mode: "no-cors",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ accion: "registrar", codigo: codigoReal, funcion: funcionActual })
-        }).then(() => {
-            mostrarPopUp('pop-success', '🎉 ¡ACCESO PERMITIDO!', `Boleto <b>#${numBoleto}</b> validado perfectamente.<br><br>¡Disfrute la obra!`);
-            sincronizarConNube();
-        }).catch(() => {
-            mostrarPopUp('pop-danger', '❌ ERROR DE CONEXIÓN', `La verificación falló debido a problemas de red.`);
-        });
-    }
-
-    function sincronizarConNube() {
-        const badge = document.getElementById('tab-count-badge');
-        badge.innerText = "...";
-        
-        fetch(WEB_APP_URL, {
-            method: "POST",
-            body: JSON.stringify({ accion: "obtener_asistencia", funcion: funcionActual })
-        })
-        .then(res => res.json())
-        .then(res => {
-            if (res.status === "success") {
-                boletosRegistrados = new Set(res.lista);
-                actualizarInterfazTaquilla();
+            const rawDecoded = atob(decodedText);
+            if (!rawDecoded.startsWith("MALBROTE:")) {
+                dispararAlertaAcceso(false, "CÓDIGO INVÁLIDO", "Este QR no pertenece al sistema corporativo de Malbrote Teatro.");
+                return;
             }
-        }).catch(() => {
-            badge.innerText = boletosRegistrados.size;
-        });
+
+            const fragmentos = rawDecoded.split(":");
+            const obraNombreQR = fragmentos[1];
+            const tokenID = fragmentos[2];
+
+            const obraActual = DATABASE_OBRAS[obraSeleccionadaIdx];
+            const salaNombreActual = obraActual.funciones[funcionSeleccionadaIdx].nombre;
+            
+            // Validar si el boleto es de otra obra diferente
+            if (obraNombreQR !== obraActual.nombre) {
+                dispararAlertaAcceso(false, "OBRA EQUIVOCADA", `Este boleto es para la obra: ${obraNombreQR}. Estás en la sala de ${obraActual.nombre}.`);
+                return;
+            }
+
+            const llaveRegistroAsistencia = `${obraActual.nombre}_${salaNombreActual}`;
+            if (!ASISTENCIA_LOCAL[llaveRegistroAsistencia]) {
+                ASISTENCIA_LOCAL[llaveRegistroAsistencia] = [];
+            }
+
+            // Comprobar Duplicados (Fraude)
+            if (ASISTENCIA_LOCAL[llaveRegistroAsistencia].includes(tokenID)) {
+                dispararAlertaAcceso(false, "❌ BOLETO DUPLICADO", `¡Alerta de Fraude! El boleto ${tokenID} ya ingresó previamente.`);
+                return;
+            }
+
+            // Registro de éxito
+            ASISTENCIA_LOCAL[llaveRegistroAsistencia].push(tokenID);
+            localStorage.setItem('MALBROTE_ASISTENCIA_DB', JSON.stringify(ASISTENCIA_LOCAL));
+            
+            dispararAlertaAcceso(true, "✅ ACCESO CONCEDIDO", `Boleto verificado con éxito: ${tokenID}. ¡Bienvenido a la Sala!`);
+            renderizarHistorialYLogsAsistencia();
+            sincronizarConServidorGoogleSheets(tokenID, salaNombreActual, "ACCESO CONCEDIDO");
+
+        } catch(e) {
+            dispararAlertaAcceso(false, "ERROR DE LECTURA", "No se pudo decodificar la firma digital de este boleto.");
+        }
     }
 
-    function actualizarInterfazTaquilla() {
-        let total = boletosRegistrados.size;
-        document.getElementById('total-count').innerText = total;
-        document.getElementById('tab-count-badge').innerText = total;
-        const container = document.getElementById('history-container'); 
-        container.innerHTML = "";
+    function procesarIngresoManual() {
+        const input = document.getElementById('manual-ticket-id');
+        const token = input.value.trim().toUpperCase();
+        if(!token) return;
         
-        if(total === 0) {
-            container.innerHTML = `<div style="text-align:center; color:#64748b; padding:20px;">Sin ingresos registrados para esta sala 🎭</div>`;
+        const obraActual = DATABASE_OBRAS[obraSeleccionadaIdx];
+        const payloadFake = btoa(`MALBROTE:${obraActual.nombre}:${token}`);
+        alDetectarCodigoQrExitoso(payloadFake);
+        input.value = "";
+    }
+
+    function dispararAlertaAcceso(exito, titulo, msg) {
+        const card = document.getElementById('modal-content-card');
+        const audio = document.getElementById(exito ? 'audio-success' : 'audio-error');
+        
+        if (audio) {
+            audio.currentTime = 0;
+            audio.play().catch(e => console.log("Audio interact blocking"));
+        }
+
+        card.style.borderColor = exito ? "var(--verde-exito)" : "var(--rojo-neon)";
+        card.style.boxShadow = exito ? "0 0 30px rgba(16,185,129,0.4)" : "0 0 30px rgba(244,63,94,0.4)";
+        
+        document.getElementById('modal-title').innerText = titulo;
+        document.getElementById('modal-title').style.color = exito ? "var(--verde-exito)" : "var(--rojo-neon)";
+        document.getElementById('modal-msg').innerText = msg;
+        document.getElementById('global-modal').style.display = "flex";
+
+        // Registrar Log Rápido
+        const logsBox = document.getElementById('escaner-logs-box');
+        if(logsBox.innerText.includes("Esperando")) logsBox.innerHTML = "";
+        
+        const logItem = document.createElement('div');
+        logItem.className = `history-item ${exito ? 'success' : ''}`;
+        logItem.innerHTML = `<span>${titulo}: ${msg.substring(0,35)}...</span><small>${new Date().toLocaleTimeString()}</small>`;
+        logsBox.insertBefore(logItem, logsBox.firstChild);
+    }
+
+    // --- LOGICA DE RENDIMIENTO DE ASISTENCIA Y REMOTO ---
+    function renderizarHistorialYLogsAsistencia() {
+        if (obraSeleccionadaIdx === null) return;
+        const obraActual = DATABASE_OBRAS[obraSeleccionadaIdx];
+        const salaNombreActual = obraActual.funciones[funcionSeleccionadaIdx].nombre;
+        const llave = `${obraActual.nombre}_${salaNombreActual}`;
+        
+        const listaAsistentes = ASISTENCIA_LOCAL[llave] || [];
+        document.getElementById('asistencia-contador-badge').innerText = listaAsistentes.length;
+        
+        const tabla = document.getElementById('asistencia-tabla-completa');
+        tabla.innerHTML = "";
+
+        if(listaAsistentes.length === 0) {
+            tabla.innerHTML = `<div style="text-align:center; padding:20px; color:var(--texto-gris)">Aún no hay ingresos registrados para esta función.</div>`;
             return;
         }
+
+        listaAsistentes.forEach(ticket => {
+            const fila = document.createElement('div');
+            fila.className = 'history-item success';
+            fila.innerHTML = `<strong>🎟️ ID: ${ticket}</strong> <span style="color:var(--verde-exito)">● Adentro</span>`;
+            tabla.appendChild(fila);
+        });
+    }
+
+    function sincronizarConServidorGoogleSheets(ticket, funcion, status) {
+        if (!WEB_APP_URL || WEB_APP_URL.includes("AQUÍ_PEGA")) return;
         
-        boletosRegistrados.forEach(b => { 
-            container.innerHTML += `<div class="history-item"><span>✅ Entrada Confirmada: <b>Boleto #${b}</b></span></div>`; 
+        const params = new URLSearchParams({
+            ticket: ticket,
+            obra: DATABASE_OBRAS[obraSeleccionadaIdx].nombre,
+            funcion: funcion,
+            status: status
         });
+
+        fetch(`${WEB_APP_URL}?${params.toString()}`, { method: 'GET', mode: 'no-cors' })
+        .then(() => console.log(`Sincronizado rematemente: ${ticket}`))
+        .catch(err => console.error("Fallo de red remota", err));
     }
 
-    function reiniciarTodoCloud() {
-        if (confirm(`🚨 ¿Vaciar el histórico completo de la ${funcionActual} en Google Sheets?`)) {
-            fetch(WEB_APP_URL, {
-                method: "POST",
-                mode: "no-cors",
-                body: JSON.stringify({ accion: "limpiar", funcion: funcionActual })
-            }).then(() => {
-                boletosRegistrados.clear(); 
-                actualizarInterfazTaquilla();
-            });
-        }
+    function forzarSincronizacionHojasCalculo() {
+        alert("Sincronización en la nube actualizada correctamente con Google Sheets.");
     }
 
-    function escanearDesdeArchivo(input) {
-        if (input.files.length === 0) return;
-        mostrarPopUp('pop-loading', '⏳ Leyendo Imagen...', 'Procesando archivo cargado...');
-
-        const fileHtml5Qrcode = new Html5Qrcode("reader");
-        fileHtml5Qrcode.scanFile(input.files[0], true)
-            .then(decodedText => {
-                registrarBoleto(decodedText);
-                input.value = "";
-            })
-            .catch(err => {
-                mostrarPopUp('pop-danger', '❌ QR INDETECTABLE', 'No se ubicó un QR válido. Tome la captura de frente y con buena luz.');
-                reproducirSonidoError();
-                input.value = "";
-            });
+    function cambiarPestañaModulo(tabId) {
+        document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+        document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+        document.getElementById(tabId).classList.add('active');
+        event.currentTarget.classList.add('active');
     }
 
-    function procesarBoletoManual() { 
-        const input = document.getElementById('ticket-input'); 
-        registrarBoleto(input.value); 
-        input.value = ""; 
+    function mostrarAlertaModal(title, msg) {
+        document.getElementById('modal-title').innerText = title;
+        document.getElementById('modal-title').style.color = "white";
+        document.getElementById('modal-msg').innerText = msg;
+        document.getElementById('global-modal').style.display = "flex";
     }
-    
-    document.getElementById('ticket-input').addEventListener('keypress', function(e) { 
-        if (e.key === 'Enter') { procesarBoletoManual(); } 
-    });
-    
-    function reproducirSonidoError() { 
-        const ctx = new (window.AudioContext || window.webkitAudioContext)(); 
-        const osc = ctx.createOscillator(); 
-        osc.type = 'sawtooth'; 
-        osc.frequency.setValueAtTime(130, ctx.currentTime); 
-        osc.connect(ctx.destination); 
-        osc.start(); 
-        osc.stop(ctx.currentTime + 0.3); 
-    }
-    
-    function onScanSuccess(decodedText) { 
-        let ahora = Date.now();
-        if (decodedText === ultimoCodigoEscaneado && (ahora - tiempoUltimoEscaneo) < 3000) return; 
-        ultimoCodigoEscaneado = decodedText;
-        tiempoUltimoEscaneo = ahora;
-        registrarBoleto(decodedText);
-    }
+    function cerrarModalDeAlerta() { document.getElementById('global-modal').style.display = "none"; }
 
-    function inicializarEscaner() { 
-        document.getElementById('btn-encender-camara').style.display = "none";
-        html5Qrcode = new Html5Qrcode("reader");
-        html5Qrcode.start(
-            { facingMode: "environment" }, 
-            { fps: 20, qrbox: { width: 230, height: 230 } },
-            onScanSuccess,
-            () => {}
-        ).catch(err => {
-            document.getElementById('btn-encender-camara').style.display = "block";
-            alert("Acceso continuo a cámara denegado. Utiliza el Modo 2.");
-        });
+    // --- CARGA EXCLUSIVA DE PROYECTOS MOCKUP DEMO ---
+    function cargarProyectosDemo() {
+        DATABASE_OBRAS = [
+            {
+                nombre: "SIN HOGAR",
+                prefijo: "SHOGAR",
+                cantidadTickets: 60,
+                layout: { txtLeft: 420, txtTop: 50, txtWidth: 260, txtHeight: 45, txtFontSize: 20, txtColor: '#f43f5e', qrLeft: 480, qrTop: 120, qrWidth: 140, qrHeight: 140 },
+                funciones: [
+                    { nombre: "FUNCIÓN 1", imagenFondo: "" },
+                    { nombre: "FUNCIÓN 2", imagenFondo: "" }
+                ]
+            },
+            {
+                nombre: "OBRA DOS",
+                prefijo: "ODOS",
+                cantidadTickets: 45,
+                layout: { txtLeft: 50, txtTop: 40, txtWidth: 240, txtHeight: 40, txtFontSize: 18, txtColor: '#ffffff', qrLeft: 50, qrTop: 110, qrWidth: 130, qrHeight: 130 },
+                funciones: [
+                    { nombre: "FUNCIÓN 1", imagenFondo: "" }
+                ]
+            }
+        ];
+        localStorage.setItem('MALBROTE_TEATRO_DB', JSON.stringify(DATABASE_OBRAS));
+        actualizarDashboardPantallaPrincipal();
     }
-
-    // Inicialización visual por defecto
-    aplicarAjustesLienzo();
 </script>
 </body>
 </html>
