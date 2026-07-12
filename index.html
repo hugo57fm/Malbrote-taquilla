@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MALBROTE PRO v5.5 | Sistema de Control de Teatro Total</title>
+    <title>MALBROTE PRO v5.6 | Sistema de Control de Teatro Total</title>
     <!-- Librerías de Inyección de Render y Captura -->
     <script src="https://unpkg.com/html5-qrcode"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
@@ -67,20 +67,20 @@
         .canva-viewport { flex-grow: 1; background: #060811; border-radius: 14px; padding: 40px; display: flex; justify-content: center; align-items: center; overflow: auto; position: relative; min-height: 550px; border: 2px dashed #334155; }
         .canva-grid { position: absolute; top:0; left:0; width:100%; height:100%; pointer-events: none; background-image: linear-gradient(rgba(56, 189, 248, 0.02) 1px, transparent 1px), linear-gradient(90deg, rgba(56, 189, 248, 0.02) 1px, transparent 1px); background-size: 25px 25px; }
         
-        /* UNIDAD UNIFICADA ARRASTRABLE (TÍTULO Y QR JUNTOS SIN SOMBRAS) */
+        /* UNIDAD UNIFICADA ARRASTRABLE CORREGIDA TOTALMENTE TRANSPARENTE */
         .ticket-canvas-container { position: relative; display: inline-block; border-radius: 4px; overflow: hidden; }
         .ticket-bg-preview { display: block; max-width: 100%; height: auto; }
         
-        .draggable-element { position: absolute; cursor: move; border: 1px dashed transparent; box-sizing: border-box; user-select: none; display: flex; flex-direction: column; align-items: center; justify-content: space-between; padding: 8px; }
+        .draggable-element { position: absolute; cursor: move; border: 1px dashed transparent; box-sizing: border-box; user-select: none; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; padding: 5px; }
         .draggable-element:hover { border-color: var(--accent-canva); background: rgba(56,189,248,0.05); }
         
         /* Tirador Redimensionador de esquina */
         .resizer { width: 14px; height: 14px; background: var(--accent-canva); position: absolute; right: -5px; bottom: -5px; cursor: se-resize; border-radius: 50%; display: none; z-index: 50; }
         .draggable-element:hover .resizer { display: block; }
 
-        /* Removidas sombras de textos y contenedores */
-        .element-text-node { font-weight: bold; font-family: 'Arial Black', sans-serif; text-align: center; line-height: 1.2; width: 100%; overflow: hidden; white-space: nowrap; }
-        .element-qr-node { background: white; padding: 5px; border-radius: 6px; display: flex; align-items: center; justify-content: center; width: 100%; flex-grow: 1; margin-top: 5px; overflow: hidden; }
+        /* Estilos limpios y directos sin cajas de fondo artificiales */
+        .element-text-node { font-weight: bold; font-family: 'Segoe UI', Arial, sans-serif; text-align: center; line-height: 1.3; width: 100%; overflow: hidden; white-space: nowrap; margin-bottom: 8px; }
+        .element-qr-node { background: transparent; padding: 0; border-radius: 0; display: flex; align-items: center; justify-content: center; width: 100%; flex-grow: 1; overflow: hidden; }
         .element-qr-node div { width: 100% !important; height: 100% !important; display: flex; align-items: center; justify-content: center; }
         .element-qr-node img { max-width: 100%; max-height: 100%; width: auto !important; height: auto !important; }
 
@@ -107,9 +107,9 @@
 
 <div class="container">
     
-    <!-- VISTA 1: DASHBOARD (TU DIBUJO REALIZADO - LIMPIO SIN DEMOS) -->
+    <!-- VISTA 1: DASHBOARD -->
     <div id="view-dashboard" class="dashboard-view">
-        <h1>🎭 CONTROL DE TEATRO (V5.5-PRO)</h1>
+        <h1>🎭 CONTROL DE TEATRO (V5.6-PRO)</h1>
         <div class="obra-list-container" id="dashboard-obras-list">
             <!-- Cargado dinámicamente -->
         </div>
@@ -141,7 +141,7 @@
             <button class="tab-btn" onclick="cambiarPestañaModulo('tab-asistencia')">📊 Control Sala / Asistencia</button>
         </div>
 
-        <!-- MODULO: DISEÑADOR PRO (TÍTULO Y QR UNIFICADOS Y REESCALABLES) -->
+        <!-- MODULO: DISEÑADOR PRO (TÍTULO Y QR COMPLETAMENTE FLOTANTES) -->
         <div id="tab-generador" class="tab-content active">
             <div class="funciones-subtabs" id="subtabs-funciones-contenedor">
                 <!-- Se inyectan las subpestañas de funciones -->
@@ -173,7 +173,7 @@
                         <!-- Imagen Base Fondo -->
                         <img id="canva-bg-image" class="ticket-bg-preview" src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='750' height='350'><rect width='750' height='350' fill='%23111827'/><text x='50%' y='50%' fill='%234b5563' font-family='sans-serif' font-size='16' text-anchor='middle'>Sube la imagen para este lote / función</text></svg>">
                         
-                        <!-- BLOQUE COMPUESTO UNIFICADO (TÍTULO + QR JUNTOS SIN SOMBRAS) -->
+                        <!-- BLOQUE COMPUESTO UNIFICADO TRANSPARENTE (TÍTULO + QR DIRECTOS) -->
                         <div class="draggable-element" id="el-compuesto" style="left:40px; top:40px; width:180px; height:240px;">
                             <div class="element-text-node" id="el-texto-span" style="color: #ffffff; font-size: 14px;">Boleto Oficial #001</div>
                             <div class="element-qr-node" id="el-qr-target"></div>
@@ -186,7 +186,7 @@
             <div id="batch-output" style="margin-top:25px; display:none; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap:20px; padding:20px; background:#0f172a; border-radius:12px; border:1px solid #1e293b;"></div>
         </div>
 
-        <!-- MODULO: ESCÁNER CON TODA LA LÓGICA COMPLETA -->
+        <!-- MODULO: ESCÁNER -->
         <div id="tab-escaner" class="tab-content">
             <div class="scanner-grid">
                 <div>
@@ -207,7 +207,7 @@
             </div>
         </div>
 
-        <!-- MODULO: ASISTENCIA SPREADSHEETS -->
+        <!-- MODULO: ASISTENCIA -->
         <div id="tab-asistencia" class="tab-content">
             <div style="background:#0f172a; padding:20px; border-radius:12px; border:1px solid #1e293b; margin-bottom:20px; display:flex; justify-content:space-between; align-items:center;">
                 <div>
@@ -232,12 +232,12 @@
     </div>
 </div>
 
-<!-- AUDIOS INTEGRADOS EN EL MOTOR -->
+<!-- AUDIOS -->
 <audio id="audio-success" src="https://assets.mixkit.co/active_storage/sfx/2019/2019-84.wav" preload="auto"></audio>
 <audio id="audio-error" src="https://assets.mixkit.co/active_storage/sfx/2955/2955-84.wav" preload="auto"></audio>
 
 <script>
-    const WEB_APP_URL = "AQUÍ_PEGA_TU_URL_DE_GOOGLE";
+    const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzqiah0ZY9FCbpiEMmEEmkAQJBkBsn4SEgHRIOKwuyk0XSrq03bJ59XROJVpNLRp60/exec";
 
     let DATABASE_OBRAS = JSON.parse(localStorage.getItem('MALBROTE_TEATRO_DB')) || [];
     let ASISTENCIA_LOCAL = JSON.parse(localStorage.getItem('MALBROTE_ASISTENCIA_DB')) || {};
@@ -407,7 +407,7 @@
         }
     });
 
-    // --- ARRASTRE Y ESCALA DEL COMPLEMENTO UNIFICADO ---
+    // --- ARRASTRE Y ESCALA ---
     function inicializarArrastreYEscalaElementos(id) {
         const elemento = document.getElementById(id);
         const resizer = elemento.querySelector('.resizer');
@@ -449,7 +449,6 @@
                 if (w > 60) elemento.style.width = w + 'px';
                 if (h > 80) elemento.style.height = h + 'px';
                 
-                // Escalar dinámicamente la tipografía del encabezado del bloque
                 const txtNode = document.getElementById('el-texto-span');
                 txtNode.style.fontSize = Math.max(9, w * 0.08) + 'px';
 
@@ -554,7 +553,7 @@
             bg.src = document.getElementById('canva-bg-image').src;
             canvasClone.appendChild(bg);
 
-            // Clonar Bloque Compuesto Completo (Unificado)
+            // Clonar Bloque Compuesto Completo Transparente
             const compClon = document.createElement('div');
             compClon.className = 'draggable-element';
             compClon.style.left = obra.layout.compLeft + 'px';
@@ -596,7 +595,6 @@
             cardWrapper.appendChild(btnDownload);
             output.appendChild(cardWrapper);
 
-            // Medir contenedor interno físico para renderizar el código bidi
             let sizeQr = Math.min(obra.layout.compWidth, obra.layout.compHeight - (obra.layout.txtFontSize + 15)) - 10;
             if(sizeQr < 25) sizeQr = 25;
             new QRCode(targetQrInner, { text: payloadCifrado, width: sizeQr, height: sizeQr });
@@ -604,7 +602,7 @@
         setTimeout(cerrarModalDeAlerta, 1000);
     }
 
-    // --- LÓGICA DE ESCANER INTACTA ---
+    // --- LÓGICA DE ESCANER ---
     function encenderCamaraScanner() {
         if(html5QrScannerInstancia) { html5QrScannerInstancia.clear(); }
         html5QrScannerInstancia = new Html5QrcodeScanner("reader", { fps: 15, qrbox: 250 });
