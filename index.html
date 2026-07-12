@@ -20,6 +20,12 @@
             --texto-blanco: #f8fafc;
             --texto-gris: #94a3b8;
             --verde-exito: #10b981;
+            
+            /* Variables dinámicas para el color de las guías */
+            --guia-h-color: rgba(56, 189, 248, 0.5);
+            --guia-h-glow: rgba(56, 189, 248, 0.8);
+            --guia-v-color: rgba(56, 189, 248, 0.5);
+            --guia-v-glow: rgba(56, 189, 248, 0.8);
         }
 
         * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -81,21 +87,21 @@
             background-size: 50px 50px, 50px 50px, 10px 10px, 10px 10px;
         }
         
-        /* Ejes de Centrado Absolutos de Alta Visibilidad (Líneas Neón Continuas) */
+        /* Ejes de Centrado con Variables Dinámicas de Color */
         .canva-viewport::before { 
             content: ""; position: absolute; 
             top: 50%; left: 0; 
             width: 100%; height: 1px; 
-            background: rgba(56, 189, 248, 0.5); 
-            box-shadow: 0 0 6px rgba(56, 189, 248, 0.8);
+            background: var(--guia-h-color); 
+            box-shadow: 0 0 6px var(--guia-h-glow);
             pointer-events: none; z-index: 10; 
         }
         .canva-viewport::after { 
             content: ""; position: absolute; 
             left: 50%; top: 0; 
             width: 1px; height: 100%; 
-            background: rgba(56, 189, 248, 0.5); 
-            box-shadow: 0 0 6px rgba(56, 189, 248, 0.8);
+            background: var(--guia-v-color); 
+            box-shadow: 0 0 6px var(--guia-v-glow);
             pointer-events: none; z-index: 10; 
         }
 
@@ -202,13 +208,13 @@
                     <div class="ticket-canvas-container" id="canvasBox">
                         <img id="canva-bg-image" class="ticket-bg-preview" src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='750' height='350'><rect width='750' height='350' fill='%23111827'/><text x='50%' y='50%' fill='%234b5563' font-family='sans-serif' font-size='16' text-anchor='middle'>Sube la imagen para este lote / función</text></svg>">
                         
-                        <!-- CAJA 1: TEXTO TOTALMENTE INDEPENDIENTE (SE PUEDE ESTIRAR AL LARGO DESEADO) -->
+                        <!-- CAJA 1: TEXTO TOTALMENTE INDEPENDIENTE -->
                         <div class="draggable-element" id="el-texto-draggable" style="left:40px; top:40px; width:450px; height:60px;">
                             <div class="element-text-node" id="el-texto-span" style="color: #ffffff; font-size: 14px;">Boleto Oficial: NOMBRE OBRA-001</div>
                             <div class="resizer"></div>
                         </div>
 
-                        <!-- CAJA 2: QR TOTALMENTE INDEPENDIENTE (MANTIENE SU PROPIO TAMAÑO CUADRADO) -->
+                        <!-- CAJA 2: QR TOTALMENTE INDEPENDIENTE -->
                         <div class="draggable-element" id="el-qr-draggable" style="left:40px; top:120px; width:140px; height:140px;">
                             <div class="element-qr-node" id="el-qr-target"></div>
                             <div class="resizer"></div>
@@ -270,7 +276,7 @@
 <audio id="audio-error" src="https://assets.mixkit.co/active_storage/sfx/2955/2955-84.wav" preload="auto"></audio>
 
 <script>
-    const WEB_APP_URL = "Ahttps://script.google.com/macros/s/AKfycbzqiah0ZY9FCbpiEMmEEmkAQJBkBsn4SEgHRIOKwuyk0XSrq03bJ59XROJVpNLRp60/exec";
+    const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzqiah0ZY9FCbpiEMmEEmkAQJBkBsn4SEgHRIOKwuyk0XSrq03bJ59XROJVpNLRp60/exec";
 
     let DATABASE_OBRAS = JSON.parse(localStorage.getItem('MALBROTE_TEATRO_DB')) || [];
     let ASISTENCIA_LOCAL = JSON.parse(localStorage.getItem('MALBROTE_ASISTENCIA_DB')) || {};
@@ -446,10 +452,11 @@
         }
     });
 
-    // --- ARRASTRE Y ESCALA INDEPENDIENTE ---
+    // --- ARRASTRE Y ESCALA INDEPENDIENTE CON TOPE MAGNÉTICO E INTELIGENCIA DE COLOR ---
     function inicializarArrastreYEscalaElementos(id) {
         const elemento = document.getElementById(id);
         const resizer = elemento.querySelector('.resizer');
+        const canvasBox = document.getElementById('canvasBox');
 
         elemento.addEventListener('mousedown', function(e) {
             if (e.target.classList.contains('resizer')) return;
@@ -462,11 +469,67 @@
             function mover(evt) {
                 let dx = evt.clientX - startX;
                 let dy = evt.clientY - startY;
-                elemento.style.left = (initialLeft + dx) + 'px';
-                elemento.style.top = (initialTop + dy) + 'px';
+                
+                let targetLeft = initialLeft + dx;
+                let targetTop = initialTop + dy;
+
+                // Calcular el centro geométrico del elemento actual
+                let elementCenterX = targetLeft + (elemento.clientWidth / 2);
+                let elementCenterY = targetTop + (elemento.clientHeight / 2);
+
+                // Centro del lienzo contenedor (Boleto)
+                let canvasCenterX = canvasBox.clientWidth / 2;
+                let canvasCenterY = canvasBox.clientHeight / 2;
+
+                const RANGO_MAGNETICO = 10; // Distancia en px para activar el "tope"
+                let alineadoHorizontal = false;
+                let alineadoVertical = false;
+
+                // Lógica de Imán Vertical (Eje X / Izquierda-Derecha)
+                if (Math.abs(elementCenterX - canvasCenterX) < RANGO_MAGNETICO) {
+                    targetLeft = canvasCenterX - (elemento.clientWidth / 2);
+                    alineadoVertical = true;
+                }
+
+                // Lógica de Imán Horizontal (Eje Y / Arriba-Abajo)
+                if (Math.abs(elementCenterY - canvasCenterY) < RANGO_MAGNETICO) {
+                    targetTop = canvasCenterY - (elemento.clientHeight / 2);
+                    alineadoHorizontal = true;
+                }
+
+                // Aplicar posiciones calculadas
+                elemento.style.left = targetLeft + 'px';
+                elemento.style.top = targetTop + 'px';
+
+                // Cambiar el color de las guías neón en tiempo real
+                const r = document.documentElement.style;
+                if (alineadoHorizontal) {
+                    r.setProperty('--guia-h-color', 'rgba(16, 185, 129, 0.9)');
+                    r.setProperty('--guia-h-glow', 'rgba(16, 185, 129, 1)');
+                } else {
+                    r.setProperty('--guia-h-color', 'rgba(56, 189, 248, 0.5)');
+                    r.setProperty('--guia-h-glow', 'rgba(56, 189, 248, 0.8)');
+                }
+
+                if (alineadoVertical) {
+                    r.setProperty('--guia-v-color', 'rgba(16, 185, 129, 0.9)');
+                    r.setProperty('--guia-v-glow', 'rgba(16, 185, 129, 1)');
+                } else {
+                    r.setProperty('--guia-v-color', 'rgba(56, 189, 248, 0.5)');
+                    r.setProperty('--guia-v-glow', 'rgba(56, 189, 248, 0.8)');
+                }
+
                 salvarDatosDiseñoInstantaneo();
             }
+
             function soltar() {
+                // Restaurar colores por defecto de las guías al soltar el ratón
+                const r = document.documentElement.style;
+                r.setProperty('--guia-h-color', 'rgba(56, 189, 248, 0.5)');
+                r.setProperty('--guia-h-glow', 'rgba(56, 189, 248, 0.8)');
+                r.setProperty('--guia-v-color', 'rgba(56, 189, 248, 0.5)');
+                r.setProperty('--guia-v-glow', 'rgba(56, 189, 248, 0.8)');
+
                 document.removeEventListener('mousemove', mover);
                 document.removeEventListener('mouseup', soltar);
             }
@@ -565,7 +628,7 @@
         }
     }
 
-    // --- RENDERIZADO TOTALMENTE SEPARADO E INDEPENDIENTE ---
+    // --- RENDERIZADO ---
     function generarLoteCompleto() {
         salvarDatosDiseñoInstantaneo();
         const obra = DATABASE_OBRAS[obraSeleccionadaIdx];
@@ -595,7 +658,7 @@
             bg.src = document.getElementById('canva-bg-image').src;
             canvasClone.appendChild(bg);
 
-            // CLON DEL TEXTO INDEPENDIENTE (Usa su propio largo sin tocar al QR)
+            // CLON DEL TEXTO INDEPENDIENTE
             const txtClon = document.createElement('div');
             txtClon.className = 'draggable-element';
             txtClon.style.left = obra.layout.txtLeft + 'px';
@@ -612,7 +675,7 @@
             txtClon.appendChild(txtNode);
             canvasClone.appendChild(txtClon);
 
-            // CLON DEL QR INDEPENDIENTE (Usa su tamaño asignado sin ser aplastado por el texto)
+            // CLON DEL QR INDEPENDIENTE
             const qrClon = document.createElement('div');
             qrClon.className = 'draggable-element';
             qrClon.style.left = obra.layout.qrLeft + 'px';
