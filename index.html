@@ -3,696 +3,404 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Panel de Control & Taquilla - Teatro Maestro</title>
-    
-    <!-- Librerías de Escáner y Captura -->
-    <script src="https://unpkg.com/html5-qrcode"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-    
-    <!-- Librería para Recorte de Fotos Profesional (Estilo Canva/Editor) -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
-
+    <title>Creador de Boletos - Malbrote Teatro</title>
+    <!-- Importamos fuentes con estilo similar al manual de marca -->
+    <link href="https://fonts.googleapis.com/css2?family=Permanent+Marker&family=Syne:wght@700;800&family=Space+Grotesk:wght@400;700&display=swap" rel="stylesheet">
     <style>
+        /* PALETA DE COLORES MALBROTE TEATRO */
         :root {
-            --primary: #2563eb;
-            --primary-dark: #1d4ed8;
-            --text-dark: #0f172a; /* El azul marino oscuro de tus boletos oficiales */
-            --bg-main: #f8fafc;
-            --surface: #ffffff;
-            --border: #e2e8f0;
+            --rojo-malbrote: #601919;
+            --rojo-saturado: #AD1A24;
+            --negro-puro: #000000;
+            --negro-suave: #191919;
+            --blanco: #FFFFFF;
+            --verde-rebelde: #68FE00;
         }
 
-        body { 
-            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; 
-            background-color: var(--bg-main); 
-            margin: 0; 
-            padding: 0; 
-            color: var(--text-dark);
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
         }
 
-        /* Navbar estilo App Moderna */
-        .app-header {
-            background: var(--surface);
-            border-bottom: 1px solid var(--border);
-            padding: 15px 20px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .app-title { margin: 0; font-size: 20px; font-weight: 700; display: flex; align-items: center; gap: 10px; }
-
-        .main-layout {
-            max-width: 1200px;
-            margin: 25px auto;
-            padding: 0 20px;
-            display: grid;
-            grid-template-columns: 1fr;
-            gap: 25px;
-        }
-
-        /* Pestañas Modernas */
-        .tabs-container {
-            display: flex;
-            background: #edd;
-            background: var(--border);
-            padding: 4px;
-            border-radius: 8px;
-            margin-bottom: 10px;
-        }
-        .tab-btn {
-            flex: 1;
-            background: none;
-            border: none;
-            padding: 10px;
-            font-size: 14px;
-            font-weight: 600;
-            color: #64748b;
-            cursor: pointer;
-            border-radius: 6px;
-            transition: all 0.2s;
-        }
-        .tab-btn.active {
-            background: var(--surface);
-            color: var(--primary);
-            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-        }
-
-        .tab-content { display: none; animation: fadeIn 0.3s ease; }
-        .tab-content.active { display: block; }
-
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
-
-        /* Tarjeta Contenedora Estilo Canva */
-        .card {
-            background: var(--surface);
-            border-radius: 12px;
-            border: 1px solid var(--border);
-            padding: 24px;
-            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
-            text-align: left;
-        }
-
-        /* Dashboard de Obras (Cuadritos Chiquitos) */
-        .grid-obras {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-            gap: 15px;
-            margin-top: 15px;
-        }
-        .obra-item {
-            background: var(--surface);
-            border: 2px solid var(--border);
-            border-radius: 10px;
+        body {
+            background-color: var(--negro-puro);
+            color: var(--blanco);
+            font-family: 'Space Grotesk', sans-serif;
             padding: 20px;
-            cursor: pointer;
-            text-align: center;
-            transition: all 0.2s;
-            font-weight: 600;
-        }
-        .obra-item:hover, .obra-item.active {
-            border-color: var(--primary);
-            background: #f0f5ff;
-        }
-
-        .sub-funciones {
-            margin-top: 10px;
-            display: none;
-            flex-direction: column;
-            gap: 5px;
-            padding-left: 10px;
-        }
-        .sub-funciones button {
-            background: #f1f5f9;
-            color: var(--text-dark);
-            border: 1px solid var(--border);
-            padding: 8px;
-            font-size: 13px;
-            border-radius: 6px;
-            text-align: left;
-        }
-        .sub-funciones button:hover { background: var(--primary); color: white; }
-
-        /* Botones e Inputs UX */
-        .btn {
-            background: var(--primary); color: white; border: none; padding: 12px 20px;
-            font-size: 15px; font-weight: 600; border-radius: 8px; cursor: pointer;
-            display: inline-flex; align-items: center; justify-content: center; gap: 8px;
-        }
-        .btn:hover { background: var(--primary-dark); }
-        .btn-secondary { background: #64748b; }
-        .btn-secondary:hover { background: #475569; }
-        .btn-accent { background: #ea580c; }
-
-        .input-control {
-            width: 100%; padding: 10px 14px; border: 1px solid var(--border);
-            border-radius: 8px; font-size: 15px; box-sizing: border-box; margin-top: 5px;
-        }
-
-        /* --- LIENZO DINÁMICO ADAPTABLE (CANVA STYLE) --- */
-        .canvas-area {
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 20px;
-            margin-top: 25px;
+            min-height: 100vh;
         }
 
-        /* El contenedor toma el tamaño real de tu imagen subida */
-        .ticket-live-container {
-            position: relative;
-            background: #ffffff;
-            border: 1px dashed #cbd5e1;
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+            text-transform: uppercase;
+        }
+
+        header h1 {
+            font-family: 'Permanent Marker', cursive; /* Simula el estilo rupestre/disruptivo */
+            font-size: 3rem;
+            color: var(--rojo-saturado);
+            letter-spacing: 2px;
+            text-shadow: 2px 2px var(--negro-suave);
+        }
+
+        header p {
+            font-family: 'Space Grotesk', sans-serif;
+            color: var(--verde-rebelde);
+            font-size: 0.9rem;
+            letter-spacing: 4px;
+            margin-top: 5px;
+        }
+
+        .workspace {
+            display: flex;
+            gap: 30px;
+            max-width: 1200px;
+            width: 100%;
+            align-items: flex-start;
+        }
+
+        /* PANEL DE CONTROLES (Estilo Manual de Marca) */
+        .controls-panel {
+            background-color: var(--negro-suave);
+            border: 2px solid var(--rojo-malbrote);
             border-radius: 8px;
-            display: inline-block;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+            padding: 25px;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
         }
 
-        .ticket-bg-img {
-            display: block;
-            max-width: 100%;
-            height: auto;
+        .controls-panel h2 {
+            font-family: 'Syne', sans-serif;
+            font-size: 1.4rem;
+            border-bottom: 2px solid var(--rojo-saturado);
+            padding-bottom: 10px;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+        }
+
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .input-group label {
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #aaa;
+        }
+
+        .input-group input, .input-group select {
+            background-color: var(--negro-puro);
+            border: 1px solid var(--rojo-malbrote);
+            color: var(--blanco);
+            padding: 12px;
+            border-radius: 4px;
+            font-family: inherit;
+            font-size: 1rem;
+            outline: none;
+            transition: border 0.3s;
+        }
+
+        .input-group input:focus {
+            border-color: var(--verde-rebelde);
+        }
+
+        /* LIENZO DEL BOLETO */
+        .canvas-container {
+            flex: 2;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .ticket-canvas {
+            width: 600px;
+            height: 600px;
+            background-color: var(--blanco);
+            border-radius: 12px;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 15px 40px rgba(0,0,0,0.6);
+        }
+
+        /* COMPONENTE QR CON TÍTULO INTEGRADO (Arrastrable y Redimensionable) */
+        .qr-wrapper {
+            position: absolute;
+            top: 50px;
+            left: 50px;
+            width: 180px; /* Tamaño inicial por defecto */
+            min-width: 100px;
+            min-height: 120px;
+            background-color: transparent;
+            padding: 10px;
+            cursor: move;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            user-select: none;
+            box-sizing: border-box;
+        }
+
+        .qr-wrapper:hover, .qr-wrapper.active {
+            outline: 2px dashed var(--rojo-saturado);
+        }
+
+        /* El título va ADENTRO de la imagen/bloque del QR */
+        .qr-title-inside {
+            font-family: 'Permanent Marker', cursive;
+            color: var(--negro-puro);
+            font-size: 1.1rem;
+            text-align: center;
+            margin-bottom: 6px;
+            width: 100%;
+            word-wrap: break-word;
+            line-height: 1.1;
+            text-transform: uppercase;
+        }
+
+        .qr-image-placeholder {
+            width: 100%;
+            aspect-ratio: 1/1;
+            background-color: #000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 0.7rem;
+            font-weight: bold;
+            text-align: center;
+            background-image: url('https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=MalbroteTeatroBoleto');
+            background-size: cover;
+            background-position: center;
+        }
+
+        /* Tirador para agrandar/achicar desde la esquina inferior derecha */
+        .resize-handle {
+            position: absolute;
+            width: 14px;
+            height: 14px;
+            background-color: var(--rojo-saturado);
+            right: 0;
+            bottom: 0;
+            cursor: se-resize;
+            border-radius: 2px;
+        }
+
+        /* Fondo decorativo opcional cargable */
+        .ticket-bg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            z-index: 1;
             pointer-events: none;
         }
 
-        /* Capa de Texto Oficial Replicado Exacto */
-        .ticket-text-layer {
+        .elements-layer {
             position: absolute;
-            top: 5%;
+            top: 0;
             left: 0;
             width: 100%;
+            height: 100%;
+            z-index: 2;
+        }
+
+        .hint {
+            color: #aaa;
+            font-size: 0.85rem;
             text-align: center;
-            font-family: 'Segoe UI', system-ui, sans-serif;
-            font-size: 18px;
-            font-weight: 600;
-            color: #1a2b4c; /* Color oficial del boleto guardado */
-            letter-spacing: -0.3px;
-            z-index: 10;
+            margin-top: 5px;
         }
 
-        /* QR Arrastrable sobre el Canvas */
-        .ticket-qr-layer {
-            position: absolute;
-            bottom: 10%;
-            left: 50%;
-            transform: translateX(-50%);
-            cursor: move;
-            z-index: 10;
+        .hint strong {
+            color: var(--verde-rebelde);
         }
-
-        /* Modal o Ventana de Recorte Profesional */
-        .crop-modal-content {
-            max-width: 400px;
-            margin: 0 auto;
-            text-align: center;
-        }
-        .cropper-wrapper {
-            max-height: 300px;
-            margin-bottom: 15px;
-            background: #334155;
-        }
-
-        /* Escáner & Listas */
-        #reader { width: 100%; max-width: 320px; margin: 0 auto; border-radius: 12px; overflow: hidden; }
-        .counter-box { background: var(--primary); color: white; padding: 15px; border-radius: 8px; font-size: 22px; font-weight: bold; text-align: center; margin-bottom: 15px; }
-        .history-list { background: var(--bg-main); border-radius: 8px; padding: 10px; max-height: 200px; overflow-y: auto; }
-        .history-item { padding: 10px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; }
-
-        /* Ventanas Flotantes Pop-Up */
-        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15,23,42,0.6); z-index: 9999; justify-content: center; align-items: center; padding: 20px; box-sizing: border-box; }
-        .modal-box { background: white; padding: 25px; border-radius: 14px; max-width: 450px; width: 100%; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1); }
     </style>
 </head>
 <body>
 
-<header class="app-header">
-    <div class="app-title">🎭 Taquilla Profesional & Engine v6.0</div>
-    <div>
-        <select id="funcion-activa" onchange="cambiarFuncionSecura()" style="padding:8px; border-radius:6px; font-weight:600;">
-            <option value="FUNCIÓN 1">⚡ FUNCIÓN 1</option>
-            <option value="FUNCIÓN 2">⚡ FUNCIÓN 2</option>
-        </select>
-    </div>
-</header>
+    <header>
+        <h1>Malbrote</h1>
+        <p>Teatro Colectivo • Creador de Entradas</p>
+    </header>
 
-<div class="main-layout">
-    
-    <div class="tabs-container">
-        <button class="tab-btn active" onclick="switchTab('tab-generador')">🎨 Canva Generator</button>
-        <button class="tab-btn" onclick="switchTab('tab-escaner')">📷 Escáner de Sala</button>
-        <button class="tab-btn" onclick="switchTab('tab-asistencia')">📊 Asistencia (<span id="tab-count-badge">0</span>)</button>
-    </div>
-
-    <!-- PESTAÑA 1: GENERADOR ESTILO CANVA -->
-    <div id="tab-generador" class="tab-content active">
-        <div class="card">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-                <h3 style="margin:0;">Mis Obras y Producciones</h3>
-                <button class="btn" style="padding: 8px 12px; font-size:13px;" onclick="abrirPopUpNuevaObra()">➕ Nueva Obra</button>
-            </div>
+    <div class="workspace">
+        <!-- PANEL DE CONTROLES -->
+        <div class="controls-panel">
+            <h2>Personalizar Boleto</h2>
             
-            <!-- Cuadritos chiquitos listados -->
-            <div class="grid-obras" id="lista-obras-grid">
-                <div class="obra-item" onclick="toggleOpcionesObra(this, 'SIN HOGAR')">
-                    🎬 SIN HOGAR
-                    <div class="sub-funciones" id="sub-SIN-HOGAR">
-                        <button onclick="seleccionarProduccion('SIN HOGAR', 1)">🎟️ Función 1 (Boleto 001-078)</button>
-                        <button onclick="seleccionarProduccion('SIN HOGAR', 2)">🎟️ Función 2 (Boleto 079-156)</button>
-                    </div>
-                </div>
+            <div class="input-group">
+                <label for="ticketTitle">Título del Boleto (Va dentro del QR)</label>
+                <input type="text" id="ticketTitle" value="MALBROTE PRESENTA">
             </div>
 
-            <div id="editor-canva-section" style="display:none; margin-top:30px; border-top:1px solid var(--border); padding-top:20px;">
-                <h4 id="workspace-title" style="margin:0 0 15px 0; color: var(--primary);">Configurando: SIN HOGAR</h4>
-                
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
-                    <div>
-                        <label style="font-weight:600; font-size:14px;">Imagen de Fondo del Boleto:</label>
-                        <input type="file" id="canvas-bg-input" accept="image/*" class="input-control" onchange="procesarFondoBoleto(this)">
-                    </div>
-                    <div>
-                        <label style="font-weight:600; font-size:14px;">Subir y Recortar QR Maestro:</label>
-                        <input type="file" id="qr-crop-input" accept="image/*" class="input-control" onchange="abrirEditorRecorte(this)">
-                    </div>
-                </div>
+            <div class="input-group">
+                <label for="qrSizeSlider">Tamaño de la estructura del QR</label>
+                <input type="range" id="qrSizeSlider" min="120" max="350" value="180">
+            </div>
 
-                <div style="margin-bottom: 20px;">
-                    <button class="btn" style="width:100%;" onclick="generarLoteCompletoCanva()">⚡ Iniciar Producción en Masa Automática</button>
-                </div>
+            <div class="input-group">
+                <label for="ticketBgInput">Imagen de Fondo del Boleto</label>
+                <input type="file" id="ticketBgInput" accept="image/*">
+            </div>
 
-                <!-- LIENZO INTERACTIVO ADAPTABLE -->
-                <div class="canvas-area">
-                    <p style="font-size:12px; color:#64748b; margin:0;">💡 Arrastra el Código QR a cualquier posición sobre tu plantilla de fondo.</p>
-                    <div class="ticket-live-container" id="canvas-blueprint">
-                        <!-- El título oficial dinámico que se renderizará idéntico -->
-                        <div class="ticket-text-layer" id="live-text-overlay">Boleto Oficial: SIN HOGAR-001</div>
-                        
-                        <!-- Fondo por defecto blanco limpio como tu imagen original -->
-                        <img id="blueprint-bg" class="ticket-bg-img" src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='400' height='360' viewBox='0 0 400 360'><rect width='400' height='360' fill='white'/></svg>">
-                        
-                        <!-- Capa del QR Movible -->
-                        <div class="ticket-qr-layer" id="live-qr-overlay">
-                            <img id="cropped-qr-preview" src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><rect width='160' height='160' fill='%23eee'/></svg>" style="width:160px; height:160px; display:block;">
-                        </div>
-                    </div>
-                </div>
+            <div class="input-group">
+                <label style="color: var(--verde-rebelde)">ADN del Colectivo</label>
+                <p style="font-size: 0.8rem; color: #ccc; line-height: 1.4;">
+                    "Reivindica aquello que nace fuera de lo esperado". Colores corporativos aplicados en interfaz.
+                </p>
             </div>
         </div>
-        <div id="bulk-download-zone" style="display:none; margin-top:20px;" class="card">
-            <h4>📥 Carrete de Boletos Generados Automáticamente</h4>
-            <div id="carrete-imagenes" style="display:flex; flex-wrap:wrap; gap:10px; justify-content:center;"></div>
-        </div>
-    </div>
 
-    <!-- PESTAÑA 2: ESCÁNER COMPLETO RESTAURADO -->
-    <div id="tab-escaner" class="tab-content">
-        <div class="card">
-            <div class="counter-box">Asistentes Adentro: <span id="total-count">0</span></div>
-            
-            <button class="btn" id="btn-encender-camara" onclick="inicializarEscaner()" style="width:100%; margin-bottom:15px;">📷 Abrir Cámara en Vivo</button>
-            <div id="reader"></div>
+        <!-- AREA DEL LIENZO -->
+        <div class="canvas-container">
+            <div class="ticket-canvas" id="ticketCanvas">
+                <!-- Imagen de fondo del boleto -->
+                <img id="bgPreview" class="ticket-bg" src="" style="display: none;">
 
-            <div style="margin: 20px 0; text-align:center; font-weight:bold; color:#64748b;">— O TAMBIÉN —</div>
-
-            <label for="qr-file-input" class="btn btn-accent" style="width:100%; box-sizing:border-box;">📸 Tomar Foto de Boleto Impreso</label>
-            <input type="file" id="qr-file-input" accept="image/*" style="display: none;" onchange="escanearDesdeArchivo(this)">
-
-            <div style="margin-top:20px;">
-                <label style="font-weight:600;">Ingreso Manual por Código:</label>
-                <div style="display:flex; gap:10px; margin-top:5px;">
-                    <input type="text" id="ticket-input" class="input-control" style="margin:0;" placeholder="Ej: SIN HOGAR-009">
-                    <button class="btn" onclick="procesarBoletoManual()">Validar</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- PESTAÑA 3: ASISTENCIA GLOBAL CLOUD -->
-    <div id="tab-asistencia" class="tab-content">
-        <div class="card">
-            <h3>👥 Lista de Acceso Sincronizada</h3>
-            <button class="btn btn-secondary" style="width:100%; margin-bottom:15px;" onclick="sincronizarConNube()">🔄 Actualizar Lista con Google Sheets</button>
-            <div class="history-list" id="history-container"></div>
-            <button class="btn btn-accent" style="width:100%; margin-top:20px;" onclick="reiniciarTodoCloud()">🧹 Limpiar Asistencias de esta Función</button>
-        </div>
-    </div>
-</div>
-
-<!-- POP-UP 1: VENTANA PARA CREAR OBRA Y DEFINIR FUNCIONES -->
-<div id="popup-nueva-obra" class="modal-overlay">
-    <div class="modal-box">
-        <h3>🎬 Crear Nueva Producción</h3>
-        <div style="margin-bottom:15px;">
-            <label style="font-weight:600;">Nombre de la Obra:</label>
-            <input type="text" id="new-obra-name" class="input-control" placeholder="Ej: ROMEO Y JULIETA">
-        </div>
-        <div style="margin-bottom:20px;">
-            <label style="font-weight:600;">¿Cuántas funciones tendrá?</label>
-            <select id="new-obra-funciones" class="input-control">
-                <option value="1">1 Función</option>
-                <option value="2" selected>2 Funciones</option>
-                <option value="3">3 Funciones</option>
-                <option value="4">4 Funciones</option>
-            </select>
-        </div>
-        <div style="display:flex; gap:10px;">
-            <button class="btn" style="flex:1;" onclick="guardarNuevaObraDashboard()">Guardar Configuración</button>
-            <button class="btn btn-secondary" onclick="cerrarPopUpObra()">Cancelar</button>
-        </div>
-    </div>
-</div>
-
-<!-- POP-UP 2: EDITOR DE RECORTE DE FOTO PROFESIONAL (CROPPER) -->
-<div id="popup-cropper" class="modal-overlay">
-    <div class="modal-box" style="max-width:500px;">
-        <h3>✂️ Recortar Bordes del QR</h3>
-        <p style="font-size:13px; color:#64748b;">Arrastra las esquinas del recuadro para ajustar el corte de forma milimétrica.</p>
-        <div class="cropper-wrapper">
-            <img id="image-to-crop" style="max-width:100%;">
-        </div>
-        <div style="display:flex; gap:10px;">
-            <button class="btn" style="flex:1;" onclick="aplicarRecorteProfesionalQR()">✂️ Aplicar Recorte Recuadro</button>
-            <button class="btn btn-secondary" onclick="cerrarPopUpCropper()">Cancelar</button>
-        </div>
-    </div>
-</div>
-
-<!-- POP-UP 3: NOTIFICACIONES GLOBALES -->
-<div id="result-modal" class="modal-overlay">
-    <div id="modal-content-box" class="modal-box" style="text-align:center;">
-        <div id="modal-title" style="font-size:22px; font-weight:bold; margin-bottom:10px;"></div>
-        <div id="modal-message" style="font-size:15px; margin-bottom:20px; color:#475569;"></div>
-        <button id="modal-btn" class="btn" style="width:100%;" onclick="cerrarPopUpGlobal()">Entendido</button>
-    </div>
-</div>
-
-<script>
-    // ==========================================
-    // ¡ENLACE DIRECTO A TU APPS SCRIPT DE GOOGLE!
-    // ==========================================
-    const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzqiah0ZY9FCbpiEMmEEmkAQJBkBsn4SEgHRIOKwuyk0XSrq03bJ59XROJVpNLRp60/exec";
-
-    let funcionActual = document.getElementById('funcion-activa').value;
-    let boletosRegistrados = new Set();
-    let ultimoCodigoEscaneado = "";
-    let tiempoUltimoEscaneo = 0;
-    let html5Qrcode = null;
-    let cropperInstancia = null;
-    
-    let obraSeleccionadaActiva = "";
-    let funcionLoteSeleccionada = 1;
-
-    // --- LOGICA DE ARRASTRE TIPO CANVA (DRAG & DROP SOBRE CANVAS) ---
-    const qrDrag = document.getElementById('live-qr-overlay');
-    const containerCanvas = document.getElementById('canvas-blueprint');
-    let isDragging = false; let startX, startY, initialLeft, initialTop;
-
-    qrDrag.addEventListener('mousedown', (e) => {
-        isDragging = true;
-        startX = e.clientX; startY = e.clientY;
-        initialLeft = qrDrag.offsetLeft; initialTop = qrDrag.offsetTop;
-        e.preventDefault();
-    });
-
-    document.addEventListener('mousemove', (e) => {
-        if (!isDragging) return;
-        let dx = e.clientX - startX; let dy = e.clientY - startY;
-        let newLeft = initialLeft + dx; let newTop = initialTop + dy;
-        
-        // Mantener dentro de las fronteras físicas del canvas adaptable
-        if(newLeft >= 0 && newLeft <= (containerCanvas.clientWidth - qrDrag.clientWidth)) {
-            qrDrag.style.left = newLeft + 'px'; qrDrag.style.transform = 'none';
-        }
-        if(newTop >= 0 && newTop <= (containerCanvas.clientHeight - qrDrag.clientHeight)) {
-            qrDrag.style.top = newTop + 'px';
-        }
-    });
-
-    document.addEventListener('mouseup', () => isDragging = false);
-
-    // --- MANEJO DE SECCIONES Y DASHBOARD ---
-    function abrirPopUpNuevaObra() { document.getElementById('popup-nueva-obra').style.display = 'flex'; }
-    function cerrarPopUpObra() { document.getElementById('popup-nueva-obra').style.display = 'none'; }
-    function cerrarPopUpCropper() { document.getElementById('popup-cropper').style.display = 'none'; }
-    
-    function guardarNuevaObraDashboard() {
-        const nombre = document.getElementById('new-obra-name').value.trim().toUpperCase();
-        const funcionesNum = parseInt(document.getElementById('new-obra-funciones').value, 10);
-        if(!nombre) return alert("Escribe un nombre para la obra");
-
-        const grid = document.getElementById('lista-obras-grid');
-        let subBtns = '';
-        let inicioRango = 1;
-        for(let f=1; f<=funcionesNum; f++) {
-            let finRango = inicioRango + 77;
-            subBtns += `<button onclick="seleccionarProduccion('${nombre}', ${f})">🎟️ Función ${f} (Boleto ${String(inicioRango).padStart(3,'0')}-${String(finRango).padStart(3,'0')})</button>`;
-            inicioRango = finRango + 1;
-        }
-
-        const nuevaTarjeta = document.createElement('div');
-        nuevaTarjeta.className = 'obra-item';
-        nuevaTarjeta.setAttribute('onclick', `toggleOpcionesObra(this, '${nombre}')`);
-        nuevaTarjeta.innerHTML = `🎬 ${nombre} <div class="sub-funciones" id="sub-${nombre}">${subBtns}</div>`;
-        grid.appendChild(nuevaTarjeta);
-        
-        cerrarPopUpObra();
-        document.getElementById('new-obra-name').value = '';
-    }
-
-    function toggleOpcionesObra(elemento, idObra) {
-        document.querySelectorAll('.sub-funciones').forEach(el => el.style.display = 'none');
-        document.querySelectorAll('.obra-item').forEach(el => el.classList.remove('active'));
-        elemento.classList.add('active');
-        document.getElementById(`sub-${idObra}`).style.display = 'flex';
-    }
-
-    function seleccionarProduccion(obra, numFuncion) {
-        event.stopPropagation();
-        obraSeleccionadaActiva = obra;
-        funcionLoteSeleccionada = numFuncion;
-        document.getElementById('editor-canva-section').style.display = 'block';
-        document.getElementById('workspace-title').innerText = `Configurando: ${obra} (Función ${numFuncion})`;
-        
-        let rangoInicio = numFuncion === 1 ? "001" : "079";
-        document.getElementById('live-text-overlay').innerText = `Boleto Oficial: ${obra}-${rangoInicio}`;
-    }
-
-    // Adaptar dinámicamente el fondo del Canvas al archivo subido
-    function procesarFondoBoleto(input) {
-        if (input.files && input.files[0]) {
-            const lector = new FileReader();
-            lector.onload = function(e) {
-                document.getElementById('blueprint-bg').src = e.target.result;
-            }
-            lector.readAsDataURL(input.files[0]);
-        }
-    }
-
-    // --- RECORTE INTERACTIVO DE FOTOS PROFESIONAL (CROPPER.JS) ---
-    function abrirEditorRecorte(input) {
-        if (input.files && input.files[0]) {
-            const lector = new FileReader();
-            lector.onload = function(e) {
-                const img = document.getElementById('image-to-crop');
-                img.src = e.target.result;
-                document.getElementById('popup-cropper').style.display = 'flex';
-                
-                if(cropperInstancia) cropperInstancia.destroy();
-                setTimeout(() => {
-                    cropperInstancia = new Cropper(img, {
-                        viewMode: 1,
-                        background: false,
-                        autoCropArea: 1
-                    });
-                }, 200);
-            }
-            lector.readAsDataURL(input.files[0]);
-        }
-    }
-
-    function aplicarRecorteProfesionalQR() {
-        if(!cropperInstancia) return;
-        const canvasRecortado = cropperInstancia.getCroppedCanvas();
-        document.getElementById('cropped-qr-preview').src = canvasRecortado.toDataURL();
-        cerrarPopUpCropper();
-    }
-
-    // --- MOTOR GENERADOR MASIVO AUTOMÁTICO DE BOLETOS ---
-    function generarLoteCompletoCanva() {
-        if(!obraSeleccionadaActiva) return alert("Por favor selecciona una obra primero.");
-        
-        const carrete = document.getElementById('carrete-imagenes');
-        carrete.innerHTML = "";
-        document.getElementById('bulk-download-zone').style.display = 'block';
-        
-        let inicio = funcionLoteSeleccionada === 1 ? 1 : 79;
-        let fin = funcionLoteSeleccionada === 1 ? 78 : 156;
-        let indiceActual = inicio;
-
-        mostrarPopUpGlobal('⏳ Generando Masivamente', 'Tu computadora está procesando y fusionando las capas del boleto de forma automatizada...', 'pop-loading');
-
-        function clonarSiguienteBoleto() {
-            if(indiceActual > fin) {
-                mostrarPopUpGlobal('🎉 ¡PROCESO CONCLUIDO!', `Se generó el paquete completo de boletos del ${String(inicio).padStart(3,'0')} al ${String(fin).padStart(3,'0')} en alta resolución.`, 'pop-success');
-                return;
-            }
-
-            let numFormateado = String(indiceActual).padStart(3, '0');
-            document.getElementById('live-text-overlay').innerText = `Boleto Oficial: ${obraSeleccionadaActiva}-${numFormateado}`;
-
-            setTimeout(() => {
-                html2canvas(document.getElementById('canvas-blueprint'), { scale: 2, useCORS: true }).then(canvas => {
-                    let imgFinalData = canvas.toDataURL('image/png');
+                <!-- Capa de elementos interactivos -->
+                <div class="elements-layer">
                     
-                    // Crear elemento de descarga automático en segundo plano
-                    let triggerDescarga = document.createElement('a');
-                    triggerDescarga.download = `Boleto_${obraSeleccionadaActiva}_${numFormateado}.png`;
-                    triggerDescarga.href = imgFinalData;
-                    triggerDescarga.click();
+                    <!-- QR INTEGRADO CON TÍTULO ADENTRO -->
+                    <div class="qr-wrapper" id="qrWrapper">
+                        <div class="qr-title-inside" id="qrTitlePreview">MALBROTE PRESENTA</div>
+                        <div class="qr-image-placeholder"></div>
+                        <!-- Control para redimensionar con el mouse de forma fluida -->
+                        <div class="resize-handle" id="resizeHandle"></div>
+                    </div>
 
-                    // Mostrar miniatura en el panel inferior
-                    let previsualizacionMini = document.createElement('img');
-                    previsualizacionMini.src = imgFinalData;
-                    previsualizacionMini.style.width = "90px";
-                    previsualizacionMini.style.border = "1px solid var(--border)";
-                    previsualizacionMini.style.borderRadius = "4px";
-                    carrete.appendChild(previsualizacionMini);
+                </div>
+            </div>
+            <p class="hint">💡 Arrastra el bloque del <strong>QR</strong> para ubicarlo donde quieras. Usa el <strong>Slider</strong> o estira la <strong>esquina roja</strong> para cambiar su tamaño.</p>
+        </div>
+    </div>
 
-                    indiceActual++;
-                    clonarSiguienteBoleto();
-                });
-            }, 100);
-        }
+    <script>
+        // Elementos del DOM
+        const ticketTitleInput = document.getElementById('ticketTitle');
+        const qrTitlePreview = document.getElementById('qrTitlePreview');
+        const qrWrapper = document.getElementById('qrWrapper');
+        const qrSizeSlider = document.getElementById('qrSizeSlider');
+        const ticketBgInput = document.getElementById('ticketBgInput');
+        const bgPreview = document.getElementById('bgPreview');
+        const resizeHandle = document.getElementById('resizeHandle');
+        const ticketCanvas = document.getElementById('ticketCanvas');
 
-        clonarSiguienteBoleto();
-    }
-
-    // --- CONTROL DE TAQUILLA & ESCÁNER TOTALMENTE INTEGRADOS ---
-    sincronizarConNube();
-
-    function mostrarPopUpGlobal(titulo, mensaje, clase) {
-        document.getElementById('result-modal').style.display = 'flex';
-        document.getElementById('modal-title').innerText = titulo;
-        document.getElementById('modal-message').innerHTML = mensaje;
-    }
-    function cerrarPopUpGlobal() { document.getElementById('result-modal').style.display = 'none'; }
-
-    function cambiarFuncionSecura() {
-        funcionActual = document.getElementById('funcion-activa').value;
-        boletosRegistrados.clear();
-        sincronizarConNube();
-    }
-
-    function switchTab(tabId) {
-        document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
-        document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
-        document.getElementById(tabId).classList.add('active');
-        event.currentTarget.classList.add('active');
-        if (tabId === 'tab-asistencia') sincronizarConNube();
-        if (tabId !== 'tab-escaner' && html5Qrcode) {
-            html5Qrcode.stop().then(() => {
-                document.getElementById('btn-encender-camara').style.display = "block";
-            }).catch(err => console.log(err));
-        }
-    }
-
-    function desencriptarToken(token) {
-        try {
-            let decodificado = atob(token.trim());
-            if(decodificado.startsWith("TEATRO-SECURE:")) return decodificado.replace("TEATRO-SECURE:", "");
-            return token.toUpperCase();
-        } catch(e) { return token.toUpperCase(); }
-    }
-
-    function extraerNumero(codigo) {
-        let coincidencia = codigo.match(/\d+$/);
-        return coincidencia ? parseInt(coincidencia[0], 10) : null;
-    }
-
-    function registrarBoleto(codigoBruto) {
-        let codigoReal = desencriptarToken(codigoBruto);
-        let numBoleto = extraerNumero(codigoReal);
-        
-        if (!numBoleto || numBoleto < 1 || numBoleto > 156) {
-            mostrarPopUpGlobal('❌ CÓDIGO INVÁLIDO', `El código <b>[${codigoReal}]</b> no pertenece al rango oficial impreso.`, 'pop-danger');
-            reproducirSonidoError(); return;
-        }
-
-        if (funcionActual === "FUNCIÓN 1" && numBoleto > 78) {
-            mostrarPopUpGlobal('⚠️ FUNCIÓN EQUIVOCADA', `El boleto <b>#${numBoleto}</b> es de la <b>FUNCIÓN 2</b>.`, 'pop-danger');
-            reproducirSonidoError(); return;
-        }
-        if (funcionActual === "FUNCIÓN 2" && numBoleto <= 78) {
-            mostrarPopUpGlobal('⚠️ FUNCIÓN EQUIVOCADA', `El boleto <b>#${numBoleto}</b> es de la <b>FUNCIÓN 1</b>.`, 'pop-danger');
-            reproducirSonidoError(); return;
-        }
-
-        if (boletosRegistrados.has(String(numBoleto).padStart(3, '0'))) {
-            mostrarPopUpGlobal('🚨 ¡YA ACCESADO!', `El boleto <b>#${numBoleto}</b> ya se encuentra dentro de la sala. Duplicado.`, 'pop-danger');
-            reproducirSonidoError(); return;
-        }
-
-        fetch(WEB_APP_URL, {
-            method: "POST",
-            mode: "no-cors",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ accion: "registrar", codigo: codigoReal, funcion: funcionActual })
-        }).then(() => {
-            mostrarPopUpGlobal('🎉 ¡ACCESO PERMITIDO!', `Boleto <b>#${numBoleto}</b> verificado con éxito. ¡Adelante!`);
-            sincronizarConNube();
-        }).catch(() => {
-            mostrarPopUpGlobal('❌ ERROR DE RED', `Revisa tu señal de internet.`);
+        // 1. Actualizar el título dinámicamente (dentro del contenedor QR)
+        ticketTitleInput.addEventListener('input', (e) => {
+            qrTitlePreview.textContent = e.target.value.toUpperCase();
         });
-    }
 
-    function sincronizarConNube() {
-        fetch(WEB_APP_URL, { method: "POST", body: JSON.stringify({ accion: "obtener_asistencia", funcion: funcionActual }) })
-        .then(res => res.json())
-        .then(res => {
-            if (res.status === "success") {
-                boletosRegistrados = new Set(res.lista);
-                let total = boletosRegistrados.size;
-                document.getElementById('total-count').innerText = total;
-                document.getElementById('tab-count-badge').innerText = total;
-                const container = document.getElementById('history-container'); container.innerHTML = "";
-                if(total === 0) {
-                    container.innerHTML = `<div style="text-align:center; color:#64748b; padding:10px;">Sala vacía 🎭</div>`;
-                    return;
-                }
-                boletosRegistrados.forEach(b => { container.innerHTML += `<div class="history-item"><span>✅ Boleto #<b>${b}</b></span></div>`; });
+        // 2. Controlar tamaño del QR mediante el Slider
+        qrSizeSlider.addEventListener('input', (e) => {
+            const size = e.target.value;
+            qrWrapper.style.width = `${size}px`;
+        });
+
+        // 3. Cargar fondo personalizado para el boleto
+        ticketBgInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    bgPreview.src = event.target.result;
+                    bgPreview.style.display = 'block';
+                };
+                reader.readAsDataURL(file);
             }
-        }).catch(() => {});
-    }
-
-    function reiniciarTodoCloud() {
-        if (confirm(`🚨 ¿Limpiar asistencia de la ${funcionActual} en Google Sheets?`)) {
-            fetch(WEB_APP_URL, { method: "POST", mode: "no-cors", body: JSON.stringify({ accion: "limpiar", funcion: funcionActual }) }).then(() => {
-                boletosRegistrados.clear(); sincronizarConNube();
-            });
-        }
-    }
-
-    function escanearDesdeArchivo(input) {
-        if (input.files.length === 0) return;
-        const fileHtml5Qrcode = new Html5Qrcode("reader");
-        fileHtml5Qrcode.scanFile(input.files[0], true)
-            .then(decodedText => { registrarBoleto(decodedText); input.value = ""; })
-            .catch(err => { mostrarPopUpGlobal('❌ LECTURA FALLIDA', 'No se localizó un QR legible.'); reproducirSonidoError(); input.value = ""; });
-    }
-
-    function procesarBoletoManual() { const input = document.getElementById('ticket-input'); registrarBoleto(input.value); input.value = ""; }
-    function reproducirSonidoError() { const ctx = new (window.AudioContext || window.webkitAudioContext)(); const osc = ctx.createOscillator(); osc.type = 'sawtooth'; osc.frequency.setValueAtTime(130, ctx.currentTime); osc.connect(ctx.destination); osc.start(); osc.stop(ctx.currentTime + 0.3); }
-    function onScanSuccess(decodedText) { registrarBoleto(decodedText); }
-
-    function inicializarEscaner() { 
-        document.getElementById('btn-encender-camara').style.display = "none";
-        html5Qrcode = new Html5Qrcode("reader");
-        html5Qrcode.start({ facingMode: "environment" }, { fps: 20, qrbox: { width: 250, height: 250 } }, onScanSuccess, () => {}).catch(() => {
-            document.getElementById('btn-encender-camara').style.display = "block";
         });
-    }
-</script>
+
+        // 4. LÓGICA DRAG & DROP (Arrastrar el código QR libremente por el lienzo)
+        let isDragging = false;
+        let startX, startY, initialLeft, initialTop;
+
+        qrWrapper.addEventListener('mousedown', (e) => {
+            // Evitar que se confunda con el redimensionador de la esquina
+            if (e.target === resizeHandle) return;
+
+            isDragging = true;
+            qrWrapper.classList.add('active');
+            
+            startX = e.clientX;
+            startY = e.clientY;
+            
+            initialLeft = qrWrapper.offsetLeft;
+            initialTop = qrWrapper.offsetTop;
+
+            document.addEventListener('mousemove', mouseMoveHandler);
+            document.addEventListener('mouseup', mouseUpHandler);
+        });
+
+        function mouseMoveHandler(e) {
+            if (!isDragging) return;
+            
+            const dx = e.clientX - startX;
+            const dy = e.clientY - startY;
+            
+            let newLeft = initialLeft + dx;
+            let newTop = initialTop + dy;
+
+            // Límites para que no se salga por completo del lienzo del boleto
+            const maxLeft = ticketCanvas.clientWidth - qrWrapper.clientWidth;
+            const maxTop = ticketCanvas.clientHeight - qrWrapper.clientHeight;
+
+            newLeft = Math.max(0, Math.min(newLeft, maxLeft));
+            newTop = Math.max(0, Math.min(newTop, maxTop));
+
+            qrWrapper.style.left = `${newLeft}px`;
+            qrWrapper.style.top = `${newTop}px`;
+        }
+
+        function mouseUpHandler() {
+            isDragging = false;
+            qrWrapper.classList.remove('active');
+            document.removeEventListener('mousemove', mouseMoveHandler);
+            document.removeEventListener('mouseup', mouseUpHandler);
+        }
+
+        // 5. LÓGICA RESIZE MANUAL (Estirar desde la esquina roja)
+        let isResizing = false;
+        let initialWidth;
+
+        resizeHandle.addEventListener('mousedown', (e) => {
+            e.stopPropagation(); // Evita activar el arrastre
+            isResizing = true;
+            
+            startX = e.clientX;
+            initialWidth = qrWrapper.clientWidth;
+
+            document.addEventListener('mousemove', resizeMoveHandler);
+            document.addEventListener('mouseup', resizeUpHandler);
+        });
+
+        function resizeMoveHandler(e) {
+            if (!isResizing) return;
+            const dx = e.clientX - startX;
+            const newWidth = Math.max(100, Math.min(350, initialWidth + dx)); // Rango permitido
+            
+            qrWrapper.style.width = `${newWidth}px`;
+            qrSizeSlider.value = newWidth; // Sincroniza el slider
+        }
+
+        function resizeUpHandler() {
+            isResizing = false;
+            document.removeEventListener('mousemove', resizeMoveHandler);
+            document.removeEventListener('mouseup', resizeUpHandler);
+        }
+    </script>
 </body>
 </html>
