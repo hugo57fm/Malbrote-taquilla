@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MALBROTE PRO v5.8 | Sistema de Control de Teatro Total</title>
+    <title>MALBROTE PRO v5.9 | Sistema de Control de Teatro Total</title>
     <!-- Librerías de Inyección de Render y Captura -->
     <script src="https://unpkg.com/html5-qrcode"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
@@ -78,19 +78,19 @@
         .ticket-canvas-container { position: relative; display: inline-block; border-radius: 4px; overflow: hidden; }
         .ticket-bg-preview { display: block; max-width: 100%; height: auto; }
         
-        /* ELEMENTOS SEPARADOS E INDEPENDIENTES */
-        .draggable-element { position: absolute; cursor: move; border: 1px dashed transparent; box-sizing: border-box; user-select: none; padding: 2px; display: flex; align-items: center; justify-content: center; }
+        /* ELEMENTOS SEPARADOS TOTALMENTE INDEPENDIENTES */
+        .draggable-element { position: absolute; cursor: move; border: 1px dashed transparent; box-sizing: border-box; user-select: none; padding: 2px; }
         .draggable-element:hover { border-color: var(--accent-canva); background: rgba(56,189,248,0.05); }
         
         /* Redimensionadores */
-        .resizer { width: 10px; height: 10px; background: var(--accent-canva); position: absolute; right: -3px; bottom: -3px; cursor: se-resize; border-radius: 50%; display: none; z-index: 50; }
+        .resizer { width: 12px; height: 12px; background: var(--accent-canva); position: absolute; right: -4px; bottom: -4px; cursor: se-resize; border-radius: 50%; display: none; z-index: 50; }
         .draggable-element:hover .resizer { display: block; }
 
-        /* Estilo Interno sin sombras ni cambios estructurales */
-        .element-text-node { font-weight: bold; font-family: 'Segoe UI', Arial, sans-serif; text-align: center; line-height: 1.2; width: 100%; height: 100%; white-space: normal; word-break: break-word; overflow: visible; display: flex; align-items: center; justify-content: center; }
-        .element-qr-node { background: transparent; display: flex; align-items: center; justify-content: center; width: 100%; height: 100%; overflow: hidden; }
+        /* Estilos de Contenidos Limpios sin Alterar composiciones */
+        .element-text-node { font-weight: bold; font-family: 'Segoe UI', Arial, sans-serif; text-align: center; line-height: 1.2; width: 100%; height: 100%; white-space: normal; word-break: break-word; display: flex; align-items: center; justify-content: center; }
+        .element-qr-node { background: transparent; display: flex; align-items: center; justify-content: center; width: 100%; height: 100%; }
         .element-qr-node div { width: 100% !important; height: 100% !important; display: flex; align-items: center; justify-content: center; }
-        .element-qr-node img { max-width: 100%; max-height: 100%; width: auto !important; height: auto !important; }
+        .element-qr-node img { max-width: 100%; max-height: 100%; width: auto !important; height: auto !important; display: block; margin: auto; }
 
         /* INPUTS Y BOTONES */
         input[type="text"], input[type="number"] { padding: 12px; background: var(--bg-input); border: 1px solid #334155; border-radius: 8px; font-size: 14px; color: white; width: 100%; transition: 0.2s; }
@@ -117,7 +117,7 @@
     
     <!-- VISTA 1: DASHBOARD -->
     <div id="view-dashboard" class="dashboard-view">
-        <h1>🎭 CONTROL DE TEATRO (V5.8-PRO)</h1>
+        <h1>🎭 CONTROL DE TEATRO (V5.9-PRO)</h1>
         <div class="obra-list-container" id="dashboard-obras-list"></div>
         <div class="btn-add-obra" onclick="crearNuevaObra()">
             <span style="font-size: 36px;">➕</span>
@@ -152,13 +152,13 @@
             <div class="editor-layout">
                 <div class="canva-sidebar">
                     <h4>⚙️ Ajustes del Lote</h4>
-                    <input type="text" id="batch-prefix" placeholder="Prefijo (Ej: HAMLET)" oninput="salvarDatosDiseñoInstantaneo()">
+                    <input type="text" id="batch-prefix" placeholder="Prefijo Código (Ej: HAMLET)" oninput="salvarDatosDiseñoInstantaneo()">
                     <input type="number" id="batch-qty" value="50" min="1" oninput="salvarDatosDiseñoInstantaneo()">
                     
                     <h4>🖼️ Foto de esta Función</h4>
                     <input type="file" id="file-bg-function" accept="image/*" style="font-size:12px; color:var(--texto-gris);">
 
-                    <h4>🔤 Ajustes Visuales</h4>
+                    <h4>🔤 Ajustes Visuales del Título</h4>
                     <div style="display:flex; gap:10px; align-items:center;">
                         <label style="font-size:12px; color:var(--texto-gris);">Color Texto:</label>
                         <input type="color" id="prop-text-color" value="#ffffff" onchange="aplicarEstilosEnCaliente()">
@@ -177,14 +177,14 @@
                     <div class="ticket-canvas-container" id="canvasBox">
                         <img id="canva-bg-image" class="ticket-bg-preview" src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='750' height='350'><rect width='750' height='350' fill='%23111827'/><text x='50%' y='50%' fill='%234b5563' font-family='sans-serif' font-size='16' text-anchor='middle'>Sube la imagen para este lote / función</text></svg>">
                         
-                        <!-- ELEMENTO TEXTO SEPARADO -->
-                        <div class="draggable-element" id="el-texto-draggable" style="left:40px; top:40px; width:300px; height:50px;">
-                            <div class="element-text-node" id="el-texto-span" style="color: #ffffff; font-size: 14px;">Boleto Oficial: NOMBRE-001</div>
+                        <!-- CAJA 1: TEXTO TOTALMENTE INDEPENDIENTE (SE PUEDE ESTIRAR AL LARGO DESEADO) -->
+                        <div class="draggable-element" id="el-texto-draggable" style="left:40px; top:40px; width:450px; height:60px;">
+                            <div class="element-text-node" id="el-texto-span" style="color: #ffffff; font-size: 14px;">Boleto Oficial: NOMBRE OBRA-001</div>
                             <div class="resizer"></div>
                         </div>
 
-                        <!-- ELEMENTO QR SEPARADO -->
-                        <div class="draggable-element" id="el-qr-draggable" style="left:40px; top:110px; width:150px; height:150px;">
+                        <!-- CAJA 2: QR TOTALMENTE INDEPENDIENTE (MANTIENE SU PROPIO TAMAÑO CUADRADO) -->
+                        <div class="draggable-element" id="el-qr-draggable" style="left:40px; top:120px; width:140px; height:140px;">
                             <div class="element-qr-node" id="el-qr-target"></div>
                             <div class="resizer"></div>
                         </div>
@@ -245,7 +245,7 @@
 <audio id="audio-error" src="https://assets.mixkit.co/active_storage/sfx/2955/2955-84.wav" preload="auto"></audio>
 
 <script>
-    const WEB_APP_URL = "AQUÍ_PEGA_TU_URL_DE_GOOGLE";
+    const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzqiah0ZY9FCbpiEMmEEmkAQJBkBsn4SEgHRIOKwuyk0XSrq03bJ59XROJVpNLRp60/exec";
 
     let DATABASE_OBRAS = JSON.parse(localStorage.getItem('MALBROTE_TEATRO_DB')) || [];
     let ASISTENCIA_LOCAL = JSON.parse(localStorage.getItem('MALBROTE_ASISTENCIA_DB')) || {};
@@ -294,8 +294,8 @@
             prefijo: prefijoAutomatico,
             cantidadTickets: 50,
             layout: {
-                txtLeft: 40, txtTop: 40, txtWidth: 300, txtHeight: 50,
-                qrLeft: 40, qrTop: 110, qrWidth: 150, qrHeight: 150,
+                txtLeft: 40, txtTop: 40, txtWidth: 450, txtHeight: 60,
+                qrLeft: 40, qrTop: 120, qrWidth: 140, qrHeight: 140,
                 txtFontSize: 14, txtColor: '#ffffff'
             },
             funciones: [
@@ -325,13 +325,13 @@
 
         txtEl.style.left = (obra.layout.txtLeft || 40) + 'px';
         txtEl.style.top = (obra.layout.txtTop || 40) + 'px';
-        txtEl.style.width = (obra.layout.txtWidth || 300) + 'px';
-        txtEl.style.height = (obra.layout.txtHeight || 50) + 'px';
+        txtEl.style.width = (obra.layout.txtWidth || 450) + 'px';
+        txtEl.style.height = (obra.layout.txtHeight || 60) + 'px';
 
         qrEl.style.left = (obra.layout.qrLeft || 40) + 'px';
-        qrEl.style.top = (obra.layout.qrTop || 110) + 'px';
-        qrEl.style.width = (obra.layout.qrWidth || 150) + 'px';
-        qrEl.style.height = (obra.layout.qrHeight || 150) + 'px';
+        qrEl.style.top = (obra.layout.qrTop || 120) + 'px';
+        qrEl.style.width = (obra.layout.qrWidth || 140) + 'px';
+        qrEl.style.height = (obra.layout.qrHeight || 140) + 'px';
         
         document.getElementById('prop-text-size').value = obra.layout.txtFontSize || 14;
         txtSpan.style.fontSize = (obra.layout.txtFontSize || 14) + 'px';
@@ -540,7 +540,7 @@
         }
     }
 
-    // --- RENDERIZADO DEL LOTE CON PREFIJO SEGURO ---
+    // --- RENDERIZADO TOTALMENTE SEPARADO E INDEPENDIENTE ---
     function generarLoteCompleto() {
         salvarDatosDiseñoInstantaneo();
         const obra = DATABASE_OBRAS[obraSeleccionadaIdx];
@@ -570,7 +570,7 @@
             bg.src = document.getElementById('canva-bg-image').src;
             canvasClone.appendChild(bg);
 
-            // Clonar Texto Separado
+            // CLON DEL TEXTO INDEPENDIENTE (Usa su propio largo sin tocar al QR)
             const txtClon = document.createElement('div');
             txtClon.className = 'draggable-element';
             txtClon.style.left = obra.layout.txtLeft + 'px';
@@ -582,12 +582,12 @@
             txtNode.className = 'element-text-node';
             txtNode.style.color = obra.layout.txtColor;
             txtNode.style.fontSize = obra.layout.txtFontSize + 'px';
-            // Formato exacto solicitado por seguridad
             txtNode.innerText = `Boleto Oficial: ${obra.nombre}-${numStr}`;
+            
             txtClon.appendChild(txtNode);
             canvasClone.appendChild(txtClon);
 
-            // Clonar QR Separado
+            // CLON DEL QR INDEPENDIENTE (Usa su tamaño asignado sin ser aplastado por el texto)
             const qrClon = document.createElement('div');
             qrClon.className = 'draggable-element';
             qrClon.style.left = obra.layout.qrLeft + 'px';
