@@ -3,18 +3,18 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Creador de Boletos - Malbrote Teatro</title>
-    <!-- Importamos fuentes con estilo similar al manual de marca -->
-    <link href="https://fonts.googleapis.com/css2?family=Permanent+Marker&family=Syne:wght@700;800&family=Space+Grotesk:wght@400;700&display=swap" rel="stylesheet">
+    <title>Administrador de Boletos - Malbrote Teatro</title>
+    <!-- Librería externa para generar códigos QR reales -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <style>
-        /* PALETA DE COLORES MALBROTE TEATRO */
+        /* ESTÉTICA GENERAL INSPIRADA EN EL MANUAL (FONDOS OSCUROS, ACENTOS ROJOS) */
         :root {
+            --bg-principal: #0d0d0d;
+            --bg-paneles: #161616;
             --rojo-malbrote: #601919;
-            --rojo-saturado: #AD1A24;
-            --negro-puro: #000000;
-            --negro-suave: #191919;
-            --blanco: #FFFFFF;
-            --verde-rebelde: #68FE00;
+            --rojo-brillante: #AD1A24;
+            --texto-blanco: #ffffff;
+            --texto-gris: #a0a0a0;
         }
 
         * {
@@ -24,382 +24,345 @@
         }
 
         body {
-            background-color: var(--negro-puro);
-            color: var(--blanco);
-            font-family: 'Space Grotesk', sans-serif;
+            background-color: var(--bg-principal);
+            color: var(--texto-blanco);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
             padding: 20px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            min-height: 100vh;
         }
 
-        header {
-            text-align: center;
-            margin-bottom: 30px;
+        /* NAVEGACIÓN POR PESTAÑAS (Recuperada) */
+        .tabs-nav {
+            display: flex;
+            gap: 10px;
+            max-width: 1200px;
+            margin: 0 auto 20px auto;
+            border-bottom: 2px solid var(--rojo-malbrote);
+            padding-bottom: 10px;
+        }
+
+        .tab-btn {
+            background: none;
+            border: none;
+            color: var(--texto-gris);
+            padding: 10px 20px;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
             text-transform: uppercase;
         }
 
-        header h1 {
-            font-family: 'Permanent Marker', cursive; /* Simula el estilo rupestre/disruptivo */
-            font-size: 3rem;
-            color: var(--rojo-saturado);
-            letter-spacing: 2px;
-            text-shadow: 2px 2px var(--negro-suave);
+        .tab-btn:hover {
+            color: var(--texto-blanco);
         }
 
-        header p {
-            font-family: 'Space Grotesk', sans-serif;
-            color: var(--verde-rebelde);
-            font-size: 0.9rem;
-            letter-spacing: 4px;
-            margin-top: 5px;
+        .tab-btn.active {
+            color: var(--rojo-brillante);
+            border-bottom: 3px solid var(--rojo-brillante);
         }
 
+        .tab-content {
+            display: none;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        /* DISEÑO EN DOS COLUMNAS PARA EL GENERADOR */
         .workspace {
             display: flex;
             gap: 30px;
-            max-width: 1200px;
-            width: 100%;
-            align-items: flex-start;
         }
 
-        /* PANEL DE CONTROLES (Estilo Manual de Marca) */
         .controls-panel {
-            background-color: var(--negro-suave);
-            border: 2px solid var(--rojo-malbrote);
+            background-color: var(--bg-paneles);
+            padding: 20px;
             border-radius: 8px;
-            padding: 25px;
-            flex: 1;
+            width: 320px;
+            flex-shrink: 0;
             display: flex;
             flex-direction: column;
-            gap: 20px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            gap: 15px;
         }
 
-        .controls-panel h2 {
-            font-family: 'Syne', sans-serif;
-            font-size: 1.4rem;
-            border-bottom: 2px solid var(--rojo-saturado);
-            padding-bottom: 10px;
-            margin-bottom: 10px;
+        .controls-panel h3 {
+            border-bottom: 1px solid var(--rojo-malbrote);
+            padding-bottom: 8px;
+            margin-bottom: 5px;
             text-transform: uppercase;
+            font-size: 1.1rem;
         }
 
         .input-group {
             display: flex;
             flex-direction: column;
-            gap: 8px;
+            gap: 5px;
         }
 
         .input-group label {
             font-size: 0.85rem;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            color: #aaa;
+            color: var(--texto-gris);
         }
 
         .input-group input, .input-group select {
-            background-color: var(--negro-puro);
+            background-color: var(--bg-principal);
             border: 1px solid var(--rojo-malbrote);
-            color: var(--blanco);
-            padding: 12px;
+            color: white;
+            padding: 10px;
             border-radius: 4px;
-            font-family: inherit;
-            font-size: 1rem;
-            outline: none;
-            transition: border 0.3s;
+            font-size: 0.95rem;
         }
 
-        .input-group input:focus {
-            border-color: var(--verde-rebelde);
-        }
-
-        /* LIENZO DEL BOLETO */
-        .canvas-container {
-            flex: 2;
+        /* CONTENEDOR FLEXIBLE: Se adapta al tamaño real de la imagen cargada */
+        .canvas-area {
+            flex-grow: 1;
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 15px;
         }
 
-        .ticket-canvas {
-            width: 600px;
-            height: 600px;
-            background-color: var(--blanco);
-            border-radius: 12px;
+        .ticket-container {
             position: relative;
-            overflow: hidden;
-            box-shadow: 0 15px 40px rgba(0,0,0,0.6);
+            display: inline-block; /* Crucial: Se autoajusta al tamaño del fondo */
+            box-shadow: 0 10px 30px rgba(0,0,0,0.7);
+            background-color: #222;
         }
 
-        /* COMPONENTE QR CON TÍTULO INTEGRADO (Arrastrable y Redimensionable) */
-        .qr-wrapper {
+        .ticket-bg {
+            display: block;
+            max-width: 100%;
+            height: auto;
+        }
+
+        /* EL BLOQUE COMPACTO DEL QR (Inspirado exactamente en tu imagen) */
+        .qr-ticket-block {
             position: absolute;
-            top: 50px;
-            left: 50px;
-            width: 180px; /* Tamaño inicial por defecto */
-            min-width: 100px;
-            min-height: 120px;
-            background-color: transparent;
-            padding: 10px;
+            top: 20px;
+            left: 20px;
+            background-color: #ffffff; /* Fondo blanco riguroso */
+            padding: 15px;
+            border-radius: 12px;
+            border: 2px dashed #b5c2d1; /* Borde suave simulando tu muestra */
             cursor: move;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
             user-select: none;
-            box-sizing: border-box;
+            width: 200px; /* Tamaño inicial por defecto */
         }
 
-        .qr-wrapper:hover, .qr-wrapper.active {
-            outline: 2px dashed var(--rojo-saturado);
+        .qr-ticket-block:hover {
+            box-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
         }
 
-        /* El título va ADENTRO de la imagen/bloque del QR */
-        .qr-title-inside {
-            font-family: 'Permanent Marker', cursive;
-            color: var(--negro-puro);
-            font-size: 1.1rem;
+        /* Texto superior interno del bloque QR */
+        .qr-ticket-text {
+            color: #111a2e; /* Color oscuro idéntico a la imagen */
+            font-size: 0.85rem;
+            font-weight: bold;
             text-align: center;
-            margin-bottom: 6px;
+            margin-bottom: 12px;
             width: 100%;
             word-wrap: break-word;
-            line-height: 1.1;
-            text-transform: uppercase;
+            font-family: sans-serif;
         }
 
-        .qr-image-placeholder {
+        /* Contenedor del QR nativo generado por JS */
+        .qr-code-target {
             width: 100%;
-            aspect-ratio: 1/1;
+            display: flex;
+            justify-content: center;
+        }
+
+        .qr-code-target img {
+            width: 100% !important; /* Forzamos a que llene el bloque blanco */
+            height: auto !important;
+        }
+
+        /* PESTAÑA DEL LECTOR (Recuperada) */
+        .scanner-box {
+            background-color: var(--bg-paneles);
+            padding: 30px;
+            border-radius: 8px;
+            text-align: center;
+            max-width: 500px;
+            margin: 40px auto;
+        }
+
+        .scanner-placeholder {
+            width: 100%;
+            height: 250px;
             background-color: #000;
+            margin: 20px 0;
             display: flex;
             align-items: center;
             justify-content: center;
-            color: white;
-            font-size: 0.7rem;
-            font-weight: bold;
-            text-align: center;
-            background-image: url('https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=MalbroteTeatroBoleto');
-            background-size: cover;
-            background-position: center;
-        }
-
-        /* Tirador para agrandar/achicar desde la esquina inferior derecha */
-        .resize-handle {
-            position: absolute;
-            width: 14px;
-            height: 14px;
-            background-color: var(--rojo-saturado);
-            right: 0;
-            bottom: 0;
-            cursor: se-resize;
-            border-radius: 2px;
-        }
-
-        /* Fondo decorativo opcional cargable */
-        .ticket-bg {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            z-index: 1;
-            pointer-events: none;
-        }
-
-        .elements-layer {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: 2;
-        }
-
-        .hint {
-            color: #aaa;
-            font-size: 0.85rem;
-            text-align: center;
-            margin-top: 5px;
-        }
-
-        .hint strong {
-            color: var(--verde-rebelde);
+            border: 2px dashed var(--rojo-malbrote);
+            color: var(--texto-gris);
         }
     </style>
 </head>
 <body>
 
-    <header>
-        <h1>Malbrote</h1>
-        <p>Teatro Colectivo • Creador de Entradas</p>
-    </header>
+    <!-- NAVEGACIÓN -->
+    <nav class="tabs-nav">
+        <button class="tab-btn active" onclick="switchTab('generador')">Generador de Boletos</button>
+        <button class="tab-btn" onclick="switchTab('lector')">Lector de Acceso</button>
+    </nav>
 
-    <div class="workspace">
-        <!-- PANEL DE CONTROLES -->
-        <div class="controls-panel">
-            <h2>Personalizar Boleto</h2>
+    <!-- CONTENIDO: GENERADOR -->
+    <div id="generador" class="tab-content active">
+        <div class="workspace">
             
-            <div class="input-group">
-                <label for="ticketTitle">Título del Boleto (Va dentro del QR)</label>
-                <input type="text" id="ticketTitle" value="MALBROTE PRESENTA">
-            </div>
+            <!-- Panel izquierdo -->
+            <div class="controls-panel">
+                <h3>Ajustes del Boleto</h3>
+                
+                <div class="input-group">
+                    <label>Fondo del Boleto (Sube tu diseño)</label>
+                    <input type="file" id="bgInput" accept="image/*">
+                </div>
 
-            <div class="input-group">
-                <label for="qrSizeSlider">Tamaño de la estructura del QR</label>
-                <input type="range" id="qrSizeSlider" min="120" max="350" value="180">
-            </div>
+                <div class="input-group">
+                    <label>Código o ID del Boleto</label>
+                    <input type="text" id="ticketId" value="SIN HOGAR-078">
+                </div>
 
-            <div class="input-group">
-                <label for="ticketBgInput">Imagen de Fondo del Boleto</label>
-                <input type="file" id="ticketBgInput" accept="image/*">
-            </div>
-
-            <div class="input-group">
-                <label style="color: var(--verde-rebelde)">ADN del Colectivo</label>
-                <p style="font-size: 0.8rem; color: #ccc; line-height: 1.4;">
-                    "Reivindica aquello que nace fuera de lo esperado". Colores corporativos aplicados en interfaz.
-                </p>
-            </div>
-        </div>
-
-        <!-- AREA DEL LIENZO -->
-        <div class="canvas-container">
-            <div class="ticket-canvas" id="ticketCanvas">
-                <!-- Imagen de fondo del boleto -->
-                <img id="bgPreview" class="ticket-bg" src="" style="display: none;">
-
-                <!-- Capa de elementos interactivos -->
-                <div class="elements-layer">
-                    
-                    <!-- QR INTEGRADO CON TÍTULO ADENTRO -->
-                    <div class="qr-wrapper" id="qrWrapper">
-                        <div class="qr-title-inside" id="qrTitlePreview">MALBROTE PRESENTA</div>
-                        <div class="qr-image-placeholder"></div>
-                        <!-- Control para redimensionar con el mouse de forma fluida -->
-                        <div class="resize-handle" id="resizeHandle"></div>
-                    </div>
-
+                <div class="input-group">
+                    <label>Tamaño del Bloque QR</label>
+                    <input type="range" id="sizeSlider" min="130" max="400" value="210">
                 </div>
             </div>
-            <p class="hint">💡 Arrastra el bloque del <strong>QR</strong> para ubicarlo donde quieras. Usa el <strong>Slider</strong> o estira la <strong>esquina roja</strong> para cambiar su tamaño.</p>
+
+            <!-- Área del lienzo responsiva -->
+            <div class="canvas-area">
+                <div class="ticket-container" id="ticketContainer">
+                    <!-- Si no hay imagen, muestra un placeholder transparente o negro -->
+                    <img id="ticketBg" class="ticket-bg" src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='700' height='400'><rect width='700' height='400' fill='%23222'/></svg>">
+                    
+                    <!-- BLOQUE UNIFICADO (TEXTO + QR) -->
+                    <div class="qr-ticket-block" id="qrBlock">
+                        <div class="qr-ticket-text" id="qrTextPreview">Boleto Oficial: SIN HOGAR-078</div>
+                        <div id="qrcode" class="qr-code-target"></div>
+                    </div>
+                </div>
+                <p style="color: var(--texto-gris); margin-top: 15px; font-size: 0.9rem;">
+                    💡 Arrastra el recuadro blanco para posicionarlo. Modifica el tamaño con el slider.
+                </p>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- CONTENIDO: LECTOR (Recuperado) -->
+    <div id="lector" class="tab-content">
+        <div class="scanner-box">
+            <h2>Escanear Código de Entrada</h2>
+            <div class="scanner-placeholder">
+                [ Cámara / Lector de Código QR Desactivado ]
+            </div>
+            <p style="color: var(--texto-gris);">La cámara del dispositivo se activará en este módulo para validar las entradas en taquilla.</p>
         </div>
     </div>
 
     <script>
-        // Elementos del DOM
-        const ticketTitleInput = document.getElementById('ticketTitle');
-        const qrTitlePreview = document.getElementById('qrTitlePreview');
-        const qrWrapper = document.getElementById('qrWrapper');
-        const qrSizeSlider = document.getElementById('qrSizeSlider');
-        const ticketBgInput = document.getElementById('ticketBgInput');
-        const bgPreview = document.getElementById('bgPreview');
-        const resizeHandle = document.getElementById('resizeHandle');
-        const ticketCanvas = document.getElementById('ticketCanvas');
+        // --- Cambiar de Pestañas ---
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+            
+            document.getElementById(tabId).classList.add('active');
+            event.target.classList.add('active');
+        }
 
-        // 1. Actualizar el título dinámicamente (dentro del contenedor QR)
-        ticketTitleInput.addEventListener('input', (e) => {
-            qrTitlePreview.textContent = e.target.value.toUpperCase();
+        // --- Elementos del Generador ---
+        const bgInput = document.getElementById('bgInput');
+        const ticketBg = document.getElementById('ticketBg');
+        const ticketIdInput = document.getElementById('ticketId');
+        const qrTextPreview = document.getElementById('qrTextPreview');
+        const sizeSlider = document.getElementById('sizeSlider');
+        const qrBlock = document.getElementById('qrBlock');
+        const ticketContainer = document.getElementById('ticketContainer');
+
+        // Instancia para generar el QR real
+        let qrGenerator = new QRCode(document.getElementById("qrcode"), {
+            text: "SIN HOGAR-078",
+            width: 250,
+            height: 250,
+            colorDark : "#000000",
+            colorLight : "#ffffff",
+            correctLevel : QRCode.CorrectLevel.H
         });
 
-        // 2. Controlar tamaño del QR mediante el Slider
-        qrSizeSlider.addEventListener('input', (e) => {
-            const size = e.target.value;
-            qrWrapper.style.width = `${size}px`;
+        // 1. Actualizar texto interno y regenerar código QR al escribir
+        ticketIdInput.addEventListener('input', (e) => {
+            const valor = e.target.value;
+            qrTextPreview.textContent = `Boleto Oficial: ${valor}`;
+            
+            // Actualizar el contenido encriptado en el QR
+            qrGenerator.clear();
+            qrGenerator.makeCode(valor || " ");
         });
 
-        // 3. Cargar fondo personalizado para el boleto
-        ticketBgInput.addEventListener('change', (e) => {
+        // 2. Controlar tamaño del bloque blanco mediante el slider
+        sizeSlider.addEventListener('input', (e) => {
+            qrBlock.style.width = `${e.target.value}px`;
+        });
+
+        // 3. Cargar imagen de fondo y adaptarse fielmente a sus dimensiones reales
+        bgInput.addEventListener('change', (e) => {
             const file = e.target.files[0];
             if (file) {
                 const reader = new FileReader();
                 reader.onload = function(event) {
-                    bgPreview.src = event.target.result;
-                    bgPreview.style.display = 'block';
+                    ticketBg.src = event.target.result;
                 };
                 reader.readAsDataURL(file);
             }
         });
 
-        // 4. LÓGICA DRAG & DROP (Arrastrar el código QR libremente por el lienzo)
+        // 4. Lógica de Arrastre (Drag & Drop) dentro del Lienzo
         let isDragging = false;
         let startX, startY, initialLeft, initialTop;
 
-        qrWrapper.addEventListener('mousedown', (e) => {
-            // Evitar que se confunda con el redimensionador de la esquina
-            if (e.target === resizeHandle) return;
-
+        qrBlock.addEventListener('mousedown', (e) => {
             isDragging = true;
-            qrWrapper.classList.add('active');
-            
             startX = e.clientX;
             startY = e.clientY;
-            
-            initialLeft = qrWrapper.offsetLeft;
-            initialTop = qrWrapper.offsetTop;
+            initialLeft = qrBlock.offsetLeft;
+            initialTop = qrBlock.offsetTop;
 
-            document.addEventListener('mousemove', mouseMoveHandler);
-            document.addEventListener('mouseup', mouseUpHandler);
+            document.addEventListener('mousemove', dragMove);
+            document.addEventListener('mouseup', dragEnd);
         });
 
-        function mouseMoveHandler(e) {
+        function dragMove(e) {
             if (!isDragging) return;
-            
             const dx = e.clientX - startX;
             const dy = e.clientY - startY;
-            
+
             let newLeft = initialLeft + dx;
             let newTop = initialTop + dy;
 
-            // Límites para que no se salga por completo del lienzo del boleto
-            const maxLeft = ticketCanvas.clientWidth - qrWrapper.clientWidth;
-            const maxTop = ticketCanvas.clientHeight - qrWrapper.clientHeight;
+            // Restricciones para que no se salga de los límites de la imagen del boleto
+            const maxLeft = ticketContainer.clientWidth - qrBlock.clientWidth;
+            const maxTop = ticketContainer.clientHeight - qrBlock.clientHeight;
 
             newLeft = Math.max(0, Math.min(newLeft, maxLeft));
             newTop = Math.max(0, Math.min(newTop, maxTop));
 
-            qrWrapper.style.left = `${newLeft}px`;
-            qrWrapper.style.top = `${newTop}px`;
+            qrBlock.style.left = `${newLeft}px`;
+            qrBlock.style.top = `${newTop}px`;
         }
 
-        function mouseUpHandler() {
+        function dragEnd() {
             isDragging = false;
-            qrWrapper.classList.remove('active');
-            document.removeEventListener('mousemove', mouseMoveHandler);
-            document.removeEventListener('mouseup', mouseUpHandler);
-        }
-
-        // 5. LÓGICA RESIZE MANUAL (Estirar desde la esquina roja)
-        let isResizing = false;
-        let initialWidth;
-
-        resizeHandle.addEventListener('mousedown', (e) => {
-            e.stopPropagation(); // Evita activar el arrastre
-            isResizing = true;
-            
-            startX = e.clientX;
-            initialWidth = qrWrapper.clientWidth;
-
-            document.addEventListener('mousemove', resizeMoveHandler);
-            document.addEventListener('mouseup', resizeUpHandler);
-        });
-
-        function resizeMoveHandler(e) {
-            if (!isResizing) return;
-            const dx = e.clientX - startX;
-            const newWidth = Math.max(100, Math.min(350, initialWidth + dx)); // Rango permitido
-            
-            qrWrapper.style.width = `${newWidth}px`;
-            qrSizeSlider.value = newWidth; // Sincroniza el slider
-        }
-
-        function resizeUpHandler() {
-            isResizing = false;
-            document.removeEventListener('mousemove', resizeMoveHandler);
-            document.removeEventListener('mouseup', resizeUpHandler);
+            document.removeEventListener('mousemove', dragMove);
+            document.removeEventListener('mouseup', dragEnd);
         }
     </script>
 </body>
