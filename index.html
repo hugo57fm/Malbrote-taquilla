@@ -51,7 +51,7 @@
         .tab-content { display: none; }
         .tab-content.active { display: block; }
 
-        /* MULTI-FUNCIÓN SUBTABS CRÓNICOS */
+        /* MULTI-FUNCIÓN SUBTABS */
         .funciones-subtabs { display: flex; gap: 10px; margin-bottom: 20px; background: #0f172a; padding: 10px; border-radius: 10px; flex-wrap: wrap; border: 1px solid #1e293b; }
         .subtab-btn { background: #1e293b; border: 1px solid #334155; color: white; padding: 8px 16px; border-radius: 8px; cursor: pointer; font-size: 13px; font-weight: 600; transition: 0.2s; }
         .subtab-btn.active { background: var(--rojo-brillante); border-color: var(--rojo-neon); box-shadow: 0 0 10px rgba(244,63,94,0.2); }
@@ -67,50 +67,51 @@
         .canva-viewport { flex-grow: 1; background: #060811; border-radius: 14px; padding: 40px; display: flex; justify-content: center; align-items: center; overflow: auto; position: relative; min-height: 550px; border: 2px dashed #334155; }
         .canva-grid { position: absolute; top:0; left:0; width:100%; height:100%; pointer-events: none; background-image: linear-gradient(rgba(56, 189, 248, 0.02) 1px, transparent 1px), linear-gradient(90deg, rgba(56, 189, 248, 0.02) 1px, transparent 1px); background-size: 25px 25px; }
         
-        /* COMPONENTES DE ARRASTRE SEPARADOS DE CORTE PROFESIONAL */
-        .ticket-canvas-container { position: relative; display: inline-block; box-shadow: 0 25px 60px rgba(0,0,0,0.8); border-radius: 4px; overflow: hidden; }
+        /* UNIDAD UNIFICADA ARRASTRABLE (TÍTULO Y QR JUNTOS SIN SOMBRAS) */
+        .ticket-canvas-container { position: relative; display: inline-block; border-radius: 4px; overflow: hidden; }
         .ticket-bg-preview { display: block; max-width: 100%; height: auto; }
         
-        .draggable-element { position: absolute; cursor: move; border: 1px dashed transparent; box-sizing: border-box; user-select: none; }
+        .draggable-element { position: absolute; cursor: move; border: 1px dashed transparent; box-sizing: border-box; user-select: none; display: flex; flex-direction: column; align-items: center; justify-content: space-between; padding: 8px; }
         .draggable-element:hover { border-color: var(--accent-canva); background: rgba(56,189,248,0.05); }
         
         /* Tirador Redimensionador de esquina */
-        .resizer { width: 14px; height: 14px; background: var(--accent-canva); position: absolute; right: -5px; bottom: -5px; cursor: se-resize; border-radius: 50%; display: none; box-shadow: 0 0 6px black; z-index: 50; }
+        .resizer { width: 14px; height: 14px; background: var(--accent-canva); position: absolute; right: -5px; bottom: -5px; cursor: se-resize; border-radius: 50%; display: none; z-index: 50; }
         .draggable-element:hover .resizer { display: block; }
 
-        .element-text-box { font-weight: bold; font-family: 'Arial Black', sans-serif; display: flex; align-items: center; justify-content: center; overflow: hidden; text-shadow: 2px 2px 4px rgba(0,0,0,0.9); text-align: center; line-height: 1.2; padding: 4px; }
-        .element-qr-box { background: white; padding: 10px; border-radius: 8px; display: flex; align-items: center; justify-content: center; box-shadow: 0 8px 20px rgba(0,0,0,0.4); }
-        .element-qr-box div { width: 100% !important; height: 100% !important; display: flex; align-items: center; justify-content: center; }
-        .element-qr-box img { max-width: 100%; max-height: 100%; width: auto !important; height: auto !important; }
+        /* Removidas sombras de textos y contenedores */
+        .element-text-node { font-weight: bold; font-family: 'Arial Black', sans-serif; text-align: center; line-height: 1.2; width: 100%; overflow: hidden; white-space: nowrap; }
+        .element-qr-node { background: white; padding: 5px; border-radius: 6px; display: flex; align-items: center; justify-content: center; width: 100%; flex-grow: 1; margin-top: 5px; overflow: hidden; }
+        .element-qr-node div { width: 100% !important; height: 100% !important; display: flex; align-items: center; justify-content: center; }
+        .element-qr-node img { max-width: 100%; max-height: 100%; width: auto !important; height: auto !important; }
 
-        /* INPUTS, BOTONES Y DETALLES */
+        /* INPUTS Y BOTONES */
         input[type="text"], input[type="number"] { padding: 12px; background: var(--bg-input); border: 1px solid #334155; border-radius: 8px; font-size: 14px; color: white; width: 100%; transition: 0.2s; }
         input[type="text"]:focus, input[type="number"]:focus { border-color: var(--accent-canva); outline: none; }
         button { padding: 12px 20px; background: var(--rojo-brillante); color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; transition: 0.2s; text-transform: uppercase; font-size: 13px; letter-spacing: 0.5px; }
-        button:hover { background: var(--rojo-neon); box-shadow: 0 0 15px rgba(244,63,94,0.4); }
+        button:hover { background: var(--rojo-neon); }
         
-        /* CONTROLES DEL ESCÁNER Y MÉTRICAS */
-        .scanner-grid { display: grid; grid-template-columns: 1xl; gap: 20px; }
+        /* CONTROLES DEL ESCÁNER */
+        .scanner-grid { display: grid; grid-template-columns: 1fr; gap: 20px; }
         @media (min-width: 765px) { .scanner-grid { grid-template-columns: 1fr 1fr; } }
         #reader { width: 100%; border-radius: 12px; overflow: hidden; border: 2px solid var(--rojo-brillante); background: #05070a; box-shadow: 0 8px 30px rgba(0,0,0,0.5); }
         .history-list { background: #0f172a; padding: 15px; border-radius: 12px; max-height: 380px; overflow-y: auto; border: 1px solid #1e293b; display: flex; flex-direction: column; gap: 8px; }
         .history-item { display: flex; justify-content: space-between; align-items: center; padding: 12px; border-radius: 8px; background: #1e293b; border-left: 4px solid var(--texto-gris); }
         .history-item.success { border-left-color: var(--verde-exito); background: rgba(16, 185, 129, 0.05); }
         
-        /* MODAL E INYECTORES DE ALERTA */
+        /* MODALES */
         .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 9999; justify-content: center; align-items: center; padding: 20px; backdrop-filter: blur(4px); }
-        .modal-box { background: var(--bg-card); padding: 30px; border-radius: 16px; max-width: 450px; width: 100%; text-align: center; border: 2px solid var(--rojo-neon); box-shadow: 0 0 30px rgba(244,63,94,0.3); }
+        .modal-box { background: var(--bg-card); padding: 30px; border-radius: 16px; max-width: 450px; width: 100%; text-align: center; border: 2px solid var(--rojo-neon); }
     </style>
 </head>
 <body>
 
 <div class="container">
     
-    <!-- VISTA 1: DASHBOARD (TU DIBUJO REALIZADO) -->
+    <!-- VISTA 1: DASHBOARD (TU DIBUJO REALIZADO - LIMPIO SIN DEMOS) -->
     <div id="view-dashboard" class="dashboard-view">
-        <h1>🎭 CONTROL DE TEATRO (V5.5-PRO) <button style="font-size:11px; padding:6px 12px; background:#334155;" onclick="cargarProyectosDemo()">Cargar Proyectos Demo</button></h1>
+        <h1>🎭 CONTROL DE TEATRO (V5.5-PRO)</h1>
         <div class="obra-list-container" id="dashboard-obras-list">
-            <!-- Cargado automáticamente -->
+            <!-- Cargado dinámicamente -->
         </div>
         <div class="btn-add-obra" onclick="crearNuevaObra()">
             <span style="font-size: 36px;">➕</span>
@@ -118,7 +119,7 @@
         </div>
     </div>
 
-    <!-- VISTA 2: ÁREA DE TRABAJO EN CLIENTE (SISTEMA DE DISEÑO Y LOGICA COMPLETA) -->
+    <!-- VISTA 2: ÁREA DE TRABAJO -->
     <div id="view-workspace" style="display: none;">
         <h1>
             <span id="txt-nombre-obra-header">OBRA EN TRABAJO</span>
@@ -128,23 +129,22 @@
         <div class="config-bar">
             <div>🎬 Sala Activa / Función: 
                 <select id="funcion-activa-global" onchange="sincronizarSalaActivaGlobal()">
-                    <!-- Dropdown dinámico sincronizado -->
+                    <!-- Dropdown dinámico -->
                 </select>
             </div>
             <button style="background: var(--verde-exito);" onclick="guardarObraEstructuraCompleta()">💾 Guardar Obra en Memoria</button>
         </div>
 
-        <!-- PESTAÑAS PRINCIPALES (CONSERVANDO TODO LO QUE YA HABÍAMOS HECHO) -->
         <div class="tabs">
             <button class="tab-btn active" onclick="cambiarPestañaModulo('tab-generador')">🎨 Crear (Canva Style)</button>
             <button class="tab-btn" onclick="cambiarPestañaModulo('tab-escaner')">📷 Escáner Puerta</button>
             <button class="tab-btn" onclick="cambiarPestañaModulo('tab-asistencia')">📊 Control Sala / Asistencia</button>
         </div>
 
-        <!-- MODULO: DISEÑADOR PRO (CON LOS NUEVOS ELEMENTOS SEPARADOS Y REDIMENSIONABLES) -->
+        <!-- MODULO: DISEÑADOR PRO (TÍTULO Y QR UNIFICADOS Y REESCALABLES) -->
         <div id="tab-generador" class="tab-content active">
             <div class="funciones-subtabs" id="subtabs-funciones-contenedor">
-                <!-- Se inyectan las subpestañas de funciones dinámicamente -->
+                <!-- Se inyectan las subpestañas de funciones -->
             </div>
 
             <div class="editor-layout">
@@ -170,29 +170,23 @@
                     <div class="canva-grid"></div>
                     
                     <div class="ticket-canvas-container" id="canvasBox">
-                        <!-- Imagen Base -->
+                        <!-- Imagen Base Fondo -->
                         <img id="canva-bg-image" class="ticket-bg-preview" src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='750' height='350'><rect width='750' height='350' fill='%23111827'/><text x='50%' y='50%' fill='%234b5563' font-family='sans-serif' font-size='16' text-anchor='middle'>Sube la imagen para este lote / función</text></svg>">
                         
-                        <!-- ELEMENTO 1 SEPARADO: CAJA DE TEXTO REDIMENSIONABLE -->
-                        <div class="draggable-element element-text-box" id="el-texto" style="left:40px; top:40px; width:260px; height:45px; font-size:18px;">
-                            <span id="el-texto-span">Boleto Oficial #001</span>
-                            <div class="resizer"></div>
-                        </div>
-
-                        <!-- ELEMENTO 2 SEPARADO: CÓDIGO QR REDIMENSIONABLE -->
-                        <div class="draggable-element element-qr-box" id="el-qr" style="left:40px; top:110px; width:130px; height:130px;">
-                            <div id="el-qr-target"></div>
+                        <!-- BLOQUE COMPUESTO UNIFICADO (TÍTULO + QR JUNTOS SIN SOMBRAS) -->
+                        <div class="draggable-element" id="el-compuesto" style="left:40px; top:40px; width:180px; height:240px;">
+                            <div class="element-text-node" id="el-texto-span" style="color: #ffffff; font-size: 14px;">Boleto Oficial #001</div>
+                            <div class="element-qr-node" id="el-qr-target"></div>
                             <div class="resizer"></div>
                         </div>
                     </div>
                 </div>
             </div>
             
-            <!-- Salida de Renderizador Remoto / Local -->
             <div id="batch-output" style="margin-top:25px; display:none; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap:20px; padding:20px; background:#0f172a; border-radius:12px; border:1px solid #1e293b;"></div>
         </div>
 
-        <!-- MODULO: ESCÁNER CON TODA LA LÓGICA ANTERIOR (AUDIOS, ESCANEO CONTINUO Y ALERTAS) -->
+        <!-- MODULO: ESCÁNER CON TODA LA LÓGICA COMPLETA -->
         <div id="tab-escaner" class="tab-content">
             <div class="scanner-grid">
                 <div>
@@ -213,7 +207,7 @@
             </div>
         </div>
 
-        <!-- MODULO: AUDITORÍA Y ASISTENCIA (GOOGLE SHEETS COMPLETO Y LISTADO COMPLETO) -->
+        <!-- MODULO: ASISTENCIA SPREADSHEETS -->
         <div id="tab-asistencia" class="tab-content">
             <div style="background:#0f172a; padding:20px; border-radius:12px; border:1px solid #1e293b; margin-bottom:20px; display:flex; justify-content:space-between; align-items:center;">
                 <div>
@@ -223,15 +217,13 @@
                 <button onclick="forzarSincronizacionHojasCalculo()" style="background:#16a34a;">🔄 Forzar Sincronización Remota</button>
             </div>
             <h3>Base de Datos de esta Sala</h3>
-            <div class="history-list" id="asistencia-tabla-completa" style="max-height:500px;">
-                <!-- Lista de asistencias registradas -->
-            </div>
+            <div class="history-list" id="asistencia-tabla-completa" style="max-height:500px;"></div>
         </div>
 
     </div>
 </div>
 
-<!-- MODAL INTEGRAL PARA AVISOS DE ACCESO EN PUERTA -->
+<!-- MODAL INTEGRAL -->
 <div id="global-modal" class="modal-overlay">
     <div class="modal-box" id="modal-content-card">
         <h3 id="modal-title" style="margin-bottom:10px; font-size:22px;"></h3>
@@ -245,7 +237,8 @@
 <audio id="audio-error" src="https://assets.mixkit.co/active_storage/sfx/2955/2955-84.wav" preload="auto"></audio>
 
 <script>
-    // BASE DE DATOS DE OBRAS Y ASISTENCIA COMPLETA (LocalStorage Persistente)
+    const WEB_APP_URL = "AQUÍ_PEGA_TU_URL_DE_GOOGLE";
+
     let DATABASE_OBRAS = JSON.parse(localStorage.getItem('MALBROTE_TEATRO_DB')) || [];
     let ASISTENCIA_LOCAL = JSON.parse(localStorage.getItem('MALBROTE_ASISTENCIA_DB')) || {};
     
@@ -253,10 +246,8 @@
     let funcionSeleccionadaIdx = 0; 
     let html5QrScannerInstancia = null;
 
-    // Inicializar la interfaz del dibujo
     actualizarDashboardPantallaPrincipal();
 
-    // --- LOGICA DE PROYECTOS (DASHBOARD) ---
     function actualizarDashboardPantallaPrincipal() {
         document.getElementById('view-dashboard').style.display = "block";
         document.getElementById('view-workspace').style.display = "none";
@@ -269,7 +260,6 @@
         }
 
         DATABASE_OBRAS.forEach((obra, index) => {
-            // Miniatura dinámica sacada de la función 1 como especificaste en tu dibujo
             const fotoMiniatura = (obra.funciones && obra.funciones[0] && obra.funciones[0].imagenFondo) ? obra.funciones[0].imagenFondo : "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='60' height='60'><rect width='60' height='60' fill='%231e293b'/></svg>";
             
             const card = document.createElement('div');
@@ -297,8 +287,8 @@
             prefijo: prefijoAutomatico,
             cantidadTickets: 50,
             layout: {
-                txtLeft: 40, txtTop: 40, txtWidth: 260, txtHeight: 45, txtFontSize: 18, txtColor: '#ffffff',
-                qrLeft: 40, qrTop: 110, qrWidth: 130, qrHeight: 130
+                compLeft: 40, compTop: 40, compWidth: 180, compHeight: 240,
+                txtFontSize: 14, txtColor: '#ffffff'
             },
             funciones: [
                 { nombre: "FUNCIÓN 1", imagenFondo: "" }
@@ -321,22 +311,17 @@
         document.getElementById('batch-prefix').value = obra.prefijo;
         document.getElementById('batch-qty').value = obra.cantidadTickets;
 
-        // Desplegar tamaños y coordenadas salvados de la última sesión
-        const txt = document.getElementById('el-texto');
-        const qr = document.getElementById('el-qr');
+        const comp = document.getElementById('el-compuesto');
+        const txtSpan = document.getElementById('el-texto-span');
 
-        txt.style.left = obra.layout.txtLeft + 'px';
-        txt.style.top = obra.layout.txtTop + 'px';
-        txt.style.width = obra.layout.txtWidth + 'px';
-        txt.style.height = obra.layout.txtHeight + 'px';
-        txt.style.fontSize = (obra.layout.txtFontSize || 18) + 'px';
+        comp.style.left = (obra.layout.compLeft || 40) + 'px';
+        comp.style.top = (obra.layout.compTop || 40) + 'px';
+        comp.style.width = (obra.layout.compWidth || 180) + 'px';
+        comp.style.height = (obra.layout.compHeight || 240) + 'px';
+        
+        txtSpan.style.fontSize = (obra.layout.txtFontSize || 14) + 'px';
         document.getElementById('prop-text-color').value = obra.layout.txtColor || '#ffffff';
-        txt.style.color = obra.layout.txtColor || '#ffffff';
-
-        qr.style.left = obra.layout.qrLeft + 'px';
-        qr.style.top = obra.layout.qrTop + 'px';
-        qr.style.width = obra.layout.qrWidth + 'px';
-        qr.style.height = obra.layout.qrHeight + 'px';
+        txtSpan.style.color = obra.layout.txtColor || '#ffffff';
 
         funcionSeleccionadaIdx = 0;
         refrescarSubpestañasFisicas();
@@ -362,7 +347,6 @@
             caja.appendChild(btn);
         });
 
-        // BOTÓN REQUERIDO: "Agregar función"
         const btnAgregar = document.createElement('button');
         btnAgregar.className = 'subtab-btn btn-add-func';
         btnAgregar.innerText = "➕ Agregar Función";
@@ -370,7 +354,7 @@
             const numeroSiguiente = obra.funciones.length + 1;
             obra.funciones.push({
                 nombre: `FUNCIÓN ${numeroSiguiente}`,
-                imagenFondo: "" // Nueva imagen limpia para el cambio de horario
+                imagenFondo: ""
             });
             funcionSeleccionadaIdx = numeroSiguiente - 1;
             refrescarSubpestañasFisicas();
@@ -411,7 +395,6 @@
         redibujarInstanciaQrPrevia();
     }
 
-    // --- CARGA DE ARCHIVOS MULTI-IMAGEN ---
     document.getElementById('file-bg-function').addEventListener('change', function(e) {
         const file = e.target.files[0];
         if (file) {
@@ -424,7 +407,7 @@
         }
     });
 
-    // --- INTERACTIVIDAD EDITORES DE FOTOS INDEPENDIENTES ---
+    // --- ARRASTRE Y ESCALA DEL COMPLEMENTO UNIFICADO ---
     function inicializarArrastreYEscalaElementos(id) {
         const elemento = document.getElementById(id);
         const resizer = elemento.querySelector('.resizer');
@@ -463,15 +446,14 @@
             function escalar(evt) {
                 let w = startWidth + (evt.clientX - startX);
                 let h = startHeight + (evt.clientY - startY);
-                if (w > 40) elemento.style.width = w + 'px';
-                if (h > 20) elemento.style.height = h + 'px';
+                if (w > 60) elemento.style.width = w + 'px';
+                if (h > 80) elemento.style.height = h + 'px';
                 
-                if (id === 'el-texto') {
-                    elemento.style.fontSize = Math.max(10, h * 0.45) + 'px';
-                }
-                if (id === 'el-qr') {
-                    redibujarInstanciaQrPrevia();
-                }
+                // Escalar dinámicamente la tipografía del encabezado del bloque
+                const txtNode = document.getElementById('el-texto-span');
+                txtNode.style.fontSize = Math.max(9, w * 0.08) + 'px';
+
+                redibujarInstanciaQrPrevia();
                 salvarDatosDiseñoInstantaneo();
             }
             function soltarEscala() {
@@ -483,8 +465,7 @@
         });
     }
 
-    inicializarArrastreYEscalaElementos('el-texto');
-    inicializarArrastreYEscalaElementos('el-qr');
+    inicializarArrastreYEscalaElementos('el-compuesto');
 
     document.getElementById('prop-text-val').addEventListener('input', (e) => {
         document.getElementById('el-texto-span').innerText = e.target.value;
@@ -492,27 +473,23 @@
 
     function aplicarEstilosEnCaliente() {
         const col = document.getElementById('prop-text-color').value;
-        document.getElementById('el-texto').style.color = col;
+        document.getElementById('el-texto-span').style.color = col;
         salvarDatosDiseñoInstantaneo();
     }
 
     function salvarDatosDiseñoInstantaneo() {
         if (obraSeleccionadaIdx === null) return;
         const obra = DATABASE_OBRAS[obraSeleccionadaIdx];
-        const txt = document.getElementById('el-texto');
-        const qr = document.getElementById('el-qr');
+        const comp = document.getElementById('el-compuesto');
+        const txtSpan = document.getElementById('el-texto-span');
 
         obra.layout = {
-            txtLeft: parseInt(txt.style.left),
-            txtTop: parseInt(txt.style.top),
-            txtWidth: parseInt(txt.style.width),
-            txtHeight: parseInt(txt.style.height),
-            txtFontSize: parseInt(txt.style.fontSize),
-            txtColor: document.getElementById('prop-text-color').value,
-            qrLeft: parseInt(qr.style.left),
-            qrTop: parseInt(qr.style.top),
-            qrWidth: parseInt(qr.style.width),
-            qrHeight: parseInt(qr.style.height)
+            compLeft: parseInt(comp.style.left),
+            compTop: parseInt(comp.style.top),
+            compWidth: parseInt(comp.style.width),
+            compHeight: parseInt(comp.style.height),
+            txtFontSize: parseInt(txtSpan.style.fontSize),
+            txtColor: document.getElementById('prop-text-color').value
         };
         obra.prefijo = document.getElementById('batch-prefix').value.toUpperCase();
         obra.cantidadTickets = parseInt(document.getElementById('batch-qty').value) || 50;
@@ -521,15 +498,15 @@
     function redibujarInstanciaQrPrevia() {
         const target = document.getElementById('el-qr-target');
         target.innerHTML = "";
-        let finalDim = Math.min(target.clientWidth, target.clientHeight) - 10;
-        if(finalDim < 30) finalDim = 30;
+        let finalDim = Math.min(target.clientWidth, target.clientHeight) - 4;
+        if(finalDim < 25) finalDim = 25;
         new QRCode(target, { text: "PREVIEW", width: finalDim, height: finalDim });
     }
 
     function guardarObraEstructuraCompleta() {
         salvarDatosDiseñoInstantaneo();
         localStorage.setItem('MALBROTE_TEATRO_DB', JSON.stringify(DATABASE_OBRAS));
-        mostrarAlertaModal("💾 PROYECTO SALVADO", "Todos los cambios en las funciones, imágenes de fondo y posiciones se guardaron en LocalStorage.");
+        mostrarAlertaModal("💾 PROYECTO SALVADO", "Todos los cambios en las funciones, imágenes de fondo y posiciones se guardaron con éxito.");
         actualizarDashboardPantallaPrincipal();
     }
 
@@ -540,14 +517,14 @@
 
     function eliminarObraPorCompleto(e, idx) {
         e.stopPropagation();
-        if (confirm("¿Seguro que deseas eliminar esta obra por completo? Esto borrará todas sus funciones asociadas.")) {
+        if (confirm("¿Seguro que deseas borrar esta obra?")) {
             DATABASE_OBRAS.splice(idx, 1);
             localStorage.setItem('MALBROTE_TEATRO_DB', JSON.stringify(DATABASE_OBRAS));
             actualizarDashboardPantallaPrincipal();
         }
     }
 
-    // --- EXPEDIDOR RENDERIZADOR MASSIVO ---
+    // --- EXPEDIDOR DE RENDERIZACIÓN ---
     function generarLoteCompleto() {
         salvarDatosDiseñoInstantaneo();
         const obra = DATABASE_OBRAS[obraSeleccionadaIdx];
@@ -560,7 +537,6 @@
         for(let i = 1; i <= obra.cantidadTickets; i++) {
             const numStr = String(i).padStart(3, '0');
             const tokenBoleto = `${obra.prefijo}${numStr}`;
-            // Payload Encriptado en Base64 para el escáner
             const payloadCifrado = btoa(`MALBROTE:${obra.nombre}:${tokenBoleto}`);
 
             const cardWrapper = document.createElement('div');
@@ -578,31 +554,32 @@
             bg.src = document.getElementById('canva-bg-image').src;
             canvasClone.appendChild(bg);
 
-            const txt = document.createElement('div');
-            txt.className = 'draggable-element element-text-box';
-            txt.style.left = obra.layout.txtLeft + 'px';
-            txt.style.top = obra.layout.txtTop + 'px';
-            txt.style.width = obra.layout.txtWidth + 'px';
-            txt.style.height = obra.layout.txtHeight + 'px';
-            txt.style.color = obra.layout.txtColor;
-            txt.style.fontSize = obra.layout.txtFontSize + 'px';
-            txt.innerHTML = `<span>${document.getElementById('prop-text-val').value.replace("#001", "#" + numStr)}</span>`;
-            canvasClone.appendChild(txt);
+            // Clonar Bloque Compuesto Completo (Unificado)
+            const compClon = document.createElement('div');
+            compClon.className = 'draggable-element';
+            compClon.style.left = obra.layout.compLeft + 'px';
+            compClon.style.top = obra.layout.compTop + 'px';
+            compClon.style.width = obra.layout.compWidth + 'px';
+            compClon.style.height = obra.layout.compHeight + 'px';
 
-            const qrContainer = document.createElement('div');
-            qrContainer.className = 'draggable-element element-qr-box';
-            qrContainer.style.left = obra.layout.qrLeft + 'px';
-            qrContainer.style.top = obra.layout.qrTop + 'px';
-            qrContainer.style.width = obra.layout.qrWidth + 'px';
-            qrContainer.style.height = obra.layout.qrHeight + 'px';
-            
+            const txtNode = document.createElement('div');
+            txtNode.className = 'element-text-node';
+            txtNode.style.color = obra.layout.txtColor;
+            txtNode.style.fontSize = obra.layout.txtFontSize + 'px';
+            txtNode.innerText = document.getElementById('prop-text-val').value.replace("#001", "#" + numStr);
+            compClon.appendChild(txtNode);
+
+            const qrNode = document.createElement('div');
+            qrNode.className = 'element-qr-node';
             const targetQrInner = document.createElement('div');
             targetQrInner.id = `qr-node-final-${numStr}`;
-            qrContainer.appendChild(targetQrInner);
-            canvasClone.appendChild(qrContainer);
+            qrNode.appendChild(targetQrInner);
+            compClon.appendChild(qrNode);
+
+            canvasClone.appendChild(compClon);
 
             const btnDownload = document.createElement('button');
-            btnDownload.innerText = `💾 Descargar #${numStr}`;
+            btnDownload.innerText = `Descargar #${numStr}`;
             btnDownload.style.width = "100%";
             btnDownload.style.marginTop = "10px";
             btnDownload.style.fontSize = "11px";
@@ -619,17 +596,17 @@
             cardWrapper.appendChild(btnDownload);
             output.appendChild(cardWrapper);
 
-            let sizeQr = Math.min(obra.layout.qrWidth, obra.layout.qrHeight) - 20;
+            // Medir contenedor interno físico para renderizar el código bidi
+            let sizeQr = Math.min(obra.layout.compWidth, obra.layout.compHeight - (obra.layout.txtFontSize + 15)) - 10;
+            if(sizeQr < 25) sizeQr = 25;
             new QRCode(targetQrInner, { text: payloadCifrado, width: sizeQr, height: sizeQr });
         }
         setTimeout(cerrarModalDeAlerta, 1000);
     }
 
-    // --- SISTEMA DEL ESCÁNER DE PUERTA (LÓGICA CONSERVADA AL 100%) ---
+    // --- LÓGICA DE ESCANER INTACTA ---
     function encenderCamaraScanner() {
-        if(html5QrScannerInstancia) {
-            html5QrScannerInstancia.clear();
-        }
+        if(html5QrScannerInstancia) { html5QrScannerInstancia.clear(); }
         html5QrScannerInstancia = new Html5QrcodeScanner("reader", { fps: 15, qrbox: 250 });
         html5QrScannerInstancia.render(alDetectarCodigoQrExitoso);
     }
@@ -649,33 +626,28 @@
             const obraActual = DATABASE_OBRAS[obraSeleccionadaIdx];
             const salaNombreActual = obraActual.funciones[funcionSeleccionadaIdx].nombre;
             
-            // Validar si el boleto es de otra obra diferente
             if (obraNombreQR !== obraActual.nombre) {
-                dispararAlertaAcceso(false, "OBRA EQUIVOCADA", `Este boleto es para la obra: ${obraNombreQR}. Estás en la sala de ${obraActual.nombre}.`);
+                dispararAlertaAcceso(false, "OBRA EQUIVOCADA", `Este boleto es para: ${obraNombreQR}. Estás en la sala de ${obraActual.nombre}.`);
                 return;
             }
 
             const llaveRegistroAsistencia = `${obraActual.nombre}_${salaNombreActual}`;
-            if (!ASISTENCIA_LOCAL[llaveRegistroAsistencia]) {
-                ASISTENCIA_LOCAL[llaveRegistroAsistencia] = [];
-            }
+            if (!ASISTENCIA_LOCAL[llaveRegistroAsistencia]) { ASISTENCIA_LOCAL[llaveRegistroAsistencia] = []; }
 
-            // Comprobar Duplicados (Fraude)
             if (ASISTENCIA_LOCAL[llaveRegistroAsistencia].includes(tokenID)) {
-                dispararAlertaAcceso(false, "❌ BOLETO DUPLICADO", `¡Alerta de Fraude! El boleto ${tokenID} ya ingresó previamente.`);
+                dispararAlertaAcceso(false, "❌ BOLETO DUPLICADO", `¡Alerta de Fraude! El boleto ${tokenID} ya ingresó.`);
                 return;
             }
 
-            // Registro de éxito
             ASISTENCIA_LOCAL[llaveRegistroAsistencia].push(tokenID);
             localStorage.setItem('MALBROTE_ASISTENCIA_DB', JSON.stringify(ASISTENCIA_LOCAL));
             
-            dispararAlertaAcceso(true, "✅ ACCESO CONCEDIDO", `Boleto verificado con éxito: ${tokenID}. ¡Bienvenido a la Sala!`);
+            dispararAlertaAcceso(true, "✅ ACCESO CONCEDIDO", `Boleto verificado con éxito: ${tokenID}.`);
             renderizarHistorialYLogsAsistencia();
             sincronizarConServidorGoogleSheets(tokenID, salaNombreActual, "ACCESO CONCEDIDO");
 
         } catch(e) {
-            dispararAlertaAcceso(false, "ERROR DE LECTURA", "No se pudo decodificar la firma digital de este boleto.");
+            dispararAlertaAcceso(false, "ERROR DE LECTURA", "No se pudo decodificar la firma digital.");
         }
     }
 
@@ -683,10 +655,8 @@
         const input = document.getElementById('manual-ticket-id');
         const token = input.value.trim().toUpperCase();
         if(!token) return;
-        
         const obraActual = DATABASE_OBRAS[obraSeleccionadaIdx];
-        const payloadFake = btoa(`MALBROTE:${obraActual.nombre}:${token}`);
-        alDetectarCodigoQrExitoso(payloadFake);
+        alDetectarCodigoQrExitoso(btoa(`MALBROTE:${obraActual.nombre}:${token}`));
         input.value = "";
     }
 
@@ -694,20 +664,15 @@
         const card = document.getElementById('modal-content-card');
         const audio = document.getElementById(exito ? 'audio-success' : 'audio-error');
         
-        if (audio) {
-            audio.currentTime = 0;
-            audio.play().catch(e => console.log("Audio interact blocking"));
-        }
+        if (audio) { audio.currentTime = 0; audio.play().catch(e => {}); }
 
         card.style.borderColor = exito ? "var(--verde-exito)" : "var(--rojo-neon)";
-        card.style.boxShadow = exito ? "0 0 30px rgba(16,185,129,0.4)" : "0 0 30px rgba(244,63,94,0.4)";
         
         document.getElementById('modal-title').innerText = titulo;
         document.getElementById('modal-title').style.color = exito ? "var(--verde-exito)" : "var(--rojo-neon)";
         document.getElementById('modal-msg').innerText = msg;
         document.getElementById('global-modal').style.display = "flex";
 
-        // Registrar Log Rápido
         const logsBox = document.getElementById('escaner-logs-box');
         if(logsBox.innerText.includes("Esperando")) logsBox.innerHTML = "";
         
@@ -717,16 +682,14 @@
         logsBox.insertBefore(logItem, logsBox.firstChild);
     }
 
-    // --- LOGICA DE RENDIMIENTO DE ASISTENCIA Y REMOTO ---
     function renderizarHistorialYLogsAsistencia() {
         if (obraSeleccionadaIdx === null) return;
         const obraActual = DATABASE_OBRAS[obraSeleccionadaIdx];
         const salaNombreActual = obraActual.funciones[funcionSeleccionadaIdx].nombre;
         const llave = `${obraActual.nombre}_${salaNombreActual}`;
-        
         const listaAsistentes = ASISTENCIA_LOCAL[llave] || [];
-        document.getElementById('asistencia-contador-badge').innerText = listaAsistentes.length;
         
+        document.getElementById('asistencia-contador-badge').innerText = listaAsistentes.length;
         const tabla = document.getElementById('asistencia-tabla-completa');
         tabla.innerHTML = "";
 
@@ -745,17 +708,8 @@
 
     function sincronizarConServidorGoogleSheets(ticket, funcion, status) {
         if (!WEB_APP_URL || WEB_APP_URL.includes("AQUÍ_PEGA")) return;
-        
-        const params = new URLSearchParams({
-            ticket: ticket,
-            obra: DATABASE_OBRAS[obraSeleccionadaIdx].nombre,
-            funcion: funcion,
-            status: status
-        });
-
-        fetch(`${WEB_APP_URL}?${params.toString()}`, { method: 'GET', mode: 'no-cors' })
-        .then(() => console.log(`Sincronizado rematemente: ${ticket}`))
-        .catch(err => console.error("Fallo de red remota", err));
+        const params = new URLSearchParams({ ticket: ticket, obra: DATABASE_OBRAS[obraSeleccionadaIdx].nombre, funcion: funcion, status: status });
+        fetch(`${WEB_APP_URL}?${params.toString()}`, { method: 'GET', mode: 'no-cors' });
     }
 
     function forzarSincronizacionHojasCalculo() {
@@ -776,33 +730,6 @@
         document.getElementById('global-modal').style.display = "flex";
     }
     function cerrarModalDeAlerta() { document.getElementById('global-modal').style.display = "none"; }
-
-    // --- CARGA EXCLUSIVA DE PROYECTOS MOCKUP DEMO ---
-    function cargarProyectosDemo() {
-        DATABASE_OBRAS = [
-            {
-                nombre: "SIN HOGAR",
-                prefijo: "SHOGAR",
-                cantidadTickets: 60,
-                layout: { txtLeft: 420, txtTop: 50, txtWidth: 260, txtHeight: 45, txtFontSize: 20, txtColor: '#f43f5e', qrLeft: 480, qrTop: 120, qrWidth: 140, qrHeight: 140 },
-                funciones: [
-                    { nombre: "FUNCIÓN 1", imagenFondo: "" },
-                    { nombre: "FUNCIÓN 2", imagenFondo: "" }
-                ]
-            },
-            {
-                nombre: "OBRA DOS",
-                prefijo: "ODOS",
-                cantidadTickets: 45,
-                layout: { txtLeft: 50, txtTop: 40, txtWidth: 240, txtHeight: 40, txtFontSize: 18, txtColor: '#ffffff', qrLeft: 50, qrTop: 110, qrWidth: 130, qrHeight: 130 },
-                funciones: [
-                    { nombre: "FUNCIÓN 1", imagenFondo: "" }
-                ]
-            }
-        ];
-        localStorage.setItem('MALBROTE_TEATRO_DB', JSON.stringify(DATABASE_OBRAS));
-        actualizarDashboardPantallaPrincipal();
-    }
 </script>
 </body>
 </html>
