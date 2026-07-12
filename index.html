@@ -64,18 +64,43 @@
         .canva-sidebar { background: #0f172a; padding: 22px; border-radius: 14px; width: 100%; max-width: 350px; display: flex; flex-direction: column; gap: 18px; border: 1px solid #1e293b; height: fit-content; }
         .canva-sidebar h4 { font-size: 13px; color: var(--accent-canva); text-transform: uppercase; letter-spacing: 1px; margin-bottom: -5px; }
 
-        /* VIEWPORT CON LÍNEAS GUÍA DE CENTRADO */
-        .canva-viewport { flex-grow: 1; background: #060811; border-radius: 14px; padding: 40px; display: flex; justify-content: center; align-items: center; overflow: auto; position: relative; min-height: 550px; border: 2px dashed #334155; }
+        /* VIEWPORT CON MEJORAS DE CUADRÍCULA DE ALTA PRECISIÓN */
+        .canva-viewport { flex-grow: 1; background: #05070f; border-radius: 14px; padding: 40px; display: flex; justify-content: center; align-items: center; overflow: auto; position: relative; min-height: 550px; border: 2px solid #1e293b; }
         
-        /* Cuadrícula base */
-        .canva-grid { position: absolute; top:0; left:0; width:100%; height:100%; pointer-events: none; background-image: linear-gradient(rgba(56, 189, 248, 0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(56, 189, 248, 0.03) 1px, transparent 1px); background-size: 20px 20px; }
+        /* Cuadrícula Técnica de Precisión Milimétrica */
+        .canva-grid { 
+            position: absolute; 
+            top: 0; left: 0; 
+            width: 100%; height: 100%; 
+            pointer-events: none; 
+            background-image: 
+                linear-gradient(rgba(56, 189, 248, 0.08) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(56, 189, 248, 0.08) 1px, transparent 1px),
+                linear-gradient(rgba(56, 189, 248, 0.02) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(56, 189, 248, 0.02) 1px, transparent 1px);
+            background-size: 50px 50px, 50px 50px, 10px 10px, 10px 10px;
+        }
         
-        /* Ejes de Centrado Absolutos (Cruces de guía azul neón) */
-        .canva-viewport::before { content: ""; position: absolute; top: 50%; left: 0; width: 100%; height: 1px; border-top: 1px dashed rgba(56, 189, 248, 0.35); pointer-events: none; z-index: 10; }
-        .canva-viewport::after { content: ""; position: absolute; left: 50%; top: 0; width: 1px; height: 100%; border-left: 1px dashed rgba(56, 189, 248, 0.35); pointer-events: none; z-index: 10; }
+        /* Ejes de Centrado Absolutos de Alta Visibilidad (Líneas Neón Continuas) */
+        .canva-viewport::before { 
+            content: ""; position: absolute; 
+            top: 50%; left: 0; 
+            width: 100%; height: 1px; 
+            background: rgba(56, 189, 248, 0.5); 
+            box-shadow: 0 0 6px rgba(56, 189, 248, 0.8);
+            pointer-events: none; z-index: 10; 
+        }
+        .canva-viewport::after { 
+            content: ""; position: absolute; 
+            left: 50%; top: 0; 
+            width: 1px; height: 100%; 
+            background: rgba(56, 189, 248, 0.5); 
+            box-shadow: 0 0 6px rgba(56, 189, 248, 0.8);
+            pointer-events: none; z-index: 10; 
+        }
 
         /* CONTENEDOR CANVA */
-        .ticket-canvas-container { position: relative; display: inline-block; border-radius: 4px; overflow: hidden; }
+        .ticket-canvas-container { position: relative; display: inline-block; border-radius: 4px; overflow: hidden; box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.1); }
         .ticket-bg-preview { display: block; max-width: 100%; height: auto; }
         
         /* ELEMENTOS SEPARADOS TOTALMENTE INDEPENDIENTES */
@@ -245,7 +270,7 @@
 <audio id="audio-error" src="https://assets.mixkit.co/active_storage/sfx/2955/2955-84.wav" preload="auto"></audio>
 
 <script>
-    const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzqiah0ZY9FCbpiEMmEEmkAQJBkBsn4SEgHRIOKwuyk0XSrq03bJ59XROJVpNLRp60/exec";
+    const WEB_APP_URL = "Ahttps://script.google.com/macros/s/AKfycbzqiah0ZY9FCbpiEMmEEmkAQJBkBsn4SEgHRIOKwuyk0XSrq03bJ59XROJVpNLRp60/exec";
 
     let DATABASE_OBRAS = JSON.parse(localStorage.getItem('MALBROTE_TEATRO_DB')) || [];
     let ASISTENCIA_LOCAL = JSON.parse(localStorage.getItem('MALBROTE_ASISTENCIA_DB')) || {};
