@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MALBROTE PRO v5.7 | Sistema de Control de Teatro Total</title>
+    <title>MALBROTE PRO v5.8 | Sistema de Control de Teatro Total</title>
     <!-- Librerías de Inyección de Render y Captura -->
     <script src="https://unpkg.com/html5-qrcode"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
@@ -70,24 +70,25 @@
         /* Cuadrícula base */
         .canva-grid { position: absolute; top:0; left:0; width:100%; height:100%; pointer-events: none; background-image: linear-gradient(rgba(56, 189, 248, 0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(56, 189, 248, 0.03) 1px, transparent 1px); background-size: 20px 20px; }
         
-        /* Ejes de Centrado Absolutos (Cruces de guía) */
-        .canva-viewport::before { content: ""; position: absolute; top: 50%; left: 0; width: 100%; height: 1px; border-top: 1px dashed rgba(56, 189, 248, 0.25); pointer-events: none; z-index: 10; }
-        .canva-viewport::after { content: ""; position: absolute; left: 50%; top: 0; width: 1px; height: 100%; border-left: 1px dashed rgba(56, 189, 248, 0.25); pointer-events: none; z-index: 10; }
+        /* Ejes de Centrado Absolutos (Cruces de guía azul neón) */
+        .canva-viewport::before { content: ""; position: absolute; top: 50%; left: 0; width: 100%; height: 1px; border-top: 1px dashed rgba(56, 189, 248, 0.35); pointer-events: none; z-index: 10; }
+        .canva-viewport::after { content: ""; position: absolute; left: 50%; top: 0; width: 1px; height: 100%; border-left: 1px dashed rgba(56, 189, 248, 0.35); pointer-events: none; z-index: 10; }
 
-        /* UNIDAD UNIFICADA ARRASTRABLE TRANSPARENTE */
+        /* CONTENEDOR CANVA */
         .ticket-canvas-container { position: relative; display: inline-block; border-radius: 4px; overflow: hidden; }
         .ticket-bg-preview { display: block; max-width: 100%; height: auto; }
         
-        .draggable-element { position: absolute; cursor: move; border: 1px dashed transparent; box-sizing: border-box; user-select: none; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; padding: 5px; }
+        /* ELEMENTOS SEPARADOS E INDEPENDIENTES */
+        .draggable-element { position: absolute; cursor: move; border: 1px dashed transparent; box-sizing: border-box; user-select: none; padding: 2px; display: flex; align-items: center; justify-content: center; }
         .draggable-element:hover { border-color: var(--accent-canva); background: rgba(56,189,248,0.05); }
         
-        /* Redimensionador */
-        .resizer { width: 14px; height: 14px; background: var(--accent-canva); position: absolute; right: -5px; bottom: -5px; cursor: se-resize; border-radius: 50%; display: none; z-index: 50; }
+        /* Redimensionadores */
+        .resizer { width: 10px; height: 10px; background: var(--accent-canva); position: absolute; right: -3px; bottom: -3px; cursor: se-resize; border-radius: 50%; display: none; z-index: 50; }
         .draggable-element:hover .resizer { display: block; }
 
-        /* CORRECCIÓN: white-space: normal para evitar que se corte el texto largo */
-        .element-text-node { font-weight: bold; font-family: 'Segoe UI', Arial, sans-serif; text-align: center; line-height: 1.3; width: 100%; overflow: visible; white-space: normal; word-break: break-word; margin-bottom: 8px; }
-        .element-qr-node { background: transparent; padding: 0; border-radius: 0; display: flex; align-items: center; justify-content: center; width: 100%; flex-grow: 1; overflow: hidden; }
+        /* Estilo Interno sin sombras ni cambios estructurales */
+        .element-text-node { font-weight: bold; font-family: 'Segoe UI', Arial, sans-serif; text-align: center; line-height: 1.2; width: 100%; height: 100%; white-space: normal; word-break: break-word; overflow: visible; display: flex; align-items: center; justify-content: center; }
+        .element-qr-node { background: transparent; display: flex; align-items: center; justify-content: center; width: 100%; height: 100%; overflow: hidden; }
         .element-qr-node div { width: 100% !important; height: 100% !important; display: flex; align-items: center; justify-content: center; }
         .element-qr-node img { max-width: 100%; max-height: 100%; width: auto !important; height: auto !important; }
 
@@ -116,7 +117,7 @@
     
     <!-- VISTA 1: DASHBOARD -->
     <div id="view-dashboard" class="dashboard-view">
-        <h1>🎭 CONTROL DE TEATRO (V5.7-PRO)</h1>
+        <h1>🎭 CONTROL DE TEATRO (V5.8-PRO)</h1>
         <div class="obra-list-container" id="dashboard-obras-list"></div>
         <div class="btn-add-obra" onclick="crearNuevaObra()">
             <span style="font-size: 36px;">➕</span>
@@ -157,11 +158,14 @@
                     <h4>🖼️ Foto de esta Función</h4>
                     <input type="file" id="file-bg-function" accept="image/*" style="font-size:12px; color:var(--texto-gris);">
 
-                    <h4>🔤 Ajustes del Título</h4>
-                    <input type="text" id="prop-text-val" value="Boleto Oficial: SIN HOGAR-001">
+                    <h4>🔤 Ajustes Visuales</h4>
                     <div style="display:flex; gap:10px; align-items:center;">
                         <label style="font-size:12px; color:var(--texto-gris);">Color Texto:</label>
                         <input type="color" id="prop-text-color" value="#ffffff" onchange="aplicarEstilosEnCaliente()">
+                    </div>
+                    <div style="display:flex; gap:10px; align-items:center;">
+                        <label style="font-size:12px; color:var(--texto-gris);">Tamaño Letra:</label>
+                        <input type="number" id="prop-text-size" value="14" min="8" max="40" oninput="aplicarEstilosEnCaliente()">
                     </div>
 
                     <button style="background:var(--accent-canva); color:black; margin-top:10px;" onclick="generarLoteCompleto()">⚡ Generar / Renderizar Lote</button>
@@ -173,9 +177,14 @@
                     <div class="ticket-canvas-container" id="canvasBox">
                         <img id="canva-bg-image" class="ticket-bg-preview" src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='750' height='350'><rect width='750' height='350' fill='%23111827'/><text x='50%' y='50%' fill='%234b5563' font-family='sans-serif' font-size='16' text-anchor='middle'>Sube la imagen para este lote / función</text></svg>">
                         
-                        <!-- BLOQUE COMPUESTO UNIFICADO TRANSPARENTE -->
-                        <div class="draggable-element" id="el-compuesto" style="left:40px; top:40px; width:220px; height:260px;">
-                            <div class="element-text-node" id="el-texto-span" style="color: #ffffff; font-size: 14px;">Boleto Oficial: SIN HOGAR-001</div>
+                        <!-- ELEMENTO TEXTO SEPARADO -->
+                        <div class="draggable-element" id="el-texto-draggable" style="left:40px; top:40px; width:300px; height:50px;">
+                            <div class="element-text-node" id="el-texto-span" style="color: #ffffff; font-size: 14px;">Boleto Oficial: NOMBRE-001</div>
+                            <div class="resizer"></div>
+                        </div>
+
+                        <!-- ELEMENTO QR SEPARADO -->
+                        <div class="draggable-element" id="el-qr-draggable" style="left:40px; top:110px; width:150px; height:150px;">
                             <div class="element-qr-node" id="el-qr-target"></div>
                             <div class="resizer"></div>
                         </div>
@@ -236,7 +245,7 @@
 <audio id="audio-error" src="https://assets.mixkit.co/active_storage/sfx/2955/2955-84.wav" preload="auto"></audio>
 
 <script>
-    const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzqiah0ZY9FCbpiEMmEEmkAQJBkBsn4SEgHRIOKwuyk0XSrq03bJ59XROJVpNLRp60/exec";
+    const WEB_APP_URL = "AQUÍ_PEGA_TU_URL_DE_GOOGLE";
 
     let DATABASE_OBRAS = JSON.parse(localStorage.getItem('MALBROTE_TEATRO_DB')) || [];
     let ASISTENCIA_LOCAL = JSON.parse(localStorage.getItem('MALBROTE_ASISTENCIA_DB')) || {};
@@ -285,7 +294,8 @@
             prefijo: prefijoAutomatico,
             cantidadTickets: 50,
             layout: {
-                compLeft: 40, compTop: 40, compWidth: 220, compHeight: 260,
+                txtLeft: 40, txtTop: 40, txtWidth: 300, txtHeight: 50,
+                qrLeft: 40, qrTop: 110, qrWidth: 150, qrHeight: 150,
                 txtFontSize: 14, txtColor: '#ffffff'
             },
             funciones: [
@@ -309,17 +319,26 @@
         document.getElementById('batch-prefix').value = obra.prefijo;
         document.getElementById('batch-qty').value = obra.cantidadTickets;
 
-        const comp = document.getElementById('el-compuesto');
+        const txtEl = document.getElementById('el-texto-draggable');
+        const qrEl = document.getElementById('el-qr-draggable');
         const txtSpan = document.getElementById('el-texto-span');
 
-        comp.style.left = (obra.layout.compLeft || 40) + 'px';
-        comp.style.top = (obra.layout.compTop || 40) + 'px';
-        comp.style.width = (obra.layout.compWidth || 220) + 'px';
-        comp.style.height = (obra.layout.compHeight || 260) + 'px';
+        txtEl.style.left = (obra.layout.txtLeft || 40) + 'px';
+        txtEl.style.top = (obra.layout.txtTop || 40) + 'px';
+        txtEl.style.width = (obra.layout.txtWidth || 300) + 'px';
+        txtEl.style.height = (obra.layout.txtHeight || 50) + 'px';
+
+        qrEl.style.left = (obra.layout.qrLeft || 40) + 'px';
+        qrEl.style.top = (obra.layout.qrTop || 110) + 'px';
+        qrEl.style.width = (obra.layout.qrWidth || 150) + 'px';
+        qrEl.style.height = (obra.layout.qrHeight || 150) + 'px';
         
+        document.getElementById('prop-text-size').value = obra.layout.txtFontSize || 14;
         txtSpan.style.fontSize = (obra.layout.txtFontSize || 14) + 'px';
         document.getElementById('prop-text-color').value = obra.layout.txtColor || '#ffffff';
         txtSpan.style.color = obra.layout.txtColor || '#ffffff';
+
+        txtSpan.innerText = `Boleto Oficial: ${obra.nombre}-001`;
 
         funcionSeleccionadaIdx = 0;
         refrescarSubpestañasFisicas();
@@ -402,7 +421,7 @@
         }
     });
 
-    // --- ARRASTRE Y ESCALA ---
+    // --- ARRASTRE Y ESCALA INDEPENDIENTE ---
     function inicializarArrastreYEscalaElementos(id) {
         const elemento = document.getElementById(id);
         const resizer = elemento.querySelector('.resizer');
@@ -441,10 +460,12 @@
             function escalar(evt) {
                 let w = startWidth + (evt.clientX - startX);
                 let h = startHeight + (evt.clientY - startY);
-                if (w > 60) elemento.style.width = w + 'px';
-                if (h > 80) elemento.style.height = h + 'px';
+                if (w > 30) elemento.style.width = w + 'px';
+                if (h > 20) elemento.style.height = h + 'px';
                 
-                redibujarInstanciaQrPrevia();
+                if (id === 'el-qr-draggable') {
+                    redibujarInstanciaQrPrevia();
+                }
                 salvarDatosDiseñoInstantaneo();
             }
             function soltarEscala() {
@@ -456,30 +477,34 @@
         });
     }
 
-    inicializarArrastreYEscalaElementos('el-compuesto');
-
-    document.getElementById('prop-text-val').addEventListener('input', (e) => {
-        document.getElementById('el-texto-span').innerText = e.target.value;
-    });
+    inicializarArrastreYEscalaElementos('el-texto-draggable');
+    inicializarArrastreYEscalaElementos('el-qr-draggable');
 
     function aplicarEstilosEnCaliente() {
         const col = document.getElementById('prop-text-color').value;
-        document.getElementById('el-texto-span').style.color = col;
+        const size = document.getElementById('prop-text-size').value;
+        const txtSpan = document.getElementById('el-texto-span');
+        txtSpan.style.color = col;
+        txtSpan.style.fontSize = size + 'px';
         salvarDatosDiseñoInstantaneo();
     }
 
     function salvarDatosDiseñoInstantaneo() {
         if (obraSeleccionadaIdx === null) return;
         const obra = DATABASE_OBRAS[obraSeleccionadaIdx];
-        const comp = document.getElementById('el-compuesto');
-        const txtSpan = document.getElementById('el-texto-span');
+        const txtEl = document.getElementById('el-texto-draggable');
+        const qrEl = document.getElementById('el-qr-draggable');
 
         obra.layout = {
-            compLeft: parseInt(comp.style.left),
-            compTop: parseInt(comp.style.top),
-            compWidth: parseInt(comp.style.width),
-            compHeight: parseInt(comp.style.height),
-            txtFontSize: parseInt(txtSpan.style.fontSize),
+            txtLeft: parseInt(txtEl.style.left),
+            txtTop: parseInt(txtEl.style.top),
+            txtWidth: parseInt(txtEl.style.width),
+            txtHeight: parseInt(txtEl.style.height),
+            qrLeft: parseInt(qrEl.style.left),
+            qrTop: parseInt(qrEl.style.top),
+            qrWidth: parseInt(qrEl.style.width),
+            qrHeight: parseInt(qrEl.style.height),
+            txtFontSize: parseInt(document.getElementById('prop-text-size').value),
             txtColor: document.getElementById('prop-text-color').value
         };
         obra.prefijo = document.getElementById('batch-prefix').value.toUpperCase();
@@ -515,7 +540,7 @@
         }
     }
 
-    // --- REEMPLAZO INTELIGENTE AUTOMÁTICO DE NÚMERO ---
+    // --- RENDERIZADO DEL LOTE CON PREFIJO SEGURO ---
     function generarLoteCompleto() {
         salvarDatosDiseñoInstantaneo();
         const obra = DATABASE_OBRAS[obraSeleccionadaIdx];
@@ -524,8 +549,6 @@
         output.style.display = "grid";
 
         mostrarAlertaModal("⚙️ PROCESANDO RENDER", `Dibujando ${obra.cantidadTickets} boletos únicos...`);
-
-        const textoBaseConfigurado = document.getElementById('prop-text-val').value;
 
         for(let i = 1; i <= obra.cantidadTickets; i++) {
             const numStr = String(i).padStart(3, '0');
@@ -547,37 +570,38 @@
             bg.src = document.getElementById('canva-bg-image').src;
             canvasClone.appendChild(bg);
 
-            const compClon = document.createElement('div');
-            compClon.className = 'draggable-element';
-            compClon.style.left = obra.layout.compLeft + 'px';
-            compClon.style.top = obra.layout.compTop + 'px';
-            compClon.style.width = obra.layout.compWidth + 'px';
-            compClon.style.height = obra.layout.compHeight + 'px';
+            // Clonar Texto Separado
+            const txtClon = document.createElement('div');
+            txtClon.className = 'draggable-element';
+            txtClon.style.left = obra.layout.txtLeft + 'px';
+            txtClon.style.top = obra.layout.txtTop + 'px';
+            txtClon.style.width = obra.layout.txtWidth + 'px';
+            txtClon.style.height = obra.layout.txtHeight + 'px';
 
             const txtNode = document.createElement('div');
             txtNode.className = 'element-text-node';
             txtNode.style.color = obra.layout.txtColor;
             txtNode.style.fontSize = obra.layout.txtFontSize + 'px';
-            
-            // Reemplazo inteligente de patrones numéricos (ej: #001, 001) o adición al final
-            let textoRenderizadoFinal = textoBaseConfigurado;
-            if (/#?\d+$/.test(textoBaseConfigurado) || textoBaseConfigurado.includes("001")) {
-                textoRenderizadoFinal = textoBaseConfigurado.replace(/#?\d+$/, numStr).replace("001", numStr);
-            } else {
-                textoRenderizadoFinal = textoBaseConfigurado + "-" + numStr;
-            }
-            
-            txtNode.innerText = textoRenderizadoFinal;
-            compClon.appendChild(txtNode);
+            // Formato exacto solicitado por seguridad
+            txtNode.innerText = `Boleto Oficial: ${obra.nombre}-${numStr}`;
+            txtClon.appendChild(txtNode);
+            canvasClone.appendChild(txtClon);
+
+            // Clonar QR Separado
+            const qrClon = document.createElement('div');
+            qrClon.className = 'draggable-element';
+            qrClon.style.left = obra.layout.qrLeft + 'px';
+            qrClon.style.top = obra.layout.qrTop + 'px';
+            qrClon.style.width = obra.layout.qrWidth + 'px';
+            qrClon.style.height = obra.layout.qrHeight + 'px';
 
             const qrNode = document.createElement('div');
             qrNode.className = 'element-qr-node';
             const targetQrInner = document.createElement('div');
             targetQrInner.id = `qr-node-final-${numStr}`;
             qrNode.appendChild(targetQrInner);
-            compClon.appendChild(qrNode);
-
-            canvasClone.appendChild(compClon);
+            qrClon.appendChild(qrNode);
+            canvasClone.appendChild(qrClon);
 
             const btnDownload = document.createElement('button');
             btnDownload.innerText = `Descargar #${numStr}`;
@@ -597,7 +621,7 @@
             cardWrapper.appendChild(btnDownload);
             output.appendChild(cardWrapper);
 
-            let sizeQr = Math.min(obra.layout.compWidth, obra.layout.compHeight - (obra.layout.txtFontSize + 25));
+            let sizeQr = Math.min(obra.layout.qrWidth, obra.layout.qrHeight) - 4;
             if(sizeQr < 25) sizeQr = 25;
             new QRCode(targetQrInner, { text: payloadCifrado, width: sizeQr, height: sizeQr });
         }
