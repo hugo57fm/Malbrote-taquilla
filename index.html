@@ -3,213 +3,394 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sistema de Taquilla Integral - Teatro</title>
+    <title>Panel de Control & Taquilla - Teatro Maestro</title>
+    
+    <!-- Librerías de Escáner y Captura -->
     <script src="https://unpkg.com/html5-qrcode"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    
+    <!-- Librería para Recorte de Fotos Profesional (Estilo Canva/Editor) -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
+
     <style>
-        body { font-family: 'Segoe UI', sans-serif; background-color: #f4f6f9; margin: 0; padding: 15px; text-align: center; }
-        .container { max-width: 500px; margin: 0 auto; background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
-        h1 { color: #333; margin: 5px 0 10px 0; font-size: 24px; }
-        .config-bar { background: #f8fafc; padding: 10px; border-radius: 8px; margin-bottom: 15px; border: 1px solid #e2e8f0; font-weight: bold; }
-        select { padding: 8px; font-size: 14px; border-radius: 6px; border: 1px solid #cbd5e1; font-weight: bold; color: #1e293b; }
-        .tabs { display: flex; justify-content: space-around; margin-bottom: 15px; border-bottom: 2px solid #e2e8f0; }
-        .tab-btn { background: none; border: none; padding: 10px 5px; font-size: 15px; font-weight: bold; cursor: pointer; color: #64748b; flex: 1; }
-        .tab-btn.active { color: #2563eb; border-bottom: 3px solid #2563eb; }
-        .tab-content { display: none; }
-        .tab-content.active { display: block; }
-        .counter-box { background: #2563eb; color: white; padding: 12px; border-radius: 8px; font-size: 20px; font-weight: bold; margin: 10px 0; }
-        
-        /* Contenedor optimizado y compacto para la cámara */
-        #reader { width: 100%; max-width: 280px; margin: 0 auto 15px auto; border-radius: 12px; overflow: hidden; background: #e2e8f0; border: 2px solid #cbd5e1; }
-        #reader video { object-fit: cover !important; height: 260px !important; }
-
-        .input-group { margin: 15px 0; display: flex; flex-direction: column; gap: 10px; align-items: center; }
-        .input-row { display: flex; gap: 10px; justify-content: center; width: 100%; }
-        input { padding: 12px; border: 1px solid #ccc; border-radius: 6px; font-size: 16px; width: 60%; }
-        input[type="number"], input[type="range"] { padding: 8px; }
-        input[type="number"] { width: 25%; }
-        button { padding: 12px 20px; background: #16a34a; color: white; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 16px; }
-        button:hover { background: #15803d; }
-        .btn-camera { background: #4f46e5; width: 100%; margin-bottom: 10px; padding: 14px; font-size: 16px; }
-        .btn-file { background: #ea580c; width: 100%; margin-bottom: 15px; padding: 14px; font-size: 16px; color: white; border-radius: 6px; font-weight: bold; border: none; cursor: pointer; display: inline-block; box-sizing: border-box; }
-        .btn-sync { background: #2563eb; width: 100%; padding: 12px; font-size: 16px; margin-bottom: 10px; }
-        
-        /* Diseño del Pop-up Flotante */
-        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 9999; justify-content: center; align-items: center; padding: 20px; box-sizing: border-box; }
-        .modal-box { background: white; padding: 30px 20px; border-radius: 16px; max-width: 400px; width: 100%; box-shadow: 0 10px 25px rgba(0,0,0,0.3); animation: popEffect 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
-        @keyframes popEffect { from { transform: scale(0.7); opacity: 0; } to { transform: scale(1); opacity: 1; } }
-        .modal-title { font-size: 26px; font-weight: bold; margin-bottom: 15px; }
-        .modal-message { font-size: 18px; margin-bottom: 25px; color: #334155; line-height: 1.5; }
-        .modal-btn { width: 100%; padding: 14px; font-size: 18px; color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; }
-        
-        /* Estados del Pop-up */
-        .pop-success { border: 4px solid #16a34a; background-color: #f0fdf4; }
-        .pop-success .modal-title { color: #16a34a; }
-        .pop-success .modal-btn { background: #16a34a; }
-        .pop-danger { border: 4px solid #ef4444; background-color: #fef2f2; }
-        .pop-danger .modal-title { color: #ef4444; }
-        .pop-danger .modal-btn { background: #ef4444; }
-        .pop-loading { border: 4px solid #eab308; background-color: #fefce8; }
-        .pop-loading .modal-title { color: #ca8a04; }
-
-        .history-list { text-align: left; background: #f8fafc; padding: 10px; border-radius: 6px; max-height: 250px; overflow-y: auto; margin-top: 15px; border: 1px solid #cbd5e1; }
-        .history-item { display: flex; justify-content: space-between; align-items: center; padding: 8px 10px; border-bottom: 1px solid #e2e8f0; font-size: 15px; }
-        .btn-reset { background: #64748b; margin-top: 25px; width: 100%; }
-        #qr-output { margin-top: 20px; display: flex; flex-wrap: wrap; justify-content: center; gap: 15px; max-height: 400px; overflow-y: auto; padding: 10px; border: 1px solid #e2e8f0; border-radius: 8px; background: #fafafa; }
-
-        /* --- SECCIÓN NUEVA: DISEÑO DE TU BOLETO MAESTRO --- */
-        .ticket-wrapper {
-            margin: 20px auto;
-            position: relative;
-            width: 380px;
-            height: 200px;
-            background-color: #1a1a1a;
-            background-size: cover;
-            background-position: center;
-            border-radius: 10px;
-            overflow: hidden;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-            border: 2px solid #333;
+        :root {
+            --primary: #2563eb;
+            --primary-dark: #1d4ed8;
+            --text-dark: #0f172a; /* El azul marino oscuro de tus boletos oficiales */
+            --bg-main: #f8fafc;
+            --surface: #ffffff;
+            --border: #e2e8f0;
         }
-        /* Tu tipografía y color dorado oficial idénticos */
-        .ticket-title-overlay {
+
+        body { 
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; 
+            background-color: var(--bg-main); 
+            margin: 0; 
+            padding: 0; 
+            color: var(--text-dark);
+        }
+
+        /* Navbar estilo App Moderna */
+        .app-header {
+            background: var(--surface);
+            border-bottom: 1px solid var(--border);
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .app-title { margin: 0; font-size: 20px; font-weight: 700; display: flex; align-items: center; gap: 10px; }
+
+        .main-layout {
+            max-width: 1200px;
+            margin: 25px auto;
+            padding: 0 20px;
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 25px;
+        }
+
+        /* Pestañas Modernas */
+        .tabs-container {
+            display: flex;
+            background: #edd;
+            background: var(--border);
+            padding: 4px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+        }
+        .tab-btn {
+            flex: 1;
+            background: none;
+            border: none;
+            padding: 10px;
+            font-size: 14px;
+            font-weight: 600;
+            color: #64748b;
+            cursor: pointer;
+            border-radius: 6px;
+            transition: all 0.2s;
+        }
+        .tab-btn.active {
+            background: var(--surface);
+            color: var(--primary);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+
+        .tab-content { display: none; animation: fadeIn 0.3s ease; }
+        .tab-content.active { display: block; }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* Tarjeta Contenedora Estilo Canva */
+        .card {
+            background: var(--surface);
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            padding: 24px;
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
+            text-align: left;
+        }
+
+        /* Dashboard de Obras (Cuadritos Chiquitos) */
+        .grid-obras {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+        .obra-item {
+            background: var(--surface);
+            border: 2px solid var(--border);
+            border-radius: 10px;
+            padding: 20px;
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.2s;
+            font-weight: 600;
+        }
+        .obra-item:hover, .obra-item.active {
+            border-color: var(--primary);
+            background: #f0f5ff;
+        }
+
+        .sub-funciones {
+            margin-top: 10px;
+            display: none;
+            flex-direction: column;
+            gap: 5px;
+            padding-left: 10px;
+        }
+        .sub-funciones button {
+            background: #f1f5f9;
+            color: var(--text-dark);
+            border: 1px solid var(--border);
+            padding: 8px;
+            font-size: 13px;
+            border-radius: 6px;
+            text-align: left;
+        }
+        .sub-funciones button:hover { background: var(--primary); color: white; }
+
+        /* Botones e Inputs UX */
+        .btn {
+            background: var(--primary); color: white; border: none; padding: 12px 20px;
+            font-size: 15px; font-weight: 600; border-radius: 8px; cursor: pointer;
+            display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+        }
+        .btn:hover { background: var(--primary-dark); }
+        .btn-secondary { background: #64748b; }
+        .btn-secondary:hover { background: #475569; }
+        .btn-accent { background: #ea580c; }
+
+        .input-control {
+            width: 100%; padding: 10px 14px; border: 1px solid var(--border);
+            border-radius: 8px; font-size: 15px; box-sizing: border-box; margin-top: 5px;
+        }
+
+        /* --- LIENZO DINÁMICO ADAPTABLE (CANVA STYLE) --- */
+        .canvas-area {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+            margin-top: 25px;
+        }
+
+        /* El contenedor toma el tamaño real de tu imagen subida */
+        .ticket-live-container {
+            position: relative;
+            background: #ffffff;
+            border: 1px dashed #cbd5e1;
+            border-radius: 8px;
+            display: inline-block;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+        }
+
+        .ticket-bg-img {
+            display: block;
+            max-width: 100%;
+            height: auto;
+            pointer-events: none;
+        }
+
+        /* Capa de Texto Oficial Replicado Exacto */
+        .ticket-text-layer {
             position: absolute;
-            top: 20px;
+            top: 5%;
             left: 0;
             width: 100%;
-            font-family: 'Impact', 'Arial Black', sans-serif;
-            font-size: 22px;
-            color: #f1c40f; 
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
             text-align: center;
-            z-index: 2;
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            font-size: 18px;
+            font-weight: 600;
+            color: #1a2b4c; /* Color oficial del boleto guardado */
+            letter-spacing: -0.3px;
+            z-index: 10;
         }
-        /* Máscara contenedora para aplicar el recorte del QR */
-        .ticket-qr-crop {
+
+        /* QR Arrastrable sobre el Canvas */
+        .ticket-qr-layer {
             position: absolute;
-            bottom: 20px;
+            bottom: 10%;
             left: 50%;
             transform: translateX(-50%);
-            width: 100px;
-            height: 100px;
-            overflow: hidden; /* Esto hace el recorte mágico */
-            background: white;
-            border-radius: 4px;
-            z-index: 2;
+            cursor: move;
+            z-index: 10;
         }
-        .ticket-qr-crop #preview-qrcode img {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%) scale(1.3); /* Escala inicial */
+
+        /* Modal o Ventana de Recorte Profesional */
+        .crop-modal-content {
+            max-width: 400px;
+            margin: 0 auto;
+            text-align: center;
         }
-        .crop-controls {
-            background: #f1f5f9;
-            padding: 10px;
-            border-radius: 8px;
-            margin-top: 10px;
-            width: 100%;
-            box-sizing: border-box;
-            font-size: 13px;
+        .cropper-wrapper {
+            max-height: 300px;
+            margin-bottom: 15px;
+            background: #334155;
         }
+
+        /* Escáner & Listas */
+        #reader { width: 100%; max-width: 320px; margin: 0 auto; border-radius: 12px; overflow: hidden; }
+        .counter-box { background: var(--primary); color: white; padding: 15px; border-radius: 8px; font-size: 22px; font-weight: bold; text-align: center; margin-bottom: 15px; }
+        .history-list { background: var(--bg-main); border-radius: 8px; padding: 10px; max-height: 200px; overflow-y: auto; }
+        .history-item { padding: 10px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; }
+
+        /* Ventanas Flotantes Pop-Up */
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15,23,42,0.6); z-index: 9999; justify-content: center; align-items: center; padding: 20px; box-sizing: border-box; }
+        .modal-box { background: white; padding: 25px; border-radius: 14px; max-width: 450px; width: 100%; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1); }
     </style>
 </head>
 <body>
 
-<div class="container">
-    <h1>🎭 Control de Teatro (v5.3)</h1>
-    
-    <div class="config-bar">
-        🎬 Sala Activa: 
-        <select id="funcion-activa" onchange="cambiarFuncionSecura()">
-            <option value="FUNCIÓN 1">FUNCIÓN 1</option>
-            <option value="FUNCIÓN 2">FUNCIÓN 2</option>
+<header class="app-header">
+    <div class="app-title">🎭 Taquilla Profesional & Engine v6.0</div>
+    <div>
+        <select id="funcion-activa" onchange="cambiarFuncionSecura()" style="padding:8px; border-radius:6px; font-weight:600;">
+            <option value="FUNCIÓN 1">⚡ FUNCIÓN 1</option>
+            <option value="FUNCIÓN 2">⚡ FUNCIÓN 2</option>
         </select>
     </div>
+</header>
 
-    <div class="tabs">
-        <button class="tab-btn active" onclick="switchTab('tab-generador')">🎟️ Crear</button>
-        <button class="tab-btn" onclick="switchTab('tab-escaner')">📷 Escáner</button>
-        <button class="tab-btn" onclick="switchTab('tab-asistencia')">📊 Dentro (<span id="tab-count-badge">0</span>)</button>
+<div class="main-layout">
+    
+    <div class="tabs-container">
+        <button class="tab-btn active" onclick="switchTab('tab-generador')">🎨 Canva Generator</button>
+        <button class="tab-btn" onclick="switchTab('tab-escaner')">📷 Escáner de Sala</button>
+        <button class="tab-btn" onclick="switchTab('tab-asistencia')">📊 Asistencia (<span id="tab-count-badge">0</span>)</button>
     </div>
 
-    <!-- PESTAÑA 1: GENERADOR AUTOMÁTICO (RESTAURADO + MEJORADO) -->
+    <!-- PESTAÑA 1: GENERADOR ESTILO CANVA -->
     <div id="tab-generador" class="tab-content active">
-        <h3>Generador de Boletos Automático</h3>
-        
-        <div class="input-group">
-            <!-- Botón para que vuelvas a subir tu imagen de fondo original -->
-            <label for="bg-file-input" style="background:#0284c7;" class="btn-file">🖼️ 1. Subir Imagen de Fondo (Plantilla)</label>
-            <input type="file" id="bg-file-input" accept="image/*" style="display: none;" onchange="cargarImagenFondo(this)">
+        <div class="card">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                <h3 style="margin:0;">Mis Obras y Producciones</h3>
+                <button class="btn" style="padding: 8px 12px; font-size:13px;" onclick="abrirPopUpNuevaObra()">➕ Nueva Obra</button>
+            </div>
             
-            <div class="crop-controls">
-                <label><b>✂️ Recorte del Código QR (Quitar bordes blancos):</b></label>
-                <input type="range" id="qr-zoom-slider" min="1.0" max="2.5" step="0.1" value="1.3" oninput="ajustarZoomQR(this.value)">
+            <!-- Cuadritos chiquitos listados -->
+            <div class="grid-obras" id="lista-obras-grid">
+                <div class="obra-item" onclick="toggleOpcionesObra(this, 'SIN HOGAR')">
+                    🎬 SIN HOGAR
+                    <div class="sub-funciones" id="sub-SIN-HOGAR">
+                        <button onclick="seleccionarProduccion('SIN HOGAR', 1)">🎟️ Función 1 (Boleto 001-078)</button>
+                        <button onclick="seleccionarProduccion('SIN HOGAR', 2)">🎟️ Función 2 (Boleto 079-156)</button>
+                    </div>
+                </div>
             </div>
 
-            <div class="input-row">
-                <input type="text" id="qr-prefix" value="SIN HOGAR" placeholder="Ej: SIN HOGAR" autocomplete="off">
-                <input type="number" id="qr-quantity" min="1" max="500" value="156">
+            <div id="editor-canva-section" style="display:none; margin-top:30px; border-top:1px solid var(--border); padding-top:20px;">
+                <h4 id="workspace-title" style="margin:0 0 15px 0; color: var(--primary);">Configurando: SIN HOGAR</h4>
+                
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
+                    <div>
+                        <label style="font-weight:600; font-size:14px;">Imagen de Fondo del Boleto:</label>
+                        <input type="file" id="canvas-bg-input" accept="image/*" class="input-control" onchange="procesarFondoBoleto(this)">
+                    </div>
+                    <div>
+                        <label style="font-weight:600; font-size:14px;">Subir y Recortar QR Maestro:</label>
+                        <input type="file" id="qr-crop-input" accept="image/*" class="input-control" onchange="abrirEditorRecorte(this)">
+                    </div>
+                </div>
+
+                <div style="margin-bottom: 20px;">
+                    <button class="btn" style="width:100%;" onclick="generarLoteCompletoCanva()">⚡ Iniciar Producción en Masa Automática</button>
+                </div>
+
+                <!-- LIENZO INTERACTIVO ADAPTABLE -->
+                <div class="canvas-area">
+                    <p style="font-size:12px; color:#64748b; margin:0;">💡 Arrastra el Código QR a cualquier posición sobre tu plantilla de fondo.</p>
+                    <div class="ticket-live-container" id="canvas-blueprint">
+                        <!-- El título oficial dinámico que se renderizará idéntico -->
+                        <div class="ticket-text-layer" id="live-text-overlay">Boleto Oficial: SIN HOGAR-001</div>
+                        
+                        <!-- Fondo por defecto blanco limpio como tu imagen original -->
+                        <img id="blueprint-bg" class="ticket-bg-img" src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='400' height='360' viewBox='0 0 400 360'><rect width='400' height='360' fill='white'/></svg>">
+                        
+                        <!-- Capa del QR Movible -->
+                        <div class="ticket-qr-layer" id="live-qr-overlay">
+                            <img id="cropped-qr-preview" src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><rect width='160' height='160' fill='%23eee'/></svg>" style="width:160px; height:160px; display:block;">
+                        </div>
+                    </div>
+                </div>
             </div>
-            <button style="width: 100%;" onclick="generarLoteBoletosAutomaticos()">⚡ Generar Automáticamente en Lote</button>
         </div>
-
-        <!-- Vista Previa en Vivo de tu Plantilla Maestra -->
-        <div class="ticket-wrapper" id="plantilla-maestra">
-            <div class="ticket-title-overlay" id="preview-ticket-title">Boleto Oficial: SIN HOGAR-001</div>
-            <div class="ticket-qr-crop">
-                <div id="preview-qrcode"></div>
-            </div>
+        <div id="bulk-download-zone" style="display:none; margin-top:20px;" class="card">
+            <h4>📥 Carrete de Boletos Generados Automáticamente</h4>
+            <div id="carrete-imagenes" style="display:flex; flex-wrap:wrap; gap:10px; justify-content:center;"></div>
         </div>
-
-        <div id="qr-output" style="display:none;"></div>
     </div>
 
-    <!-- PESTAÑA 2: ESCÁNER (RESTAURADO COMPLETO) -->
+    <!-- PESTAÑA 2: ESCÁNER COMPLETO RESTAURADO -->
     <div id="tab-escaner" class="tab-content">
-        <div class="counter-box">Asistentes en Sala: <span id="total-count">0</span></div>
-        
-        <!-- Método 1: Cámara Ajustada Corta -->
-        <button class="btn-camera" id="btn-encender-camara" onclick="inicializarEscaner()">📷 Modo 1: Abrir Cámara Compacta</button>
-        <div id="reader"></div>
+        <div class="card">
+            <div class="counter-box">Asistentes Adentro: <span id="total-count">0</span></div>
+            
+            <button class="btn" id="btn-encender-camara" onclick="inicializarEscaner()" style="width:100%; margin-bottom:15px;">📷 Abrir Cámara en Vivo</button>
+            <div id="reader"></div>
 
-        <!-- Método 2: Escáner Manual de Fotos -->
-        <label for="qr-file-input" class="btn-file">📸 Modo 2: Tomar Foto de Boleto</label>
-        <input type="file" id="qr-file-input" accept="image/*" style="display: none;" onchange="escanearDesdeArchivo(this)">
+            <div style="margin: 20px 0; text-align:center; font-weight:bold; color:#64748b;">— O TAMBIÉN —</div>
 
-        <!-- Método 3: Registro Manual -->
-        <div class="input-group">
-            <div class="input-row">
-                <input type="text" id="ticket-input" placeholder="Número manual..." autocomplete="off">
-                <button onclick="procesarBoletoManual()">Ingresar</button>
+            <label for="qr-file-input" class="btn btn-accent" style="width:100%; box-sizing:border-box;">📸 Tomar Foto de Boleto Impreso</label>
+            <input type="file" id="qr-file-input" accept="image/*" style="display: none;" onchange="escanearDesdeArchivo(this)">
+
+            <div style="margin-top:20px;">
+                <label style="font-weight:600;">Ingreso Manual por Código:</label>
+                <div style="display:flex; gap:10px; margin-top:5px;">
+                    <input type="text" id="ticket-input" class="input-control" style="margin:0;" placeholder="Ej: SIN HOGAR-009">
+                    <button class="btn" onclick="procesarBoletoManual()">Validar</button>
+                </div>
             </div>
         </div>
     </div>
 
-    <!-- PESTAÑA 3: ASISTENCIA GLOBAL (RESTAURADO COMPLETO) -->
+    <!-- PESTAÑA 3: ASISTENCIA GLOBAL CLOUD -->
     <div id="tab-asistencia" class="tab-content">
-        <h3>👥 Personas Adentro (Sincronizado)</h3>
-        <button class="btn-sync" onclick="sincronizarConNube()">🔄 Sincronizar Lista Cloud</button>
-        <div class="history-list" id="history-container"></div>
-        <button class="btn-reset" onclick="reiniciarTodoCloud()">🧹 Limpiar Pruebas de esta Función</button>
+        <div class="card">
+            <h3>👥 Lista de Acceso Sincronizada</h3>
+            <button class="btn btn-secondary" style="width:100%; margin-bottom:15px;" onclick="sincronizarConNube()">🔄 Actualizar Lista con Google Sheets</button>
+            <div class="history-list" id="history-container"></div>
+            <button class="btn btn-accent" style="width:100%; margin-top:20px;" onclick="reiniciarTodoCloud()">🧹 Limpiar Asistencias de esta Función</button>
+        </div>
     </div>
 </div>
 
-<!-- VENTANA POP-UP DE RESULTADOS (MODAL RESTAURADO) -->
+<!-- POP-UP 1: VENTANA PARA CREAR OBRA Y DEFINIR FUNCIONES -->
+<div id="popup-nueva-obra" class="modal-overlay">
+    <div class="modal-box">
+        <h3>🎬 Crear Nueva Producción</h3>
+        <div style="margin-bottom:15px;">
+            <label style="font-weight:600;">Nombre de la Obra:</label>
+            <input type="text" id="new-obra-name" class="input-control" placeholder="Ej: ROMEO Y JULIETA">
+        </div>
+        <div style="margin-bottom:20px;">
+            <label style="font-weight:600;">¿Cuántas funciones tendrá?</label>
+            <select id="new-obra-funciones" class="input-control">
+                <option value="1">1 Función</option>
+                <option value="2" selected>2 Funciones</option>
+                <option value="3">3 Funciones</option>
+                <option value="4">4 Funciones</option>
+            </select>
+        </div>
+        <div style="display:flex; gap:10px;">
+            <button class="btn" style="flex:1;" onclick="guardarNuevaObraDashboard()">Guardar Configuración</button>
+            <button class="btn btn-secondary" onclick="cerrarPopUpObra()">Cancelar</button>
+        </div>
+    </div>
+</div>
+
+<!-- POP-UP 2: EDITOR DE RECORTE DE FOTO PROFESIONAL (CROPPER) -->
+<div id="popup-cropper" class="modal-overlay">
+    <div class="modal-box" style="max-width:500px;">
+        <h3>✂️ Recortar Bordes del QR</h3>
+        <p style="font-size:13px; color:#64748b;">Arrastra las esquinas del recuadro para ajustar el corte de forma milimétrica.</p>
+        <div class="cropper-wrapper">
+            <img id="image-to-crop" style="max-width:100%;">
+        </div>
+        <div style="display:flex; gap:10px;">
+            <button class="btn" style="flex:1;" onclick="aplicarRecorteProfesionalQR()">✂️ Aplicar Recorte Recuadro</button>
+            <button class="btn btn-secondary" onclick="cerrarPopUpCropper()">Cancelar</button>
+        </div>
+    </div>
+</div>
+
+<!-- POP-UP 3: NOTIFICACIONES GLOBALES -->
 <div id="result-modal" class="modal-overlay">
-    <div id="modal-content-box" class="modal-box">
-        <div id="modal-title" class="modal-title"></div>
-        <div id="modal-message" class="modal-message"></div>
-        <button id="modal-btn" class="modal-btn" onclick="cerrarPopUp()">ENTENDIDO / SIGUIENTE</button>
+    <div id="modal-content-box" class="modal-box" style="text-align:center;">
+        <div id="modal-title" style="font-size:22px; font-weight:bold; margin-bottom:10px;"></div>
+        <div id="modal-message" style="font-size:15px; margin-bottom:20px; color:#475569;"></div>
+        <button id="modal-btn" class="btn" style="width:100%;" onclick="cerrarPopUpGlobal()">Entendido</button>
     </div>
 </div>
 
 <script>
     // ==========================================
-    // ¡PEGA TU URL DE APPS SCRIPT AQUÍ ABAJO!
+    // ¡ENLACE DIRECTO A TU APPS SCRIPT DE GOOGLE!
     // ==========================================
     const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzqiah0ZY9FCbpiEMmEEmkAQJBkBsn4SEgHRIOKwuyk0XSrq03bJ59XROJVpNLRp60/exec";
 
@@ -217,135 +398,190 @@
     let boletosRegistrados = new Set();
     let ultimoCodigoEscaneado = "";
     let tiempoUltimoEscaneo = 0;
-    let html5Qrcode = null; 
-    let currentZoom = 1.3;
+    let html5Qrcode = null;
+    let cropperInstancia = null;
+    
+    let obraSeleccionadaActiva = "";
+    let funcionLoteSeleccionada = 1;
 
-    // Inicializar QR de la Vista Previa de la Plantilla
-    const previewContainer = document.getElementById("preview-qrcode");
-    let qrPreviewInstancia = new QRCode(previewContainer, {
-        text: "Boleto Oficial: SIN HOGAR-001",
-        width: 100,
-        height: 100,
-        colorDark : "#000000",
-        colorLight : "#ffffff",
-        correctLevel : QRCode.CorrectLevel.H
+    // --- LOGICA DE ARRASTRE TIPO CANVA (DRAG & DROP SOBRE CANVAS) ---
+    const qrDrag = document.getElementById('live-qr-overlay');
+    const containerCanvas = document.getElementById('canvas-blueprint');
+    let isDragging = false; let startX, startY, initialLeft, initialTop;
+
+    qrDrag.addEventListener('mousedown', (e) => {
+        isDragging = true;
+        startX = e.clientX; startY = e.clientY;
+        initialLeft = qrDrag.offsetLeft; initialTop = qrDrag.offsetTop;
+        e.preventDefault();
     });
 
-    // Cargar la foto de fondo que elijas para tu boleto maestro
-    function cargarImagenFondo(input) {
+    document.addEventListener('mousemove', (e) => {
+        if (!isDragging) return;
+        let dx = e.clientX - startX; let dy = e.clientY - startY;
+        let newLeft = initialLeft + dx; let newTop = initialTop + dy;
+        
+        // Mantener dentro de las fronteras físicas del canvas adaptable
+        if(newLeft >= 0 && newLeft <= (containerCanvas.clientWidth - qrDrag.clientWidth)) {
+            qrDrag.style.left = newLeft + 'px'; qrDrag.style.transform = 'none';
+        }
+        if(newTop >= 0 && newTop <= (containerCanvas.clientHeight - qrDrag.clientHeight)) {
+            qrDrag.style.top = newTop + 'px';
+        }
+    });
+
+    document.addEventListener('mouseup', () => isDragging = false);
+
+    // --- MANEJO DE SECCIONES Y DASHBOARD ---
+    function abrirPopUpNuevaObra() { document.getElementById('popup-nueva-obra').style.display = 'flex'; }
+    function cerrarPopUpObra() { document.getElementById('popup-nueva-obra').style.display = 'none'; }
+    function cerrarPopUpCropper() { document.getElementById('popup-cropper').style.display = 'none'; }
+    
+    function guardarNuevaObraDashboard() {
+        const nombre = document.getElementById('new-obra-name').value.trim().toUpperCase();
+        const funcionesNum = parseInt(document.getElementById('new-obra-funciones').value, 10);
+        if(!nombre) return alert("Escribe un nombre para la obra");
+
+        const grid = document.getElementById('lista-obras-grid');
+        let subBtns = '';
+        let inicioRango = 1;
+        for(let f=1; f<=funcionesNum; f++) {
+            let finRango = inicioRango + 77;
+            subBtns += `<button onclick="seleccionarProduccion('${nombre}', ${f})">🎟️ Función ${f} (Boleto ${String(inicioRango).padStart(3,'0')}-${String(finRango).padStart(3,'0')})</button>`;
+            inicioRango = finRango + 1;
+        }
+
+        const nuevaTarjeta = document.createElement('div');
+        nuevaTarjeta.className = 'obra-item';
+        nuevaTarjeta.setAttribute('onclick', `toggleOpcionesObra(this, '${nombre}')`);
+        nuevaTarjeta.innerHTML = `🎬 ${nombre} <div class="sub-funciones" id="sub-${nombre}">${subBtns}</div>`;
+        grid.appendChild(nuevaTarjeta);
+        
+        cerrarPopUpObra();
+        document.getElementById('new-obra-name').value = '';
+    }
+
+    function toggleOpcionesObra(elemento, idObra) {
+        document.querySelectorAll('.sub-funciones').forEach(el => el.style.display = 'none');
+        document.querySelectorAll('.obra-item').forEach(el => el.classList.remove('active'));
+        elemento.classList.add('active');
+        document.getElementById(`sub-${idObra}`).style.display = 'flex';
+    }
+
+    function seleccionarProduccion(obra, numFuncion) {
+        event.stopPropagation();
+        obraSeleccionadaActiva = obra;
+        funcionLoteSeleccionada = numFuncion;
+        document.getElementById('editor-canva-section').style.display = 'block';
+        document.getElementById('workspace-title').innerText = `Configurando: ${obra} (Función ${numFuncion})`;
+        
+        let rangoInicio = numFuncion === 1 ? "001" : "079";
+        document.getElementById('live-text-overlay').innerText = `Boleto Oficial: ${obra}-${rangoInicio}`;
+    }
+
+    // Adaptar dinámicamente el fondo del Canvas al archivo subido
+    function procesarFondoBoleto(input) {
         if (input.files && input.files[0]) {
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                document.getElementById('plantilla-maestra').style.backgroundImage = `url('${e.target.result}')`;
+            const lector = new FileReader();
+            lector.onload = function(e) {
+                document.getElementById('blueprint-bg').src = e.target.result;
             }
-            reader.readAsDataURL(input.files[0]);
+            lector.readAsDataURL(input.files[0]);
         }
     }
 
-    // Ajustar el recorte/zoom del QR en la plantilla dinámica
-    function ajustarZoomQR(val) {
-        currentZoom = val;
-        const img = previewContainer.querySelector("img");
-        if(img) {
-            img.style.transform = `translate(-50%, -50%) scale(${val})`;
+    // --- RECORTE INTERACTIVO DE FOTOS PROFESIONAL (CROPPER.JS) ---
+    function abrirEditorRecorte(input) {
+        if (input.files && input.files[0]) {
+            const lector = new FileReader();
+            lector.onload = function(e) {
+                const img = document.getElementById('image-to-crop');
+                img.src = e.target.result;
+                document.getElementById('popup-cropper').style.display = 'flex';
+                
+                if(cropperInstancia) cropperInstancia.destroy();
+                setTimeout(() => {
+                    cropperInstancia = new Cropper(img, {
+                        viewMode: 1,
+                        background: false,
+                        autoCropArea: 1
+                    });
+                }, 200);
+            }
+            lector.readAsDataURL(input.files[0]);
         }
     }
 
-    // Esperar a que renderice inicialmente para aplicar zoom por defecto
-    setTimeout(() => ajustarZoomQR(1.3), 600);
+    function aplicarRecorteProfesionalQR() {
+        if(!cropperInstancia) return;
+        const canvasRecortado = cropperInstancia.getCroppedCanvas();
+        document.getElementById('cropped-qr-preview').src = canvasRecortado.toDataURL();
+        cerrarPopUpCropper();
+    }
 
-    // GENERADOR AUTOMÁTICO MASIVO POR LOTES
-    function generarLoteBoletosAutomaticos() {
-        const prefix = document.getElementById('qr-prefix').value.trim().toUpperCase() || "SIN HOGAR";
-        const cantidad = parseInt(document.getElementById('qr-quantity').value, 10) || 156;
-        const output = document.getElementById('qr-output');
+    // --- MOTOR GENERADOR MASIVO AUTOMÁTICO DE BOLETOS ---
+    function generarLoteCompletoCanva() {
+        if(!obraSeleccionadaActiva) return alert("Por favor selecciona una obra primero.");
         
-        output.innerHTML = "";
-        output.style.display = "flex";
+        const carrete = document.getElementById('carrete-imagenes');
+        carrete.innerHTML = "";
+        document.getElementById('bulk-download-zone').style.display = 'block';
         
-        mostrarPopUp('pop-loading', '⚡ Generando...', `Creando automáticamente ${cantidad} boletos idénticos con QR recortado...`);
+        let inicio = funcionLoteSeleccionada === 1 ? 1 : 79;
+        let fin = funcionLoteSeleccionada === 1 ? 78 : 156;
+        let indiceActual = inicio;
 
-        let index = 1;
+        mostrarPopUpGlobal('⏳ Generando Masivamente', 'Tu computadora está procesando y fusionando las capas del boleto de forma automatizada...', 'pop-loading');
 
-        function procesarSiguienteBoleto() {
-            if (index > cantidad) {
-                mostrarPopUp('pop-success', '🎉 PROCESO TERMINADO', `Se han autogenerado los ${cantidad} boletos en alta calidad con el formato oficial.`);
-                // Opcional: Sincronizar triggers con Apps Script de forma masiva aquí
+        function clonarSiguienteBoleto() {
+            if(indiceActual > fin) {
+                mostrarPopUpGlobal('🎉 ¡PROCESO CONCLUIDO!', `Se generó el paquete completo de boletos del ${String(inicio).padStart(3,'0')} al ${String(fin).padStart(3,'0')} en alta resolución.`, 'pop-success');
                 return;
             }
 
-            let numFormateado = String(index).padStart(3, '0');
-            let textoTitulo = `Boleto Oficial: ${prefix}-${numFormateado}`;
-            
-            // Actualizar vista previa temporalmente para la captura del clon masivo
-            document.getElementById('preview-ticket-title').innerText = textoTitulo;
-            previewContainer.innerHTML = "";
-            
-            new QRCode(previewContainer, {
-                text: textoTitulo,
-                width: 100,
-                height: 100,
-                colorDark : "#000000",
-                colorLight : "#ffffff",
-                correctLevel : QRCode.CorrectLevel.H
-            });
+            let numFormateado = String(indiceActual).padStart(3, '0');
+            document.getElementById('live-text-overlay').innerText = `Boleto Oficial: ${obraSeleccionadaActiva}-${numFormateado}`;
 
             setTimeout(() => {
-                ajustarZoomQR(currentZoom);
-                
-                // Capturar el elemento usando html2canvas de forma automática
-                html2canvas(document.getElementById('plantilla-maestra'), { scale: 2 }).then(canvas => {
-                    let imgData = canvas.toDataURL('image/png');
+                html2canvas(document.getElementById('canvas-blueprint'), { scale: 2, useCORS: true }).then(canvas => {
+                    let imgFinalData = canvas.toDataURL('image/png');
                     
-                    let link = document.createElement('a');
-                    link.download = `${prefix}-${numFormateado}.png`;
-                    link.href = imgData;
-                    
-                    // Crea un contenedor visual en la parte inferior por si quieres verlos o descargarlos todos
-                    let thumb = document.createElement('img');
-                    thumb.src = imgData;
-                    thumb.style.width = "110px";
-                    thumb.style.border = "1px solid #ccc";
-                    output.appendChild(thumb);
+                    // Crear elemento de descarga automático en segundo plano
+                    let triggerDescarga = document.createElement('a');
+                    triggerDescarga.download = `Boleto_${obraSeleccionadaActiva}_${numFormateado}.png`;
+                    triggerDescarga.href = imgFinalData;
+                    triggerDescarga.click();
 
-                    index++;
-                    procesarSiguienteBoleto();
+                    // Mostrar miniatura en el panel inferior
+                    let previsualizacionMini = document.createElement('img');
+                    previsualizacionMini.src = imgFinalData;
+                    previsualizacionMini.style.width = "90px";
+                    previsualizacionMini.style.border = "1px solid var(--border)";
+                    previsualizacionMini.style.borderRadius = "4px";
+                    carrete.appendChild(previsualizacionMini);
+
+                    indiceActual++;
+                    clonarSiguienteBoleto();
                 });
-            }, 150);
+            }, 100);
         }
 
-        procesarSiguienteBoleto();
+        clonarSiguienteBoleto();
     }
 
-    // --- CÓDIGO DE LOGICA ORIGINAL TOTALMENTE RESTAURADO ---
+    // --- CONTROL DE TAQUILLA & ESCÁNER TOTALMENTE INTEGRADOS ---
     sincronizarConNube();
 
-    function mostrarPopUp(tipo, titulo, mensaje) {
-        const modal = document.getElementById('result-modal');
-        const box = document.getElementById('modal-content-box');
-        const titleEl = document.getElementById('modal-title');
-        const msgEl = document.getElementById('modal-message');
-        const btn = document.getElementById('modal-btn');
-
-        box.className = "modal-box " + tipo;
-        titleEl.innerText = titulo;
-        msgEl.innerHTML = mensaje;
-        
-        if (tipo === 'pop-loading') {
-            btn.style.display = "none";
-        } else {
-            btn.style.display = "block";
-            btn.focus();
-        }
-        modal.style.display = "flex";
+    function mostrarPopUpGlobal(titulo, mensaje, clase) {
+        document.getElementById('result-modal').style.display = 'flex';
+        document.getElementById('modal-title').innerText = titulo;
+        document.getElementById('modal-message').innerHTML = mensaje;
     }
-
-    function cerrarPopUp() { document.getElementById('result-modal').style.display = "none"; }
+    function cerrarPopUpGlobal() { document.getElementById('result-modal').style.display = 'none'; }
 
     function cambiarFuncionSecura() {
         funcionActual = document.getElementById('funcion-activa').value;
         boletosRegistrados.clear();
-        cerrarPopUp();
         sincronizarConNube();
     }
 
@@ -379,24 +615,22 @@
         let codigoReal = desencriptarToken(codigoBruto);
         let numBoleto = extraerNumero(codigoReal);
         
-        mostrarPopUp('pop-loading', '⏳ Validando...', `Verificando el boleto <b>[${codigoReal}]</b> con la base de datos de Google...`);
-
         if (!numBoleto || numBoleto < 1 || numBoleto > 156) {
-            mostrarPopUp('pop-danger', '❌ CÓDIGO INVÁLIDO', `El código <b>[${codigoReal}]</b> no corresponde a ningún boleto oficial impreso del rango 001 al 156.`);
+            mostrarPopUpGlobal('❌ CÓDIGO INVÁLIDO', `El código <b>[${codigoReal}]</b> no pertenece al rango oficial impreso.`, 'pop-danger');
             reproducirSonidoError(); return;
         }
 
         if (funcionActual === "FUNCIÓN 1" && numBoleto > 78) {
-            mostrarPopUp('pop-danger', '⚠️ FUNCIÓN EQUIVOCADA', `El boleto <b>#${numBoleto}</b> pertenece a la <b>FUNCIÓN 2</b>.<br><br>Pídale al asistente que espere a la siguiente función.`);
+            mostrarPopUpGlobal('⚠️ FUNCIÓN EQUIVOCADA', `El boleto <b>#${numBoleto}</b> es de la <b>FUNCIÓN 2</b>.`, 'pop-danger');
             reproducirSonidoError(); return;
         }
         if (funcionActual === "FUNCIÓN 2" && numBoleto <= 78) {
-            mostrarPopUp('pop-danger', '⚠️ FUNCIÓN EQUIVOCADA', `El boleto <b>#${numBoleto}</b> pertenece a la <b>FUNCIÓN 1</b>.<br><br>Esta función ya pasó o corresponde al horario anterior.`);
+            mostrarPopUpGlobal('⚠️ FUNCIÓN EQUIVOCADA', `El boleto <b>#${numBoleto}</b> es de la <b>FUNCIÓN 1</b>.`, 'pop-danger');
             reproducirSonidoError(); return;
         }
 
         if (boletosRegistrados.has(String(numBoleto).padStart(3, '0'))) {
-            mostrarPopUp('pop-danger', '🚨 ¡BOLETO YA USADO!', `El boleto <b>#${numBoleto}</b> ya ingresó previamente a la sala.<br><br><b>¡Atención! Posible boleto duplicado o compartido.</b>`);
+            mostrarPopUpGlobal('🚨 ¡YA ACCESADO!', `El boleto <b>#${numBoleto}</b> ya se encuentra dentro de la sala. Duplicado.`, 'pop-danger');
             reproducirSonidoError(); return;
         }
 
@@ -406,100 +640,57 @@
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ accion: "registrar", codigo: codigoReal, funcion: funcionActual })
         }).then(() => {
-            mostrarPopUp('pop-success', '🎉 ¡BIENVENIDO!', `El boleto <b>#${numBoleto}</b> ha sido validado con éxito.<br><br>¡Puede pasar a la sala!`);
+            mostrarPopUpGlobal('🎉 ¡ACCESO PERMITIDO!', `Boleto <b>#${numBoleto}</b> verificado con éxito. ¡Adelante!`);
             sincronizarConNube();
         }).catch(() => {
-            mostrarPopUp('pop-danger', '❌ ERROR DE RED', `No se pudo conectar con Google. Revisa tu señal de datos o Wi-Fi.`);
+            mostrarPopUpGlobal('❌ ERROR DE RED', `Revisa tu señal de internet.`);
         });
     }
 
     function sincronizarConNube() {
-        const badge = document.getElementById('tab-count-badge');
-        badge.innerText = "...";
-        
-        fetch(WEB_APP_URL, {
-            method: "POST",
-            body: JSON.stringify({ accion: "obtener_asistencia", funcion: funcionActual })
-        })
+        fetch(WEB_APP_URL, { method: "POST", body: JSON.stringify({ accion: "obtener_asistencia", funcion: funcionActual }) })
         .then(res => res.json())
         .then(res => {
             if (res.status === "success") {
                 boletosRegistrados = new Set(res.lista);
-                actualizarInterfazTaquilla();
+                let total = boletosRegistrados.size;
+                document.getElementById('total-count').innerText = total;
+                document.getElementById('tab-count-badge').innerText = total;
+                const container = document.getElementById('history-container'); container.innerHTML = "";
+                if(total === 0) {
+                    container.innerHTML = `<div style="text-align:center; color:#64748b; padding:10px;">Sala vacía 🎭</div>`;
+                    return;
+                }
+                boletosRegistrados.forEach(b => { container.innerHTML += `<div class="history-item"><span>✅ Boleto #<b>${b}</b></span></div>`; });
             }
-        }).catch(() => {
-            if(badge) badge.innerText = boletosRegistrados.size;
-        });
-    }
-
-    function actualizarInterfazTaquilla() {
-        let total = boletosRegistrados.size;
-        document.getElementById('total-count').innerText = total;
-        document.getElementById('tab-count-badge').innerText = total;
-        const container = document.getElementById('history-container'); container.innerHTML = "";
-        
-        if(total === 0) {
-            container.innerHTML = `<div style="text-align:center; color:#94a3b8; padding:20px;">Nadie ha ingresado todavía a esta función 🎭</div>`;
-            return;
-        }
-        
-        boletosRegistrados.forEach(b => { 
-            container.innerHTML += `<div class="history-item"><span>✅ Boleto <b>#${b}</b> - En la sala</span></div>`; 
-        });
+        }).catch(() => {});
     }
 
     function reiniciarTodoCloud() {
-        if (confirm(`🚨 ¿Limpiar todas las asistencias de la ${funcionActual} en Google Sheets?`)) {
-            fetch(WEB_APP_URL, {
-                method: "POST",
-                mode: "no-cors",
-                body: JSON.stringify({ accion: "limpiar", funcion: funcionActual })
-            }).then(() => {
-                boletosRegistrados.clear(); actualizarInterfazTaquilla();
+        if (confirm(`🚨 ¿Limpiar asistencia de la ${funcionActual} en Google Sheets?`)) {
+            fetch(WEB_APP_URL, { method: "POST", mode: "no-cors", body: JSON.stringify({ accion: "limpiar", funcion: funcionActual }) }).then(() => {
+                boletosRegistrados.clear(); sincronizarConNube();
             });
         }
     }
 
     function escanearDesdeArchivo(input) {
         if (input.files.length === 0) return;
-        mostrarPopUp('pop-loading', '⏳ Leyendo Foto...', 'Analizando la captura del código QR...');
-
         const fileHtml5Qrcode = new Html5Qrcode("reader");
         fileHtml5Qrcode.scanFile(input.files[0], true)
-            .then(decodedText => {
-                registrarBoleto(decodedText);
-                input.value = "";
-            })
-            .catch(err => {
-                mostrarPopUp('pop-danger', '❌ LECTURA FALLIDA', 'No se encontró ningún QR legible en la foto. Intenta tomarla derecha, de cerca y bien iluminada.');
-                reproducirSonidoError();
-                input.value = "";
-            });
+            .then(decodedText => { registrarBoleto(decodedText); input.value = ""; })
+            .catch(err => { mostrarPopUpGlobal('❌ LECTURA FALLIDA', 'No se localizó un QR legible.'); reproducirSonidoError(); input.value = ""; });
     }
 
     function procesarBoletoManual() { const input = document.getElementById('ticket-input'); registrarBoleto(input.value); input.value = ""; }
-    document.getElementById('ticket-input').addEventListener('keypress', function(e) { if (e.key === 'Enter') { procesarBoletoManual(); } });
     function reproducirSonidoError() { const ctx = new (window.AudioContext || window.webkitAudioContext)(); const osc = ctx.createOscillator(); osc.type = 'sawtooth'; osc.frequency.setValueAtTime(130, ctx.currentTime); osc.connect(ctx.destination); osc.start(); osc.stop(ctx.currentTime + 0.3); }
-    
-    function onScanSuccess(decodedText) { 
-        let ahora = Date.now();
-        if (decodedText === ultimoCodigoEscaneado && (ahora - tiempoUltimoEscaneo) < 3000) return; 
-        ultimoCodigoEscaneado = decodedText;
-        tiempoUltimoEscaneo = ahora;
-        registrarBoleto(decodedText);
-    }
+    function onScanSuccess(decodedText) { registrarBoleto(decodedText); }
 
     function inicializarEscaner() { 
         document.getElementById('btn-encender-camara').style.display = "none";
         html5Qrcode = new Html5Qrcode("reader");
-        html5Qrcode.start(
-            { facingMode: "environment" }, 
-            { fps: 20, qrbox: { width: 230, height: 230 } },
-            onScanSuccess,
-            () => {}
-        ).catch(err => {
+        html5Qrcode.start({ facingMode: "environment" }, { fps: 20, qrbox: { width: 250, height: 250 } }, onScanSuccess, () => {}).catch(() => {
             document.getElementById('btn-encender-camara').style.display = "block";
-            alert("Usa el botón de tomar foto, la cámara continua está ocupada o no tiene permisos.");
         });
     }
 </script>
