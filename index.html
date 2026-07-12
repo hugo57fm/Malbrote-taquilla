@@ -43,7 +43,7 @@
 <body>
 
 <div class="container">
-    <h1>🎭 Control de Teatro Cloud (v5.0)</h1>
+    <h1>🎭 Control de Teatro Cloud (v5.1)</h1>
     
     <div class="config-bar">
         🎬 Sala Activa: 
@@ -75,7 +75,7 @@
     <!-- PESTAÑA 2: ESCÁNER -->
     <div id="tab-escaner" class="tab-content">
         <div class="counter-box">Asistentes en Sala: <span id="total-count">0</span></div>
-        <button class="btn-camera" id="btn-encender-camara" onclick="inicializarEscaner()">📷 Activar Cámara Súper-Foco</button>
+        <button class="btn-camera" id="btn-encender-camara" onclick="inicializarEscaner()">📷 Activar Cámara Escáner</button>
         <div id="reader"></div>
         <div class="input-group">
             <div class="input-row">
@@ -99,10 +99,13 @@
     // ==========================================
     // ¡PEGA TU URL DE APPS SCRIPT AQUÍ ABAJO! (LÍNEA 110)
     // ==========================================
-    const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxQEIDQ0VNsKB6TtqtuKhI3l6m8pVpw09J43n4aE2XukAFY6IaQ2BQ7jwC0RyTlzbxGiA/exec";
+    const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbz3VfJFbrWn1qntHd_wTkUjy5JWhd0bAReBGL1AxU075StviuEtn5Zf7Kh3OhJcxhKIIQ/exec";
 
     let funcionActual = document.getElementById('funcion-activa').value;
     let boletosRegistrados = new Set();
+    let ultimoCodigoEscaneado = "";
+    let tiempoUltimoEscaneo = 0;
+    
     sincronizarConNube();
 
     function cambiarFuncionSecura() {
@@ -142,26 +145,25 @@
         let numBoleto = extraerNumero(codigoReal);
         const statusDiv = document.getElementById('status');
         
-        switchTab('tab-escaner');
         statusDiv.className = "loading"; statusDiv.style.display = "block";
         statusDiv.innerHTML = `⏳ Analizando boleto [${codigoReal}]...`;
 
         // VALIDACIÓN DE RANGO GLOBAL 001 - 156
         if (!numBoleto || numBoleto < 1 || numBoleto > 156) {
             statusDiv.className = "danger";
-            statusDiv.innerHTML = `❌ Código Inválido: [${codigoReal}] no es uno de los boletos impresos (001-156).`;
+            statusDiv.innerHTML = `❌ Código Inválido: [${codigoReal}] no pertenece a los boletos impresos (001-156).`;
             reproducirSonidoError(); return;
         }
 
         // VALIDACIÓN DE ASIGNACIÓN POR FUNCIÓN
         if (funcionActual === "FUNCIÓN 1" && numBoleto > 78) {
             statusDiv.className = "danger";
-            statusDiv.innerHTML = `⚠️ ¡Función Equivocada! El boleto [${codigoReal}] pertenece a la FUNCIÓN 2.`;
+            statusDiv.innerHTML = `⚠️ ¡Función Equivocada! El boleto [${codigoReal}] es de la FUNCIÓN 2.`;
             reproducirSonidoError(); return;
         }
         if (funcionActual === "FUNCIÓN 2" && numBoleto <= 78) {
             statusDiv.className = "danger";
-            statusDiv.innerHTML = `⚠️ ¡Función Equivocada! El boleto [${codigoReal}] pertenece a la FUNCIÓN 1.`;
+            statusDiv.innerHTML = `⚠️ ¡Función Equivocada! El boleto [${codigoReal}] es de la FUNCIÓN 1.`;
             reproducirSonidoError(); return;
         }
 
@@ -178,11 +180,11 @@
             body: JSON.stringify({ accion: "registrar", codigo: codigoReal, funcion: funcionActual })
         }).then(() => {
             statusDiv.className = "success";
-            statusDiv.innerHTML = `✅ ¡Validado con éxito! Boleto [${codigoReal}] registrado en la lista oficial.`;
+            statusDiv.innerHTML = `✅ ¡Validado! Boleto [${codigoReal}] registrado correctamente.`;
             sincronizarConNube();
         }).catch(() => {
             statusDiv.className = "danger";
-            statusDiv.innerHTML = `❌ Error crítico de red. Verifica internet.`;
+            statusDiv.innerHTML = `❌ Error de red. Revisa tu conexión a internet.`;
         });
     }
 
@@ -238,23 +240,28 @@
     function reproducirSonidoError() { const ctx = new (window.AudioContext || window.webkitAudioContext)(); const osc = ctx.createOscillator(); osc.type = 'sawtooth'; osc.frequency.setValueAtTime(130, ctx.currentTime); osc.connect(ctx.destination); osc.start(); osc.stop(ctx.currentTime + 0.3); }
     
     function onScanSuccess(decodedText) { 
+        let ahora = Date.now();
+        // Evita re-escanear el mismo código en papel de golpe si se queda enfrente de la cámara
+        if (decodedText === ultimoCodigoEscaneado && (ahora - tiempoUltimoEscaneo) < 3000) {
+            return; 
+        }
+        ultimoCodigoEscaneado = decodedText;
+        tiempoUltimoEscaneo = ahora;
         registrarBoleto(decodedText);
-        // Pequeña pausa para evitar lecturas fantasmas seguidas en papel corto
-        setTimeout(() => { if(window.html5QrcodeScanner) { inicializarEscaner(); } }, 1200);
     }
 
     function inicializarEscaner() { 
         document.getElementById('btn-encender-camara').style.display = "none"; 
         window.html5QrcodeScanner = new Html5QrcodeScanner("reader", { 
-            fps: 30, // Mayor velocidad de procesamiento
-            qrbox: { width: 280, height: 280 }, // Recuadro más grande para enfocar de cerca papel pequeño
+            fps: 24, 
+            qrbox: { width: 260, height: 260 },
             videoConstraints: {
-                width: { ideal: 1920 }, // Obligar resolución HD para máximo detalle de líneas QR
-                height: { ideal: 1080 },
+                width: { ideal: 1280 }, // Resolución estándar fluida y altamente compatible
+                height: { ideal: 720 },
                 facingMode: "environment"
             },
             rememberLastUsedCamera: true 
-        }); 
+        }, /* verbose= */ false); 
         html5QrcodeScanner.render(onScanSuccess, () => {}); 
     }
 </script>
