@@ -3,14 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MALBROTE PRO v6.0 | Sistema de Control de Teatro Total</title>
+    <title>MALBROTE PRO v6.5 | Sistema de Control de Teatro Total</title>
     <!-- Librerías de Inyección de Render, Captura, PDFs y Compresión -->
     <script src="https://unpkg.com/html5-qrcode"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
     <style>
         :root {
             --bg-principal: #0b0f19;
@@ -140,9 +139,16 @@
         .history-item { display: flex; justify-content: space-between; align-items: center; padding: 12px; border-radius: 8px; background: #1e293b; border-left: 4px solid var(--texto-gris); }
         .history-item.success { border-left-color: var(--verde-exito); background: rgba(16, 185, 129, 0.05); }
         
-        /* MODALES */
+        /* MODALES Y POPUPS DE DESCARGA */
         .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 9999; justify-content: center; align-items: center; padding: 20px; backdrop-filter: blur(4px); }
         .modal-box { background: var(--bg-card); padding: 30px; border-radius: 16px; max-width: 450px; width: 100%; text-align: center; border: 2px solid var(--rojo-neon); }
+
+        .download-actions-zone { display: flex; flex-direction: column; gap: 12px; margin-top: 15px; }
+        .btn-popup-download { padding: 16px; font-size: 14px; border-radius: 10px; font-weight: bold; cursor: pointer; border: none; text-transform: uppercase; transition: 0.2s; width: 100%; }
+        .btn-pdf { background: #ea580c; color: white; }
+        .btn-pdf:hover { background: #f97316; }
+        .btn-image { background: #0284c7; color: white; }
+        .btn-image:hover { background: #0ea5e9; }
     </style>
 </head>
 <body>
@@ -151,7 +157,7 @@
     
     <!-- VISTA 1: DASHBOARD -->
     <div id="view-dashboard" class="dashboard-view">
-        <h1>🎭 CONTROL DE TEATRO (V6.0-PRO)</h1>
+        <h1>🎭 CONTROL DE TEATRO (V6.5-PRO)</h1>
         <div class="obra-list-container" id="dashboard-obras-list"></div>
         <div class="btn-add-obra" onclick="crearNuevaObra()">
             <span style="font-size: 36px;">➕</span>
@@ -223,7 +229,7 @@
                     </div>
 
                     <button style="background:var(--accent-canva); color:black; margin-top:10px;" onclick="generarLoteCompleto()">⚡ Generar Vista Previa del Lote</button>
-                    <button style="background:var(--verde-exito); color:white; margin-top:5px;" onclick="descargarLoteOrganizadoZIP()">📦 Descargar Lote Completo (ZIP Organizado)</button>
+                    <button style="background:var(--verde-exito); color:white; margin-top:5px;" onclick="compilarLoteEnMemoriaPRO()">📦 Procesar Lote Completo para Descarga</button>
                 </div>
 
                 <div class="canva-viewport" id="editorViewport">
@@ -287,12 +293,16 @@
     </div>
 </div>
 
-<!-- MODAL INTEGRAL -->
+<!-- MODAL INTEGRAL Y DE CONTROL DE DESCARGAS POPUP -->
 <div id="global-modal" class="modal-overlay">
     <div class="modal-box" id="modal-content-card">
         <h3 id="modal-title" style="margin-bottom:10px; font-size:22px;"></h3>
-        <p id="modal-msg" style="color:var(--texto-gris); font-size:15px; margin-bottom:25px; line-height:1.4;"></p>
-        <button onclick="cerrarModalDeAlerta()" id="modal-close-btn" style="width:100%;">Entendido / Continuar</button>
+        <p id="modal-msg" style="color:var(--texto-gris); font-size:15px; margin-bottom:20px; line-height:1.4;"></p>
+        
+        <!-- Zona dinámica de descargas solicitadas (Solo se activa al terminar el lote) -->
+        <div id="popup-download-zone" class="download-actions-zone" style="display: none;"></div>
+
+        <button onclick="cerrarModalDeAlerta()" id="modal-close-btn" style="width:100%; margin-top:15px; background:#334155;">Cerrar Ventana</button>
     </div>
 </div>
 
@@ -300,7 +310,7 @@
 <audio id="audio-error" src="https://assets.mixkit.co/active_storage/sfx/2955/2955-84.wav" preload="auto"></audio>
 
 <script>
-    const WEB_APP_URL = "AQUÍ_PEGA_TU_URL_DE_GOOGLE";
+    const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzqiah0ZY9FCbpiEMmEEmkAQJBkBsn4SEgHRIOKwuyk0XSrq03bJ59XROJVpNLRp60/exec";
 
     let DATABASE_OBRAS = JSON.parse(localStorage.getItem('MALBROTE_TEATRO_DB')) || [];
     let ASISTENCIA_LOCAL = JSON.parse(localStorage.getItem('MALBROTE_ASISTENCIA_DB')) || {};
@@ -308,6 +318,11 @@
     let obraSeleccionadaIdx = null;
     let funcionSeleccionadaIdx = 0; 
     let html5QrScannerInstancia = null;
+
+    // Contenedores globales de blobs para mantener el Pop-Up listo e independiente
+    let BLOB_ZIP_PNG = null;
+    let BLOB_ZIP_PDF = null;
+    let NOMBRE_ARCHIVO_DESCARGA_GLOBAL = "Lote";
 
     actualizarDashboardPantallaPrincipal();
 
@@ -357,7 +372,7 @@
                     nombre: "FUNCIÓN 1", 
                     imagenFondo: "", 
                     startTicket: 1, 
-                    endTicket: 50, 
+                    endTicket: 78, 
                     fileSaveAs: "Boleto_" + prefijoAutomatico 
                 }
             ]
@@ -464,7 +479,6 @@
         const func = DATABASE_OBRAS[obraSeleccionadaIdx].funciones[funcionSeleccionadaIdx];
         const canvasImg = document.getElementById('canva-bg-image');
         
-        // Carga de Rango de Boletos y Prefijo Guardar Como
         document.getElementById('batch-start').value = func.startTicket || 1;
         document.getElementById('batch-end').value = func.endTicket || 50;
         document.getElementById('file-save-as-prefix').value = func.fileSaveAs || ("Boleto_" + DATABASE_OBRAS[obraSeleccionadaIdx].prefijo);
@@ -493,7 +507,6 @@
         }
     });
 
-    // --- ARRASTRE Y ESCALA INDEPENDIENTE CON TOPE MAGNÉTICO E INTELIGENCIA DE COLOR ---
     function inicializarArrastreYEscalaElementos(id) {
         const elemento = document.getElementById(id);
         const resizer = elemento.querySelector('.resizer');
@@ -510,13 +523,11 @@
             function mover(evt) {
                 let dx = evt.clientX - startX;
                 let dy = evt.clientY - startY;
-                
                 let targetLeft = initialLeft + dx;
                 let targetTop = initialTop + dy;
 
                 let elementCenterX = targetLeft + (elemento.clientWidth / 2);
                 let elementCenterY = targetTop + (elemento.clientHeight / 2);
-
                 let canvasCenterX = canvasBox.clientWidth / 2;
                 let canvasCenterY = canvasBox.clientHeight / 2;
 
@@ -528,7 +539,6 @@
                     targetLeft = canvasCenterX - (elemento.clientWidth / 2);
                     alineadoVertical = true;
                 }
-
                 if (Math.abs(elementCenterY - canvasCenterY) < RANGO_MAGNETICO) {
                     targetTop = canvasCenterY - (elemento.clientHeight / 2);
                     alineadoHorizontal = true;
@@ -553,7 +563,6 @@
                     r.setProperty('--guia-v-color', 'rgba(56, 189, 248, 0.5)');
                     r.setProperty('--guia-v-glow', 'rgba(56, 189, 248, 0.8)');
                 }
-
                 salvarDatosDiseñoInstantaneo();
             }
 
@@ -563,7 +572,6 @@
                 r.setProperty('--guia-h-glow', 'rgba(56, 189, 248, 0.8)');
                 r.setProperty('--guia-v-color', 'rgba(56, 189, 248, 0.5)');
                 r.setProperty('--guia-v-glow', 'rgba(56, 189, 248, 0.8)');
-
                 document.removeEventListener('mousemove', mover);
                 document.removeEventListener('mouseup', soltar);
             }
@@ -584,10 +592,7 @@
                 let h = startHeight + (evt.clientY - startY);
                 if (w > 30) elemento.style.width = w + 'px';
                 if (h > 20) elemento.style.height = h + 'px';
-                
-                if (id === 'el-qr-draggable') {
-                    redibujarInstanciaQrPrevia();
-                }
+                if (id === 'el-qr-draggable') redibujarInstanciaQrPrevia();
                 salvarDatosDiseñoInstantaneo();
             }
             function soltarEscala() {
@@ -632,7 +637,6 @@
         
         obra.prefijo = document.getElementById('batch-prefix').value.toUpperCase();
         
-        // Salvar rango específico y nombre de archivo para esta función
         const func = obra.funciones[funcionSeleccionadaIdx];
         func.startTicket = parseInt(document.getElementById('batch-start').value) || 1;
         func.endTicket = parseInt(document.getElementById('batch-end').value) || 50;
@@ -668,7 +672,6 @@
         }
     }
 
-    // --- RENDERIZADO DE VISTA PREVIA ---
     function generarLoteCompleto() {
         salvarDatosDiseñoInstantaneo();
         const obra = DATABASE_OBRAS[obraSeleccionadaIdx];
@@ -703,7 +706,6 @@
             bg.src = document.getElementById('canva-bg-image').src;
             canvasClone.appendChild(bg);
 
-            // CLON DEL TEXTO INDEPENDIENTE
             const txtClon = document.createElement('div');
             txtClon.className = 'draggable-element';
             txtClon.style.left = obra.layout.txtLeft + 'px';
@@ -720,7 +722,6 @@
             txtClon.appendChild(txtNode);
             canvasClone.appendChild(txtClon);
 
-            // CLON DEL QR INDEPENDIENTE
             const qrClon = document.createElement('div');
             qrClon.className = 'draggable-element';
             qrClon.style.left = obra.layout.qrLeft + 'px';
@@ -742,7 +743,6 @@
             btnDownload.style.marginTop = "10px";
             btnDownload.style.fontSize = "11px";
             
-            // Descargar individual con prefijo personalizado de guardado
             btnDownload.onclick = () => {
                 html2canvas(canvasClone, { scale: 3 }).then(canvas => {
                     let link = document.createElement('a');
@@ -763,8 +763,8 @@
         setTimeout(cerrarModalDeAlerta, 1000);
     }
 
-    // --- NUEVA CARACTERÍSTICA: EXPORTADOR DE LOTES EN ZIP CON ORGANIZACIÓN DE CARPETAS ---
-    async function descargarLoteOrganizadoZIP() {
+    // --- LOGICA DE COMPILACIÓN PRO EN MEMORIA CON VENTANA EMERGENTE PERMANENTE ---
+    async function compilarLoteEnMemoriaPRO() {
         salvarDatosDiseñoInstantaneo();
         const { jsPDF } = window.jspdf;
         const obra = DATABASE_OBRAS[obraSeleccionadaIdx];
@@ -776,34 +776,36 @@
         const totalBoletos = endVal - startVal + 1;
 
         if (totalBoletos <= 0) {
-            alert("Rango de boletos no válido.");
+            alert("Rango de boletos inválido.");
             return;
         }
 
-        // Crear instancia del empaquetador ZIP
-        const zip = new JSZip();
-        
-        // Estructura de carpetas solicitada
-        const folderFuncion = zip.folder(func.nombre); 
-        const folderPNG = folderFuncion.folder("PNG");
-        const folderPDF = folderFuncion.folder("PDF");
+        NOMBRE_ARCHIVO_DESCARGA_GLOBAL = `Lote_Boletos_${func.nombre.replace(/\s+/g, '_')}`;
 
-        mostrarAlertaModal("📦 EXPORTADOR MASIVO", `Iniciando empaquetado de ${totalBoletos} boletos... No cierres esta ventana.`);
+        // Instanciar dos ZIPs separados para evitar colapsos de memoria y garantizar descargas directas nativas
+        const zipPNG = new JSZip();
+        const zipPDF = new JSZip();
+
+        const folderFuncionPNG = zipPNG.folder(func.nombre);
+        const folderPNGInner = folderFuncionPNG.folder("PNG");
+
+        const folderFuncionPDF = zipPDF.folder(func.nombre);
+        const folderPDFInner = folderFuncionPDF.folder("PDF");
+
+        mostrarAlertaModal("📦 PROCESANDO ARCHIVOS", `Generando ${totalBoletos} elementos en ultra-calidad...`);
+        document.getElementById('popup-download-zone').style.display = "none";
 
         const canvasBox = document.getElementById('canvasBox');
         const originalWidth = canvasBox.clientWidth;
         const originalHeight = canvasBox.clientHeight;
 
-        // Generar secuencialmente en memoria
         for (let i = startVal; i <= endVal; i++) {
             const numStr = String(i).padStart(3, '0');
             const tokenBoleto = `${obra.prefijo}${numStr}`;
             const payloadCifrado = btoa(`MALBROTE:${obra.nombre}:${tokenBoleto}`);
 
-            // Actualizar modal de estado
-            document.getElementById('modal-msg').innerHTML = `Renderizando boleto <b>${i} de ${endVal}</b>...<br><br><small>Por favor espera, este proceso garantiza la máxima definición.</small>`;
+            document.getElementById('modal-msg').innerHTML = `Renderizando y empaquetando boleto <b>${i} de ${endVal}</b>...<br><br><small>Por favor espera un momento.</small>`;
 
-            // Contenedor temporal fuera de pantalla
             const tempWrapper = document.createElement('div');
             tempWrapper.style.position = "absolute";
             tempWrapper.style.left = "-9999px";
@@ -820,7 +822,6 @@
             bg.src = document.getElementById('canva-bg-image').src;
             canvasClone.appendChild(bg);
 
-            // Clon de Texto
             const txtClon = document.createElement('div');
             txtClon.className = 'draggable-element';
             txtClon.style.left = obra.layout.txtLeft + 'px';
@@ -837,7 +838,6 @@
             txtClon.appendChild(txtNode);
             canvasClone.appendChild(txtClon);
 
-            // Clon de QR
             const qrClon = document.createElement('div');
             qrClon.className = 'draggable-element';
             qrClon.style.left = obra.layout.qrLeft + 'px';
@@ -855,40 +855,68 @@
 
             tempWrapper.appendChild(canvasClone);
 
-            // Generar el código QR
             let sizeQr = Math.min(obra.layout.qrWidth, obra.layout.qrHeight) - 4;
             if(sizeQr < 25) sizeQr = 25;
             new QRCode(targetQrInner, { text: payloadCifrado, width: sizeQr, height: sizeQr });
 
-            // Renderizar con html2canvas en Alta Calidad (escala de renderizado 3x)
+            // Captura en escala 3x para calidad de imprenta premium
             const renderedCanvas = await html2canvas(canvasClone, { scale: 3, logging: false });
             const imgData = renderedCanvas.toDataURL('image/png');
 
-            // 1. Guardar en Carpeta PNG
-            const pngBlob = await fetch(imgData).then(r => r.blob());
-            folderPNG.file(`${saveAsName}-${numStr}.png`, pngBlob);
+            // Separar la cadena Base64 pura para JSZip
+            const base64Data = imgData.split(',')[1];
 
-            // 2. Crear PDF vectorial y guardar en carpeta PDF
+            // 1. Inyectar a lote PNG
+            folderPNGInner.file(`${saveAsName}-${numStr}.png`, base64Data, {base64: true});
+
+            // 2. Inyectar a lote PDF Vectorial
             const pdf = new jsPDF({
                 orientation: 'landscape',
                 unit: 'px',
                 format: [originalWidth, originalHeight]
             });
             pdf.addImage(imgData, 'PNG', 0, 0, originalWidth, originalHeight);
-            const pdfBlob = pdf.output('blob');
-            folderPDF.file(`${saveAsName}-${numStr}.pdf`, pdfBlob);
+            const pdfBase64 = pdf.output('datauristring').split(',')[1];
+            folderPDFInner.file(`${saveAsName}-${numStr}.pdf`, pdfBase64, {base64: true});
 
-            // Eliminar elemento temporal
             document.body.removeChild(tempWrapper);
         }
 
-        // Compilar el archivo ZIP y forzar descarga
-        document.getElementById('modal-msg').innerHTML = `<b>¡Procesamiento completo!</b><br>Generando archivo ZIP de descarga... Por favor espera un momento.`;
+        document.getElementById('modal-msg').innerHTML = `<b>📦 ¡LOTE LISTO PARA DESCARGAR!</b><br>Selecciona el formato que deseas bajar. Esta ventana no se cerrará para que puedas descargar ambos si lo necesitas.`;
+
+        // Compilar estructuras a blobs nativos del navegador
+        BLOB_ZIP_PNG = await zipPNG.generateAsync({type: "blob"});
+        BLOB_ZIP_PDF = await zipPDF.generateAsync({type: "blob"});
+
+        // Pintar la interfaz del Pop-Up solicitado
+        const zone = document.getElementById('popup-download-zone');
+        zone.innerHTML = `
+            <button class="btn-popup-download btn-pdf" onclick="ejecutarDescargaLoteNativa('PDF')">📄 Descargar todos en PDF (Lote ZIP)</button>
+            <button class="btn-popup-download btn-image" onclick="ejecutarDescargaLoteNativa('PNG')">🖼️ Descargar todos en IMAGEN JPG/PNG (Lote ZIP)</button>
+        `;
+        zone.style.display = "flex";
+    }
+
+    // Descarga nativa limpia por medio de enlaces virtuales DOM
+    function ejecutarDescargaLoteNativa(tipo) {
+        const blobObjetivo = (tipo === 'PDF') ? BLOB_ZIP_PDF : BLOB_ZIP_PNG;
+        if(!blobObjetivo) {
+            alert("El archivo no está listo o expiró.");
+            return;
+        }
+        const url = window.URL.createObjectURL(blobObjetivo);
+        const a = document.createElement('a');
+        a.style.display = 'none';
+        a.href = url;
+        a.download = `${NOMBRE_ARCHIVO_DESCARGA_GLOBAL}_${tipo}.zip`;
+        document.body.appendChild(a);
+        a.click();
         
-        zip.generateAsync({type: "blob"}).then(function(content) {
-            saveAs(content, `Lote_Boletos_${func.nombre.replace(/\s+/g, '_')}.zip`);
-            mostrarAlertaModal("✅ EXPORTACIÓN EXITOSA", `Se ha descargado el paquete ZIP estructurado correctamente.`);
-        });
+        // Pequeño delay de limpieza para no romper la persistencia del pop-up solicitado
+        setTimeout(() => {
+            window.URL.revokeObjectURL(url);
+            document.body.removeChild(a);
+        }, 100);
     }
 
     // --- ESCANER ---
@@ -954,6 +982,7 @@
         document.getElementById('modal-title').innerText = titulo;
         document.getElementById('modal-title').style.color = exito ? "var(--verde-exito)" : "var(--rojo-neon)";
         document.getElementById('modal-msg').innerText = msg;
+        document.getElementById('popup-download-zone').style.display = "none";
         document.getElementById('global-modal').style.display = "flex";
 
         const logsBox = document.getElementById('escaner-logs-box');
@@ -1011,7 +1040,10 @@
         document.getElementById('modal-msg').innerHTML = msg;
         document.getElementById('global-modal').style.display = "flex";
     }
-    function cerrarModalDeAlerta() { document.getElementById('global-modal').style.display = "none"; }
+    
+    function cerrarModalDeAlerta() { 
+        document.getElementById('global-modal').style.display = "none"; 
+    }
 </script>
 </body>
 </html>
