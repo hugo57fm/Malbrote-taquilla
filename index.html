@@ -3,11 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MALBROTE PRO v5.9 | Sistema de Control de Teatro Total</title>
-    <!-- Librerías de Inyección de Render y Captura -->
+    <title>MALBROTE PRO v6.0 | Sistema de Control de Teatro Total</title>
+    <!-- Librerías de Inyección de Render, Captura, PDFs y Compresión -->
     <script src="https://unpkg.com/html5-qrcode"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
     <style>
         :root {
             --bg-principal: #0b0f19;
@@ -148,7 +151,7 @@
     
     <!-- VISTA 1: DASHBOARD -->
     <div id="view-dashboard" class="dashboard-view">
-        <h1>🎭 CONTROL DE TEATRO (V5.9-PRO)</h1>
+        <h1>🎭 CONTROL DE TEATRO (V6.0-PRO)</h1>
         <div class="obra-list-container" id="dashboard-obras-list"></div>
         <div class="btn-add-obra" onclick="crearNuevaObra()">
             <span style="font-size: 36px;">➕</span>
@@ -183,8 +186,28 @@
             <div class="editor-layout">
                 <div class="canva-sidebar">
                     <h4>⚙️ Ajustes del Lote</h4>
-                    <input type="text" id="batch-prefix" placeholder="Prefijo Código (Ej: HAMLET)" oninput="salvarDatosDiseñoInstantaneo()">
-                    <input type="number" id="batch-qty" value="50" min="1" oninput="salvarDatosDiseñoInstantaneo()">
+                    <div style="display: flex; gap: 10px; margin-bottom: 5px;">
+                        <div>
+                            <label style="font-size: 11px; color: var(--texto-gris);">Prefijo QR</label>
+                            <input type="text" id="batch-prefix" placeholder="Código (HAMLET)" oninput="salvarDatosDiseñoInstantaneo()">
+                        </div>
+                        <div>
+                            <label style="font-size: 11px; color: var(--texto-gris);">Guardar Como</label>
+                            <input type="text" id="file-save-as-prefix" placeholder="Ej: Boleto_Hamlet" oninput="salvarDatosDiseñoInstantaneo()">
+                        </div>
+                    </div>
+                    
+                    <h4>🔢 Rango Boletos (Esta Función)</h4>
+                    <div style="display: flex; gap: 10px; margin-bottom: 10px;">
+                        <div>
+                            <label style="font-size: 11px; color: var(--texto-gris);">Desde</label>
+                            <input type="number" id="batch-start" value="1" min="1" oninput="salvarDatosDiseñoInstantaneo()">
+                        </div>
+                        <div>
+                            <label style="font-size: 11px; color: var(--texto-gris);">Hasta</label>
+                            <input type="number" id="batch-end" value="50" min="1" oninput="salvarDatosDiseñoInstantaneo()">
+                        </div>
+                    </div>
                     
                     <h4>🖼️ Foto de esta Función</h4>
                     <input type="file" id="file-bg-function" accept="image/*" style="font-size:12px; color:var(--texto-gris);">
@@ -199,7 +222,8 @@
                         <input type="number" id="prop-text-size" value="14" min="8" max="40" oninput="aplicarEstilosEnCaliente()">
                     </div>
 
-                    <button style="background:var(--accent-canva); color:black; margin-top:10px;" onclick="generarLoteCompleto()">⚡ Generar / Renderizar Lote</button>
+                    <button style="background:var(--accent-canva); color:black; margin-top:10px;" onclick="generarLoteCompleto()">⚡ Generar Vista Previa del Lote</button>
+                    <button style="background:var(--verde-exito); color:white; margin-top:5px;" onclick="descargarLoteOrganizadoZIP()">📦 Descargar Lote Completo (ZIP Organizado)</button>
                 </div>
 
                 <div class="canva-viewport" id="editorViewport">
@@ -276,7 +300,7 @@
 <audio id="audio-error" src="https://assets.mixkit.co/active_storage/sfx/2955/2955-84.wav" preload="auto"></audio>
 
 <script>
-    const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzqiah0ZY9FCbpiEMmEEmkAQJBkBsn4SEgHRIOKwuyk0XSrq03bJ59XROJVpNLRp60/exec";
+    const WEB_APP_URL = "AQUÍ_PEGA_TU_URL_DE_GOOGLE";
 
     let DATABASE_OBRAS = JSON.parse(localStorage.getItem('MALBROTE_TEATRO_DB')) || [];
     let ASISTENCIA_LOCAL = JSON.parse(localStorage.getItem('MALBROTE_ASISTENCIA_DB')) || {};
@@ -307,7 +331,7 @@
                 <img class="obra-thumb" src="${fotoMiniatura}">
                 <div class="obra-info">
                     <div class="obra-title">${obra.nombre}</div>
-                    <div class="obra-meta">Lotes Funciones: ${obra.funciones.length} | Prefijo Alfa: ${obra.prefijo} | Cantidad: ${obra.cantidadTickets} boletos</div>
+                    <div class="obra-meta">Lotes Funciones: ${obra.funciones.length} | Prefijo Alfa: ${obra.prefijo}</div>
                 </div>
                 <button onclick="eliminarObraPorCompleto(event, ${index})" style="background:#be123c; font-size:11px; padding:6px 10px;">Eliminar</button>
             `;
@@ -323,14 +347,19 @@
         let nuevaObraStruct = {
             nombre: nombre.toUpperCase(),
             prefijo: prefijoAutomatico,
-            cantidadTickets: 50,
             layout: {
                 txtLeft: 40, txtTop: 40, txtWidth: 450, txtHeight: 60,
                 qrLeft: 40, qrTop: 120, qrWidth: 140, qrHeight: 140,
                 txtFontSize: 14, txtColor: '#ffffff'
             },
             funciones: [
-                { nombre: "FUNCIÓN 1", imagenFondo: "" }
+                { 
+                    nombre: "FUNCIÓN 1", 
+                    imagenFondo: "", 
+                    startTicket: 1, 
+                    endTicket: 50, 
+                    fileSaveAs: "Boleto_" + prefijoAutomatico 
+                }
             ]
         };
 
@@ -348,7 +377,6 @@
         
         document.getElementById('txt-nombre-obra-header').innerText = obra.nombre;
         document.getElementById('batch-prefix').value = obra.prefijo;
-        document.getElementById('batch-qty').value = obra.cantidadTickets;
 
         const txtEl = document.getElementById('el-texto-draggable');
         const qrEl = document.getElementById('el-qr-draggable');
@@ -368,8 +396,6 @@
         txtSpan.style.fontSize = (obra.layout.txtFontSize || 14) + 'px';
         document.getElementById('prop-text-color').value = obra.layout.txtColor || '#ffffff';
         txtSpan.style.color = obra.layout.txtColor || '#ffffff';
-
-        txtSpan.innerText = `Boleto Oficial: ${obra.nombre}-001`;
 
         funcionSeleccionadaIdx = 0;
         refrescarSubpestañasFisicas();
@@ -400,7 +426,13 @@
         btnAgregar.innerText = "➕ Agregar Función";
         btnAgregar.onclick = () => {
             const numeroSiguiente = obra.funciones.length + 1;
-            obra.funciones.push({ nombre: `FUNCIÓN ${numeroSiguiente}`, imagenFondo: "" });
+            obra.funciones.push({ 
+                nombre: `FUNCIÓN ${numeroSiguiente}`, 
+                imagenFondo: "",
+                startTicket: 1, 
+                endTicket: 50, 
+                fileSaveAs: "Boleto_" + obra.prefijo
+            });
             funcionSeleccionadaIdx = numeroSiguiente - 1;
             refrescarSubpestañasFisicas();
             actualizarSelectSalasGlobales();
@@ -432,11 +464,20 @@
         const func = DATABASE_OBRAS[obraSeleccionadaIdx].funciones[funcionSeleccionadaIdx];
         const canvasImg = document.getElementById('canva-bg-image');
         
+        // Carga de Rango de Boletos y Prefijo Guardar Como
+        document.getElementById('batch-start').value = func.startTicket || 1;
+        document.getElementById('batch-end').value = func.endTicket || 50;
+        document.getElementById('file-save-as-prefix').value = func.fileSaveAs || ("Boleto_" + DATABASE_OBRAS[obraSeleccionadaIdx].prefijo);
+
         if (func.imagenFondo) {
             canvasImg.src = func.imagenFondo;
         } else {
             canvasImg.src = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='750' height='350'><rect width='750' height='350' fill='%23111827'/><text x='50%' y='50%' fill='%234b5563' font-family='sans-serif' font-size='16' text-anchor='middle'>Sube la imagen para " + func.nombre + "</text></svg>";
         }
+
+        const startValStr = String(func.startTicket || 1).padStart(3, '0');
+        document.getElementById('el-texto-span').innerText = `Boleto Oficial: ${DATABASE_OBRAS[obraSeleccionadaIdx].nombre}-${startValStr}`;
+
         redibujarInstanciaQrPrevia();
     }
 
@@ -473,35 +514,29 @@
                 let targetLeft = initialLeft + dx;
                 let targetTop = initialTop + dy;
 
-                // Calcular el centro geométrico del elemento actual
                 let elementCenterX = targetLeft + (elemento.clientWidth / 2);
                 let elementCenterY = targetTop + (elemento.clientHeight / 2);
 
-                // Centro del lienzo contenedor (Boleto)
                 let canvasCenterX = canvasBox.clientWidth / 2;
                 let canvasCenterY = canvasBox.clientHeight / 2;
 
-                const RANGO_MAGNETICO = 10; // Distancia en px para activar el "tope"
+                const RANGO_MAGNETICO = 10; 
                 let alineadoHorizontal = false;
                 let alineadoVertical = false;
 
-                // Lógica de Imán Vertical (Eje X / Izquierda-Derecha)
                 if (Math.abs(elementCenterX - canvasCenterX) < RANGO_MAGNETICO) {
                     targetLeft = canvasCenterX - (elemento.clientWidth / 2);
                     alineadoVertical = true;
                 }
 
-                // Lógica de Imán Horizontal (Eje Y / Arriba-Abajo)
                 if (Math.abs(elementCenterY - canvasCenterY) < RANGO_MAGNETICO) {
                     targetTop = canvasCenterY - (elemento.clientHeight / 2);
                     alineadoHorizontal = true;
                 }
 
-                // Aplicar posiciones calculadas
                 elemento.style.left = targetLeft + 'px';
                 elemento.style.top = targetTop + 'px';
 
-                // Cambiar el color de las guías neón en tiempo real
                 const r = document.documentElement.style;
                 if (alineadoHorizontal) {
                     r.setProperty('--guia-h-color', 'rgba(16, 185, 129, 0.9)');
@@ -523,7 +558,6 @@
             }
 
             function soltar() {
-                // Restaurar colores por defecto de las guías al soltar el ratón
                 const r = document.documentElement.style;
                 r.setProperty('--guia-h-color', 'rgba(56, 189, 248, 0.5)');
                 r.setProperty('--guia-h-glow', 'rgba(56, 189, 248, 0.8)');
@@ -595,8 +629,14 @@
             txtFontSize: parseInt(document.getElementById('prop-text-size').value),
             txtColor: document.getElementById('prop-text-color').value
         };
+        
         obra.prefijo = document.getElementById('batch-prefix').value.toUpperCase();
-        obra.cantidadTickets = parseInt(document.getElementById('batch-qty').value) || 50;
+        
+        // Salvar rango específico y nombre de archivo para esta función
+        const func = obra.funciones[funcionSeleccionadaIdx];
+        func.startTicket = parseInt(document.getElementById('batch-start').value) || 1;
+        func.endTicket = parseInt(document.getElementById('batch-end').value) || 50;
+        func.fileSaveAs = document.getElementById('file-save-as-prefix').value;
     }
 
     function redibujarInstanciaQrPrevia() {
@@ -610,7 +650,7 @@
     function guardarObraEstructuraCompleta() {
         salvarDatosDiseñoInstantaneo();
         localStorage.setItem('MALBROTE_TEATRO_DB', JSON.stringify(DATABASE_OBRAS));
-        mostrarAlertaModal("💾 PROYECTO SALVADO", "Todos los cambios se guardaron con éxito.");
+        mostrarAlertaModal("💾 PROYECTO SALVADO", "Todos los cambios en las funciones, rangos e imágenes se guardaron.");
         actualizarDashboardPantallaPrincipal();
     }
 
@@ -628,17 +668,22 @@
         }
     }
 
-    // --- RENDERIZADO ---
+    // --- RENDERIZADO DE VISTA PREVIA ---
     function generarLoteCompleto() {
         salvarDatosDiseñoInstantaneo();
         const obra = DATABASE_OBRAS[obraSeleccionadaIdx];
+        const func = obra.funciones[funcionSeleccionadaIdx];
         const output = document.getElementById('batch-output');
         output.innerHTML = "";
         output.style.display = "grid";
 
-        mostrarAlertaModal("⚙️ PROCESANDO RENDER", `Dibujando ${obra.cantidadTickets} boletos únicos...`);
+        const startVal = func.startTicket || 1;
+        const endVal = func.endTicket || 50;
+        const saveAsName = func.fileSaveAs || "Boleto_" + obra.prefijo;
 
-        for(let i = 1; i <= obra.cantidadTickets; i++) {
+        mostrarAlertaModal("⚙️ PROCESANDO RENDER", `Dibujando vista previa del rango [${startVal} al ${endVal}]...`);
+
+        for(let i = startVal; i <= endVal; i++) {
             const numStr = String(i).padStart(3, '0');
             const tokenBoleto = `${obra.prefijo}${numStr}`;
             const payloadCifrado = btoa(`MALBROTE:${obra.nombre}:${tokenBoleto}`);
@@ -696,10 +741,12 @@
             btnDownload.style.width = "100%";
             btnDownload.style.marginTop = "10px";
             btnDownload.style.fontSize = "11px";
+            
+            // Descargar individual con prefijo personalizado de guardado
             btnDownload.onclick = () => {
                 html2canvas(canvasClone, { scale: 3 }).then(canvas => {
                     let link = document.createElement('a');
-                    link.download = `Boleto_${tokenBoleto}.png`;
+                    link.download = `${saveAsName}-${numStr}.png`;
                     link.href = canvas.toDataURL('image/png');
                     link.click();
                 });
@@ -714,6 +761,134 @@
             new QRCode(targetQrInner, { text: payloadCifrado, width: sizeQr, height: sizeQr });
         }
         setTimeout(cerrarModalDeAlerta, 1000);
+    }
+
+    // --- NUEVA CARACTERÍSTICA: EXPORTADOR DE LOTES EN ZIP CON ORGANIZACIÓN DE CARPETAS ---
+    async function descargarLoteOrganizadoZIP() {
+        salvarDatosDiseñoInstantaneo();
+        const { jsPDF } = window.jspdf;
+        const obra = DATABASE_OBRAS[obraSeleccionadaIdx];
+        const func = obra.funciones[funcionSeleccionadaIdx];
+        
+        const startVal = func.startTicket || 1;
+        const endVal = func.endTicket || 50;
+        const saveAsName = func.fileSaveAs || "Boleto_" + obra.prefijo;
+        const totalBoletos = endVal - startVal + 1;
+
+        if (totalBoletos <= 0) {
+            alert("Rango de boletos no válido.");
+            return;
+        }
+
+        // Crear instancia del empaquetador ZIP
+        const zip = new JSZip();
+        
+        // Estructura de carpetas solicitada
+        const folderFuncion = zip.folder(func.nombre); 
+        const folderPNG = folderFuncion.folder("PNG");
+        const folderPDF = folderFuncion.folder("PDF");
+
+        mostrarAlertaModal("📦 EXPORTADOR MASIVO", `Iniciando empaquetado de ${totalBoletos} boletos... No cierres esta ventana.`);
+
+        const canvasBox = document.getElementById('canvasBox');
+        const originalWidth = canvasBox.clientWidth;
+        const originalHeight = canvasBox.clientHeight;
+
+        // Generar secuencialmente en memoria
+        for (let i = startVal; i <= endVal; i++) {
+            const numStr = String(i).padStart(3, '0');
+            const tokenBoleto = `${obra.prefijo}${numStr}`;
+            const payloadCifrado = btoa(`MALBROTE:${obra.nombre}:${tokenBoleto}`);
+
+            // Actualizar modal de estado
+            document.getElementById('modal-msg').innerHTML = `Renderizando boleto <b>${i} de ${endVal}</b>...<br><br><small>Por favor espera, este proceso garantiza la máxima definición.</small>`;
+
+            // Contenedor temporal fuera de pantalla
+            const tempWrapper = document.createElement('div');
+            tempWrapper.style.position = "absolute";
+            tempWrapper.style.left = "-9999px";
+            tempWrapper.style.top = "-9999px";
+            document.body.appendChild(tempWrapper);
+
+            const canvasClone = document.createElement('div');
+            canvasClone.className = 'ticket-canvas-container';
+            canvasClone.style.width = originalWidth + 'px';
+            canvasClone.style.height = originalHeight + 'px';
+
+            const bg = document.createElement('img');
+            bg.className = 'ticket-bg-preview';
+            bg.src = document.getElementById('canva-bg-image').src;
+            canvasClone.appendChild(bg);
+
+            // Clon de Texto
+            const txtClon = document.createElement('div');
+            txtClon.className = 'draggable-element';
+            txtClon.style.left = obra.layout.txtLeft + 'px';
+            txtClon.style.top = obra.layout.txtTop + 'px';
+            txtClon.style.width = obra.layout.txtWidth + 'px';
+            txtClon.style.height = obra.layout.txtHeight + 'px';
+
+            const txtNode = document.createElement('div');
+            txtNode.className = 'element-text-node';
+            txtNode.style.color = obra.layout.txtColor;
+            txtNode.style.fontSize = obra.layout.txtFontSize + 'px';
+            txtNode.innerText = `Boleto Oficial: ${obra.nombre}-${numStr}`;
+            
+            txtClon.appendChild(txtNode);
+            canvasClone.appendChild(txtClon);
+
+            // Clon de QR
+            const qrClon = document.createElement('div');
+            qrClon.className = 'draggable-element';
+            qrClon.style.left = obra.layout.qrLeft + 'px';
+            qrClon.style.top = obra.layout.qrTop + 'px';
+            qrClon.style.width = obra.layout.qrWidth + 'px';
+            qrClon.style.height = obra.layout.qrHeight + 'px';
+
+            const qrNode = document.createElement('div');
+            qrNode.className = 'element-qr-node';
+            const targetQrInner = document.createElement('div');
+            targetQrInner.id = `qr-node-zip-${numStr}`;
+            qrNode.appendChild(targetQrInner);
+            qrClon.appendChild(qrNode);
+            canvasClone.appendChild(qrClon);
+
+            tempWrapper.appendChild(canvasClone);
+
+            // Generar el código QR
+            let sizeQr = Math.min(obra.layout.qrWidth, obra.layout.qrHeight) - 4;
+            if(sizeQr < 25) sizeQr = 25;
+            new QRCode(targetQrInner, { text: payloadCifrado, width: sizeQr, height: sizeQr });
+
+            // Renderizar con html2canvas en Alta Calidad (escala de renderizado 3x)
+            const renderedCanvas = await html2canvas(canvasClone, { scale: 3, logging: false });
+            const imgData = renderedCanvas.toDataURL('image/png');
+
+            // 1. Guardar en Carpeta PNG
+            const pngBlob = await fetch(imgData).then(r => r.blob());
+            folderPNG.file(`${saveAsName}-${numStr}.png`, pngBlob);
+
+            // 2. Crear PDF vectorial y guardar en carpeta PDF
+            const pdf = new jsPDF({
+                orientation: 'landscape',
+                unit: 'px',
+                format: [originalWidth, originalHeight]
+            });
+            pdf.addImage(imgData, 'PNG', 0, 0, originalWidth, originalHeight);
+            const pdfBlob = pdf.output('blob');
+            folderPDF.file(`${saveAsName}-${numStr}.pdf`, pdfBlob);
+
+            // Eliminar elemento temporal
+            document.body.removeChild(tempWrapper);
+        }
+
+        // Compilar el archivo ZIP y forzar descarga
+        document.getElementById('modal-msg').innerHTML = `<b>¡Procesamiento completo!</b><br>Generando archivo ZIP de descarga... Por favor espera un momento.`;
+        
+        zip.generateAsync({type: "blob"}).then(function(content) {
+            saveAs(content, `Lote_Boletos_${func.nombre.replace(/\s+/g, '_')}.zip`);
+            mostrarAlertaModal("✅ EXPORTACIÓN EXITOSA", `Se ha descargado el paquete ZIP estructurado correctamente.`);
+        });
     }
 
     // --- ESCANER ---
@@ -833,7 +1008,7 @@
     function mostrarAlertaModal(title, msg) {
         document.getElementById('modal-title').innerText = title;
         document.getElementById('modal-title').style.color = "white";
-        document.getElementById('modal-msg').innerText = msg;
+        document.getElementById('modal-msg').innerHTML = msg;
         document.getElementById('global-modal').style.display = "flex";
     }
     function cerrarModalDeAlerta() { document.getElementById('global-modal').style.display = "none"; }
