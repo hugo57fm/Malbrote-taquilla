@@ -8,44 +8,60 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <style>
-        body { font-family: 'Segoe UI', sans-serif; background-color: #f4f6f9; margin: 0; padding: 20px; text-align: center; }
-        .container { max-width: 600px; margin: 0 auto; background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
-        h1 { color: #333; margin-bottom: 5px; }
+        body { font-family: 'Segoe UI', sans-serif; background-color: #f4f6f9; margin: 0; padding: 15px; text-align: center; }
+        .container { max-width: 500px; margin: 0 auto; background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        h1 { color: #333; margin: 5px 0 10px 0; font-size: 24px; }
         .config-bar { background: #f8fafc; padding: 10px; border-radius: 8px; margin-bottom: 15px; border: 1px solid #e2e8f0; font-weight: bold; }
         select { padding: 8px; font-size: 14px; border-radius: 6px; border: 1px solid #cbd5e1; font-weight: bold; color: #1e293b; }
-        .tabs { display: flex; justify-content: space-around; margin-bottom: 20px; border-bottom: 2px solid #e2e8f0; }
-        .tab-btn { background: none; border: none; padding: 10px 10px; font-size: 15px; font-weight: bold; cursor: pointer; color: #64748b; flex: 1; }
+        .tabs { display: flex; justify-content: space-around; margin-bottom: 15px; border-bottom: 2px solid #e2e8f0; }
+        .tab-btn { background: none; border: none; padding: 10px 5px; font-size: 15px; font-weight: bold; cursor: pointer; color: #64748b; flex: 1; }
         .tab-btn.active { color: #2563eb; border-bottom: 3px solid #2563eb; }
         .tab-content { display: none; }
         .tab-content.active { display: block; }
-        .counter-box { background: #2563eb; color: white; padding: 15px; border-radius: 8px; font-size: 22px; font-weight: bold; margin: 15px 0; }
-        #reader { width: 100%; border-radius: 8px; overflow: hidden; background: #e2e8f0; margin-bottom: 15px; }
+        .counter-box { background: #2563eb; color: white; padding: 12px; border-radius: 8px; font-size: 20px; font-weight: bold; margin: 10px 0; }
+        
+        /* Contenedor optimizado y compacto para la cámara */
+        #reader { width: 100%; max-width: 280px; margin: 0 auto 15px auto; border-radius: 12px; overflow: hidden; background: #e2e8f0; border: 2px solid #cbd5e1; }
+        #reader video { object-fit: cover !important; height: 260px !important; }
+
         .input-group { margin: 15px 0; display: flex; flex-direction: column; gap: 10px; align-items: center; }
         .input-row { display: flex; gap: 10px; justify-content: center; width: 100%; }
         input { padding: 12px; border: 1px solid #ccc; border-radius: 6px; font-size: 16px; width: 60%; }
         input[type="number"] { width: 25%; }
         button { padding: 12px 20px; background: #16a34a; color: white; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 16px; }
         button:hover { background: #15803d; }
-        .btn-camera { background: #4f46e5; width: 100%; margin-bottom: 10px; padding: 15px; font-size: 17px; }
-        .btn-file { background: #ea580c; width: 100%; margin-bottom: 15px; padding: 15px; font-size: 17px; color: white; border-radius: 6px; font-weight: bold; border: none; cursor: pointer; display: inline-block; box-sizing: border-box; }
-        .btn-file:hover { background: #c2410c; }
+        .btn-camera { background: #4f46e5; width: 100%; margin-bottom: 10px; padding: 14px; font-size: 16px; }
+        .btn-file { background: #ea580c; width: 100%; margin-bottom: 15px; padding: 14px; font-size: 16px; color: white; border-radius: 6px; font-weight: bold; border: none; cursor: pointer; display: inline-block; box-sizing: border-box; }
         .btn-sync { background: #2563eb; width: 100%; padding: 12px; font-size: 16px; margin-bottom: 10px; }
-        #status { padding: 15px; border-radius: 6px; font-weight: bold; margin-top: 15px; display: none; font-size: 18px; }
-        .success { background-color: #dcfce7; color: #15803d; border: 2px solid #16a34a; }
-        .danger { background-color: #fee2e2; color: #b91c1c; border: 2px solid #ef4444; }
-        .loading { background-color: #fef08a; color: #a16207; border: 2px solid #eab308; }
+        
+        /* Diseño del Pop-up Flotante */
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 9999; justify-content: center; align-items: center; padding: 20px; box-sizing: border-box; }
+        .modal-box { background: white; padding: 30px 20px; border-radius: 16px; max-width: 400px; width: 100%; box-shadow: 0 10px 25px rgba(0,0,0,0.3); animation: popEffect 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        @keyframes popEffect { from { transform: scale(0.7); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+        .modal-title { font-size: 26px; font-weight: bold; margin-bottom: 15px; }
+        .modal-message { font-size: 18px; margin-bottom: 25px; color: #334155; line-height: 1.5; }
+        .modal-btn { width: 100%; padding: 14px; font-size: 18px; color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; }
+        
+        /* Estados del Pop-up */
+        .pop-success { border: 4px solid #16a34a; background-color: #f0fdf4; }
+        .pop-success .modal-title { color: #16a34a; }
+        .pop-success .modal-btn { background: #16a34a; }
+        .pop-danger { border: 4px solid #ef4444; background-color: #fef2f2; }
+        .pop-danger .modal-title { color: #ef4444; }
+        .pop-danger .modal-btn { background: #ef4444; }
+        .pop-loading { border: 4px solid #eab308; background-color: #fefce8; }
+        .pop-loading .modal-title { color: #ca8a04; }
+
         .history-list { text-align: left; background: #f8fafc; padding: 10px; border-radius: 6px; max-height: 250px; overflow-y: auto; margin-top: 15px; border: 1px solid #cbd5e1; }
         .history-item { display: flex; justify-content: space-between; align-items: center; padding: 8px 10px; border-bottom: 1px solid #e2e8f0; font-size: 15px; }
-        .history-item:nth-child(even) { background-color: #f1f5f9; }
         .btn-reset { background: #64748b; margin-top: 25px; width: 100%; }
         #qr-output { margin-top: 20px; display: flex; flex-wrap: wrap; justify-content: center; gap: 15px; max-height: 400px; overflow-y: auto; padding: 10px; border: 1px solid #e2e8f0; border-radius: 8px; background: #fafafa; }
-        .qr-card { border: 2px dashed #cbd5e1; padding: 15px; border-radius: 8px; background: #ffffff; display: flex; flex-direction: column; align-items: center; width: 220px; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h1>🎭 Control de Teatro Cloud (v5.2)</h1>
+    <h1>🎭 Control de Teatro (v5.3)</h1>
     
     <div class="config-bar">
         🎬 Sala Activa: 
@@ -78,36 +94,44 @@
     <div id="tab-escaner" class="tab-content">
         <div class="counter-box">Asistentes en Sala: <span id="total-count">0</span></div>
         
-        <!-- Método 1: Cámara Continua -->
-        <button class="btn-camera" id="btn-encender-camara" onclick="inicializarEscaner()">📷 Modo 1: Activar Cámara en Vivo</button>
+        <!-- Método 1: Cámara Ajustada Corta -->
+        <button class="btn-camera" id="btn-encender-camara" onclick="inicializarEscaner()">📷 Modo 1: Abrir Cámara Compacta</button>
         <div id="reader"></div>
 
-        <!-- Método 2: Escáner Manual de Fotos con Cámara Nativa -->
-        <label for="qr-file-input" class="btn-file">📸 Modo 2: Tomar Foto / Subir Imagen QR</label>
+        <!-- Método 2: Escáner Manual de Fotos -->
+        <label for="qr-file-input" class="btn-file">📸 Modo 2: Tomar Foto de Boleto</label>
         <input type="file" id="qr-file-input" accept="image/*" style="display: none;" onchange="escanearDesdeArchivo(this)">
 
         <!-- Método 3: Registro Manual -->
         <div class="input-group">
             <div class="input-row">
-                <input type="text" id="ticket-input" placeholder="Número manual o Token..." autocomplete="off">
+                <input type="text" id="ticket-input" placeholder="Número manual..." autocomplete="off">
                 <button onclick="procesarBoletoManual()">Ingresar</button>
             </div>
         </div>
-        <div id="status"></div>
     </div>
 
     <!-- PESTAÑA 3: ASISTENCIA GLOBAL -->
     <div id="tab-asistencia" class="tab-content">
         <h3>👥 Personas Adentro (Sincronizado)</h3>
-        <button class="btn-sync" onclick="sincronizarConNube()">🔄 Sincronizar Lista Cloud (Compu/Cel)</button>
+        <button class="btn-sync" onclick="sincronizarConNube()">🔄 Sincronizar Lista Cloud</button>
         <div class="history-list" id="history-container"></div>
         <button class="btn-reset" onclick="reiniciarTodoCloud()">🧹 Limpiar Pruebas de esta Función</button>
     </div>
 </div>
 
+<!-- VENTANA POP-UP DE RESULTADOS (MODAL) -->
+<div id="result-modal" class="modal-overlay">
+    <div id="modal-content-box" class="modal-box">
+        <div id="modal-title" class="modal-title"></div>
+        <div id="modal-message" class="modal-message"></div>
+        <button id="modal-btn" class="modal-btn" onclick="cerrarPopUp()">ENTENDIDO / SIGUIENTE</button>
+    </div>
+</div>
+
 <script>
     // ==========================================
-    // ¡PEGA TU URL DE APPS SCRIPT AQUÍ ABAJO! (LÍNEA 113)
+    // ¡PEGA TU URL DE APPS SCRIPT AQUÍ ABAJO! (LÍNEA 130)
     // ==========================================
     const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbz3VfJFbrWn1qntHd_wTkUjy5JWhd0bAReBGL1AxU075StviuEtn5Zf7Kh3OhJcxhKIIQ/exec";
 
@@ -119,10 +143,34 @@
     
     sincronizarConNube();
 
+    function mostrarPopUp(tipo, titulo, mensaje) {
+        const modal = document.getElementById('result-modal');
+        const box = document.getElementById('modal-content-box');
+        const titleEl = document.getElementById('modal-title');
+        const msgEl = document.getElementById('modal-message');
+        const btn = document.getElementById('modal-btn');
+
+        box.className = "modal-box " + tipo;
+        titleEl.innerText = titulo;
+        msgEl.innerHTML = mensaje;
+        
+        if (tipo === 'pop-loading') {
+            btn.style.display = "none";
+        } else {
+            btn.style.display = "block";
+            btn.focus();
+        }
+        modal.style.display = "flex";
+    }
+
+    function cerrarPopUp() {
+        document.getElementById('result-modal').style.display = "none";
+    }
+
     function cambiarFuncionSecura() {
         funcionActual = document.getElementById('funcion-activa').value;
         boletosRegistrados.clear();
-        document.getElementById('status').style.display = "none";
+        cerrarPopUp();
         sincronizarConNube();
     }
 
@@ -155,33 +203,27 @@
     function registrarBoleto(codigoBruto) {
         let codigoReal = desencriptarToken(codigoBruto);
         let numBoleto = extraerNumero(codigoReal);
-        const statusDiv = document.getElementById('status');
         
-        statusDiv.className = "loading"; statusDiv.style.display = "block";
-        statusDiv.innerHTML = `⏳ Analizando boleto [${codigoReal}]...`;
+        mostrarPopUp('pop-loading', '⏳ Validando...', `Verificando el boleto <b>[${codigoReal}]</b> con la base de datos de Google...`);
 
         // VALIDACIÓN DE RANGO GLOBAL 001 - 156
         if (!numBoleto || numBoleto < 1 || numBoleto > 156) {
-            statusDiv.className = "danger";
-            statusDiv.innerHTML = `❌ Código Inválido: [${codigoReal}] no pertenece a los boletos impresos (001-156).`;
+            mostrarPopUp('pop-danger', '❌ CÓDIGO INVÁLIDO', `El código <b>[${codigoReal}]</b> no corresponde a ningún boleto oficial impreso del rango 001 al 156.`);
             reproducirSonidoError(); return;
         }
 
         // VALIDACIÓN DE ASIGNACIÓN POR FUNCIÓN
         if (funcionActual === "FUNCIÓN 1" && numBoleto > 78) {
-            statusDiv.className = "danger";
-            statusDiv.innerHTML = `⚠️ ¡Función Equivocada! El boleto [${codigoReal}] es de la FUNCIÓN 2.`;
+            mostrarPopUp('pop-danger', '⚠️ FUNCIÓN EQUIVOCADA', `El boleto <b>#${numBoleto}</b> pertenece a la <b>FUNCIÓN 2</b>.<br><br>Pídale al asistente que espere a la siguiente función.`);
             reproducirSonidoError(); return;
         }
         if (funcionActual === "FUNCIÓN 2" && numBoleto <= 78) {
-            statusDiv.className = "danger";
-            statusDiv.innerHTML = `⚠️ ¡Función Equivocada! El boleto [${codigoReal}] es de la FUNCIÓN 1.`;
+            mostrarPopUp('pop-danger', '⚠️ FUNCIÓN EQUIVOCADA', `El boleto <b>#${numBoleto}</b> pertenece a la <b>FUNCIÓN 1</b>.<br><br>Esta función ya pasó o corresponde al horario anterior.`);
             reproducirSonidoError(); return;
         }
 
         if (boletosRegistrados.has(String(numBoleto).padStart(3, '0'))) {
-            statusDiv.className = "danger";
-            statusDiv.innerHTML = `⚠️ ¡REPETIDO! El boleto [${codigoReal}] ya ingresó previamente.`;
+            mostrarPopUp('pop-danger', '🚨 ¡BOLETO YA USADO!', `El boleto <b>#${numBoleto}</b> ya ingresó previamente a la sala.<br><br><b>¡Atención! Posible boleto duplicado o compartido.</b>`);
             reproducirSonidoError(); return;
         }
 
@@ -189,14 +231,12 @@
             method: "POST",
             mode: "no-cors",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ accion: "registrar", codigo: codigoReal, function: funcionActual })
+            body: JSON.stringify({ accion: "registrar", codigo: codigoReal, funcion: funcionActual })
         }).then(() => {
-            statusDiv.className = "success";
-            statusDiv.innerHTML = `✅ ¡Validado! Boleto [${codigoReal}] registrado correctamente.`;
+            mostrarPopUp('pop-success', '🎉 ¡BIENVENIDO!', `El boleto <b>#${numBoleto}</b> ha sido validado con éxito.<br><br>¡Puede pasar a la sala!`);
             sincronizarConNube();
         }).catch(() => {
-            statusDiv.className = "danger";
-            statusDiv.innerHTML = `❌ Error de red. Revisa tu conexión a internet.`;
+            mostrarPopUp('pop-danger', '❌ ERROR DE RED', `No se pudo conectar con Google. Revisa tu señal de datos o Wi-Fi.`);
         });
     }
 
@@ -248,28 +288,24 @@
     }
 
     function escanearDesdeArchivo(input) {
-        const statusDiv = document.getElementById('status');
         if (input.files.length === 0) return;
-        
-        statusDiv.className = "loading"; statusDiv.style.display = "block";
-        statusDiv.innerHTML = `⏳ Leyendo imagen en alta definición...`;
+        mostrarPopUp('pop-loading', '⏳ Leyendo Foto...', 'Analizando la captura del código QR...');
 
         const fileHtml5Qrcode = new Html5Qrcode("reader");
         fileHtml5Qrcode.scanFile(input.files[0], true)
             .then(decodedText => {
                 registrarBoleto(decodedText);
-                input.value = ""; // Limpiar input para la siguiente foto
+                input.value = "";
             })
             .catch(err => {
-                statusDiv.className = "danger";
-                statusDiv.innerHTML = "❌ No se detectó ningún QR claro en la foto. Intenta tomarla más de cerca y centrada.";
+                mostrarPopUp('pop-danger', '❌ LECTURA FALLIDA', 'No se encontró ningún QR legible en la foto. Intenta tomarla derecha, de cerca y bien iluminada.');
                 reproducirSonidoError();
                 input.value = "";
             });
     }
 
-    function procesarBoletoManual() { const input = document.getElementById('ticket-input'); registrarBoleto(input.value); input.value = ""; input.focus(); }
-    document.getElementById('ticket-input').addEventListener('keypress', function(e) { if (e.key === 'Enter') procesarBoletoManual(); });
+    function procesarBoletoManual() { const input = document.getElementById('ticket-input'); registrarBoleto(input.value); input.value = ""; }
+    document.getElementById('ticket-input').addEventListener('keypress', function(e) { if (e.key === 'Enter') { procesarBoletoManual(); } });
     function reproducirSonidoError() { const ctx = new (window.AudioContext || window.webkitAudioContext)(); const osc = ctx.createOscillator(); osc.type = 'sawtooth'; osc.frequency.setValueAtTime(130, ctx.currentTime); osc.connect(ctx.destination); osc.start(); osc.stop(ctx.currentTime + 0.3); }
     
     function onScanSuccess(decodedText) { 
@@ -285,12 +321,12 @@
         html5Qrcode = new Html5Qrcode("reader");
         html5Qrcode.start(
             { facingMode: "environment" }, 
-            { fps: 20, qrbox: { width: 250, height: 250 } },
+            { fps: 20, qrbox: { width: 230, height: 230 } },
             onScanSuccess,
             () => {}
         ).catch(err => {
             document.getElementById('btn-encender-camara').style.display = "block";
-            alert("No se pudo iniciar la cámara en vivo. Usa el botón 'Tomar Foto' para escanear con tu app nativa.");
+            alert("Usa el botón de tomar foto, la cámara continua está ocupada o no tiene permisos.");
         });
     }
 </script>
