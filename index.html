@@ -26,7 +26,9 @@
         input[type="number"] { width: 25%; }
         button { padding: 12px 20px; background: #16a34a; color: white; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 16px; }
         button:hover { background: #15803d; }
-        .btn-camera { background: #4f46e5; width: 100%; margin-bottom: 15px; padding: 15px; font-size: 18px; }
+        .btn-camera { background: #4f46e5; width: 100%; margin-bottom: 10px; padding: 15px; font-size: 17px; }
+        .btn-file { background: #ea580c; width: 100%; margin-bottom: 15px; padding: 15px; font-size: 17px; color: white; border-radius: 6px; font-weight: bold; border: none; cursor: pointer; display: inline-block; box-sizing: border-box; }
+        .btn-file:hover { background: #c2410c; }
         .btn-sync { background: #2563eb; width: 100%; padding: 12px; font-size: 16px; margin-bottom: 10px; }
         #status { padding: 15px; border-radius: 6px; font-weight: bold; margin-top: 15px; display: none; font-size: 18px; }
         .success { background-color: #dcfce7; color: #15803d; border: 2px solid #16a34a; }
@@ -43,7 +45,7 @@
 <body>
 
 <div class="container">
-    <h1>🎭 Control de Teatro Cloud (v5.1)</h1>
+    <h1>🎭 Control de Teatro Cloud (v5.2)</h1>
     
     <div class="config-bar">
         🎬 Sala Activa: 
@@ -75,11 +77,19 @@
     <!-- PESTAÑA 2: ESCÁNER -->
     <div id="tab-escaner" class="tab-content">
         <div class="counter-box">Asistentes en Sala: <span id="total-count">0</span></div>
-        <button class="btn-camera" id="btn-encender-camara" onclick="inicializarEscaner()">📷 Activar Cámara Escáner</button>
+        
+        <!-- Método 1: Cámara Continua -->
+        <button class="btn-camera" id="btn-encender-camara" onclick="inicializarEscaner()">📷 Modo 1: Activar Cámara en Vivo</button>
         <div id="reader"></div>
+
+        <!-- Método 2: Escáner Manual de Fotos con Cámara Nativa -->
+        <label for="qr-file-input" class="btn-file">📸 Modo 2: Tomar Foto / Subir Imagen QR</label>
+        <input type="file" id="qr-file-input" accept="image/*" style="display: none;" onchange="escanearDesdeArchivo(this)">
+
+        <!-- Método 3: Registro Manual -->
         <div class="input-group">
             <div class="input-row">
-                <input type="text" id="ticket-input" placeholder="Código manual o Token..." autocomplete="off">
+                <input type="text" id="ticket-input" placeholder="Número manual o Token..." autocomplete="off">
                 <button onclick="procesarBoletoManual()">Ingresar</button>
             </div>
         </div>
@@ -97,14 +107,15 @@
 
 <script>
     // ==========================================
-    // ¡PEGA TU URL DE APPS SCRIPT AQUÍ ABAJO! (LÍNEA 110)
+    // ¡PEGA TU URL DE APPS SCRIPT AQUÍ ABAJO! (LÍNEA 113)
     // ==========================================
-    const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbz3VfJFbrWn1qntHd_wTkUjy5JWhd0bAReBGL1AxU075StviuEtn5Zf7Kh3OhJcxhKIIQ/exec";
+    const WEB_APP_URL = "AQUÍ_PEGA_TU_URL_DE_GOOGLE";
 
     let funcionActual = document.getElementById('funcion-activa').value;
     let boletosRegistrados = new Set();
     let ultimoCodigoEscaneado = "";
     let tiempoUltimoEscaneo = 0;
+    let html5Qrcode = null; 
     
     sincronizarConNube();
 
@@ -121,9 +132,10 @@
         document.getElementById(tabId).classList.add('active');
         event.currentTarget.classList.add('active');
         if (tabId === 'tab-asistencia') sincronizarConNube();
-        if (tabId !== 'tab-escaner' && window.html5QrcodeScanner) {
-            html5QrcodeScanner.clear().catch(err => console.log(err));
-            document.getElementById('btn-encender-camara').style.display = "block";
+        if (tabId !== 'tab-escaner' && html5Qrcode) {
+            html5Qrcode.stop().then(() => {
+                document.getElementById('btn-encender-camara').style.display = "block";
+            }).catch(err => console.log(err));
         }
     }
 
@@ -177,7 +189,7 @@
             method: "POST",
             mode: "no-cors",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ accion: "registrar", codigo: codigoReal, funcion: funcionActual })
+            body: JSON.stringify({ accion: "registrar", codigo: codigoReal, function: funcionActual })
         }).then(() => {
             statusDiv.className = "success";
             statusDiv.innerHTML = `✅ ¡Validado! Boleto [${codigoReal}] registrado correctamente.`;
@@ -235,34 +247,51 @@
         }
     }
 
+    function escanearDesdeArchivo(input) {
+        const statusDiv = document.getElementById('status');
+        if (input.files.length === 0) return;
+        
+        statusDiv.className = "loading"; statusDiv.style.display = "block";
+        statusDiv.innerHTML = `⏳ Leyendo imagen en alta definición...`;
+
+        const fileHtml5Qrcode = new Html5Qrcode("reader");
+        fileHtml5Qrcode.scanFile(input.files[0], true)
+            .then(decodedText => {
+                registrarBoleto(decodedText);
+                input.value = ""; // Limpiar input para la siguiente foto
+            })
+            .catch(err => {
+                statusDiv.className = "danger";
+                statusDiv.innerHTML = "❌ No se detectó ningún QR claro en la foto. Intenta tomarla más de cerca y centrada.";
+                reproducirSonidoError();
+                input.value = "";
+            });
+    }
+
     function procesarBoletoManual() { const input = document.getElementById('ticket-input'); registrarBoleto(input.value); input.value = ""; input.focus(); }
     document.getElementById('ticket-input').addEventListener('keypress', function(e) { if (e.key === 'Enter') procesarBoletoManual(); });
     function reproducirSonidoError() { const ctx = new (window.AudioContext || window.webkitAudioContext)(); const osc = ctx.createOscillator(); osc.type = 'sawtooth'; osc.frequency.setValueAtTime(130, ctx.currentTime); osc.connect(ctx.destination); osc.start(); osc.stop(ctx.currentTime + 0.3); }
     
     function onScanSuccess(decodedText) { 
         let ahora = Date.now();
-        // Evita re-escanear el mismo código en papel de golpe si se queda enfrente de la cámara
-        if (decodedText === ultimoCodigoEscaneado && (ahora - tiempoUltimoEscaneo) < 3000) {
-            return; 
-        }
+        if (decodedText === ultimoCodigoEscaneado && (ahora - tiempoUltimoEscaneo) < 3000) return; 
         ultimoCodigoEscaneado = decodedText;
         tiempoUltimoEscaneo = ahora;
         registrarBoleto(decodedText);
     }
 
     function inicializarEscaner() { 
-        document.getElementById('btn-encender-camara').style.display = "none"; 
-        window.html5QrcodeScanner = new Html5QrcodeScanner("reader", { 
-            fps: 24, 
-            qrbox: { width: 260, height: 260 },
-            videoConstraints: {
-                width: { ideal: 1280 }, // Resolución estándar fluida y altamente compatible
-                height: { ideal: 720 },
-                facingMode: "environment"
-            },
-            rememberLastUsedCamera: true 
-        }, /* verbose= */ false); 
-        html5QrcodeScanner.render(onScanSuccess, () => {}); 
+        document.getElementById('btn-encender-camara').style.display = "none";
+        html5Qrcode = new Html5Qrcode("reader");
+        html5Qrcode.start(
+            { facingMode: "environment" }, 
+            { fps: 20, qrbox: { width: 250, height: 250 } },
+            onScanSuccess,
+            () => {}
+        ).catch(err => {
+            document.getElementById('btn-encender-camara').style.display = "block";
+            alert("No se pudo iniciar la cámara en vivo. Usa el botón 'Tomar Foto' para escanear con tu app nativa.");
+        });
     }
 </script>
 </body>
