@@ -27,6 +27,7 @@
         button { padding: 12px 20px; background: #16a34a; color: white; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 16px; }
         button:hover { background: #15803d; }
         .btn-camera { background: #4f46e5; width: 100%; margin-bottom: 15px; padding: 15px; font-size: 18px; }
+        .btn-sync { background: #2563eb; width: 100%; padding: 12px; font-size: 16px; margin-bottom: 10px; }
         #status { padding: 15px; border-radius: 6px; font-weight: bold; margin-top: 15px; display: none; font-size: 18px; }
         .success { background-color: #dcfce7; color: #15803d; border: 2px solid #16a34a; }
         .danger { background-color: #fee2e2; color: #b91c1c; border: 2px solid #ef4444; }
@@ -34,18 +35,15 @@
         .history-list { text-align: left; background: #f8fafc; padding: 10px; border-radius: 6px; max-height: 250px; overflow-y: auto; margin-top: 15px; border: 1px solid #cbd5e1; }
         .history-item { display: flex; justify-content: space-between; align-items: center; padding: 8px 10px; border-bottom: 1px solid #e2e8f0; font-size: 15px; }
         .history-item:nth-child(even) { background-color: #f1f5f9; }
-        .btn-delete { background: #ef4444; padding: 4px 8px; font-size: 12px; border-radius: 4px; }
         .btn-reset { background: #64748b; margin-top: 25px; width: 100%; }
         #qr-output { margin-top: 20px; display: flex; flex-wrap: wrap; justify-content: center; gap: 15px; max-height: 400px; overflow-y: auto; padding: 10px; border: 1px solid #e2e8f0; border-radius: 8px; background: #fafafa; }
         .qr-card { border: 2px dashed #cbd5e1; padding: 15px; border-radius: 8px; background: #ffffff; display: flex; flex-direction: column; align-items: center; width: 220px; }
-        .qr-card h4 { margin: 0 0 10px 0; color: #1e293b; font-size: 14px; }
-        .btn-download-all { background: #2563eb; margin-top: 15px; width: 100%; padding: 15px; font-size: 18px; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h1>🎭 Control de Teatro Cloud (v4.0)</h1>
+    <h1>🎭 Control de Teatro Cloud (v5.0)</h1>
     
     <div class="config-bar">
         🎬 Sala Activa: 
@@ -67,18 +65,17 @@
         <div class="input-group">
             <div class="input-row">
                 <input type="text" id="qr-prefix" placeholder="Ej: OBRALUNES" autocomplete="off">
-                <input type="number" id="qr-quantity" min="1" max="500" value="200">
+                <input type="number" id="qr-quantity" min="1" max="500" value="156">
             </div>
             <button style="width: 100%;" onclick="generarLoteBoletos()">⚡ Generar Todos los Boletos</button>
         </div>
-        <button id="btn-descargar-bloque" class="btn-download-all" style="display:none;" onclick="descargarTodosLosBoletos()">📥 Descargar Todos los Boletos Juntos</button>
         <div id="qr-output" style="display:none;"></div>
     </div>
 
     <!-- PESTAÑA 2: ESCÁNER -->
     <div id="tab-escaner" class="tab-content">
         <div class="counter-box">Asistentes en Sala: <span id="total-count">0</span></div>
-        <button class="btn-camera" id="btn-encender-camara" onclick="inicializarEscaner()">📷 Activar Cámara Escáner</button>
+        <button class="btn-camera" id="btn-encender-camara" onclick="inicializarEscaner()">📷 Activar Cámara Súper-Foco</button>
         <div id="reader"></div>
         <div class="input-group">
             <div class="input-row">
@@ -91,8 +88,8 @@
 
     <!-- PESTAÑA 3: ASISTENCIA GLOBAL -->
     <div id="tab-asistencia" class="tab-content">
-        <h3>👥 Personas Adentro (Sala Actual)</h3>
-        <p style="color: #64748b; font-size: 14px;">Lista de códigos sincronizados en esta función:</p>
+        <h3>👥 Personas Adentro (Sincronizado)</h3>
+        <button class="btn-sync" onclick="sincronizarConNube()">🔄 Sincronizar Lista Cloud (Compu/Cel)</button>
         <div class="history-list" id="history-container"></div>
         <button class="btn-reset" onclick="reiniciarTodoCloud()">🧹 Limpiar Pruebas de esta Función</button>
     </div>
@@ -100,29 +97,19 @@
 
 <script>
     // ==========================================
-    // ¡PEGA TU URL DE APPS SCRIPT AQUÍ ABAJO!
+    // ¡PEGA TU URL DE APPS SCRIPT AQUÍ ABAJO! (LÍNEA 110)
     // ==========================================
-    const WEB_APP_URL = "https://script.google.com/macros/s/AKfycby9cSUkU_REGS9lzb0I-M-6We1cAUtvRS5sBJzyr0ZWPvg0gFGl_gw_OpRi5DHgPo6xVg/exec";
+    const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxQEIDQ0VNsKB6TtqtuKhI3l6m8pVpw09J43n4aE2XukAFY6IaQ2BQ7jwC0RyTlzbxGiA/exec";
 
     let funcionActual = document.getElementById('funcion-activa').value;
-    let boletosRegistrados = cargarMemoriaPorFuncion(funcionActual);
-    actualizarInterfazTaquilla();
+    let boletosRegistrados = new Set();
+    sincronizarConNube();
 
     function cambiarFuncionSecura() {
         funcionActual = document.getElementById('funcion-activa').value;
-        boletosRegistrados = cargarMemoriaPorFuncion(funcionActual);
-        const statusDiv = document.getElementById('status');
-        statusDiv.style.display = "none";
-        actualizarInterfazTaquilla();
-    }
-
-    function cargarMemoriaPorFuncion(funcion) {
-        let guardados = localStorage.getItem('historial_' + funcion);
-        return guardados ? new Set(JSON.parse(guardados)) : new Set();
-    }
-
-    function guardarEnMemoria() {
-        localStorage.setItem('historial_' + funcionActual, JSON.stringify(Array.from(boletosRegistrados)));
+        boletosRegistrados.clear();
+        document.getElementById('status').style.display = "none";
+        sincronizarConNube();
     }
 
     function switchTab(tabId) {
@@ -130,14 +117,13 @@
         document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
         document.getElementById(tabId).classList.add('active');
         event.currentTarget.classList.add('active');
+        if (tabId === 'tab-asistencia') sincronizarConNube();
         if (tabId !== 'tab-escaner' && window.html5QrcodeScanner) {
             html5QrcodeScanner.clear().catch(err => console.log(err));
             document.getElementById('btn-encender-camara').style.display = "block";
         }
     }
 
-    function generarToken(texto) { return btoa("TEATRO-SECURE:" + texto.trim().toUpperCase()); }
-    
     function desencriptarToken(token) {
         try {
             let decodificado = atob(token.trim());
@@ -146,55 +132,43 @@
         } catch(e) { return token.toUpperCase(); }
     }
 
-    function generarLoteBoletos() {
-        const prefijo = document.getElementById('qr-prefix').value.trim().toUpperCase() || "BOLETO";
-        const cantidad = parseInt(document.getElementById('qr-quantity').value);
-        if(!cantidad || cantidad < 1 || cantidad > 500) return alert("Cantidad inválida (1-500).");
-        const wrapper = document.getElementById('qr-output');
-        wrapper.innerHTML = ""; wrapper.style.display = "flex";
-        for (let i = 1; i <= cantidad; i++) {
-            let numeroFolio = String(i).padStart(3, '0');
-            let textoVisibleBoleto = `${prefijo}-${numeroFolio}`;
-            let tokenOculto = generarToken(textoVisibleBoleto);
-            wrapper.innerHTML += `<div class="qr-card" id="card-${i}"><h4>Boleto Oficial: ${textoVisibleBoleto}</h4><div class="qrcode-box" id="qr-${i}"></div></div>`;
-            setTimeout(() => { new QRCode(document.getElementById(`qr-${i}`), { text: tokenOculto, width: 160, height: 160, correctLevel : QRCode.CorrectLevel.H }); }, 50);
-        }
-        document.getElementById('btn-descargar-bloque').style.display = "block";
-    }
-
-    function descargarTodosLosBoletos() {
-        const tarjetas = document.querySelectorAll(".qr-card");
-        if(tarjetas.length === 0) return;
-        let index = 0;
-        function descargarSiguiente() {
-            if(index >= tarjetas.length) return;
-            let tarjeta = tarjetas[index];
-            let nombreBoleto = tarjeta.querySelector("h4").innerText.replace("Boleto Oficial: ", "").trim();
-            html2canvas(tarjeta, { backgroundColor: "#ffffff", scale: 2 }).then(canvas => {
-                const enlace = document.createElement("a");
-                enlace.href = canvas.toDataURL("image/png");
-                enlace.download = `Boleto_Oficial_${nombreBoleto}.png`;
-                document.body.appendChild(enlace); enlace.click(); document.body.removeChild(enlace);
-                index++; setTimeout(descargarSiguiente, 150);
-            });
-        }
-        descargarSiguiente();
+    function extraerNumero(codigo) {
+        let coincidencia = codigo.match(/\d+$/);
+        return coincidencia ? parseInt(coincidencia[0], 10) : null;
     }
 
     function registrarBoleto(codigoBruto) {
         let codigoReal = desencriptarToken(codigoBruto);
+        let numBoleto = extraerNumero(codigoReal);
         const statusDiv = document.getElementById('status');
         
         switchTab('tab-escaner');
-        statusDiv.className = "loading";
-        statusDiv.style.display = "block";
-        statusDiv.innerHTML = `⏳ Sincronizando [${codigoReal}] con la lista de ${funcionActual}...`;
+        statusDiv.className = "loading"; statusDiv.style.display = "block";
+        statusDiv.innerHTML = `⏳ Analizando boleto [${codigoReal}]...`;
 
-        if (boletosRegistrados.has(codigoReal)) {
+        // VALIDACIÓN DE RANGO GLOBAL 001 - 156
+        if (!numBoleto || numBoleto < 1 || numBoleto > 156) {
             statusDiv.className = "danger";
-            statusDiv.innerHTML = `⚠️ ¡REPETIDO! El boleto [${codigoReal}] ya ingresó a la ${funcionActual}.`;
-            reproducirSonidoError();
-            return;
+            statusDiv.innerHTML = `❌ Código Inválido: [${codigoReal}] no es uno de los boletos impresos (001-156).`;
+            reproducirSonidoError(); return;
+        }
+
+        // VALIDACIÓN DE ASIGNACIÓN POR FUNCIÓN
+        if (funcionActual === "FUNCIÓN 1" && numBoleto > 78) {
+            statusDiv.className = "danger";
+            statusDiv.innerHTML = `⚠️ ¡Función Equivocada! El boleto [${codigoReal}] pertenece a la FUNCIÓN 2.`;
+            reproducirSonidoError(); return;
+        }
+        if (funcionActual === "FUNCIÓN 2" && numBoleto <= 78) {
+            statusDiv.className = "danger";
+            statusDiv.innerHTML = `⚠️ ¡Función Equivocada! El boleto [${codigoReal}] pertenece a la FUNCIÓN 1.`;
+            reproducirSonidoError(); return;
+        }
+
+        if (boletosRegistrados.has(String(numBoleto).padStart(3, '0'))) {
+            statusDiv.className = "danger";
+            statusDiv.innerHTML = `⚠️ ¡REPETIDO! El boleto [${codigoReal}] ya ingresó previamente.`;
+            reproducirSonidoError(); return;
         }
 
         fetch(WEB_APP_URL, {
@@ -203,67 +177,86 @@
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ accion: "registrar", codigo: codigoReal, funcion: funcionActual })
         }).then(() => {
-            boletosRegistrados.add(codigoReal);
-            guardarEnMemoria();
             statusDiv.className = "success";
-            statusDiv.innerHTML = `✅ ¡Validado! Boleto [${codigoReal}] registrado en ${funcionActual} de Google Sheets.`;
-            actualizarInterfazTaquilla();
-        }).catch(err => {
+            statusDiv.innerHTML = `✅ ¡Validado con éxito! Boleto [${codigoReal}] registrado en la lista oficial.`;
+            sincronizarConNube();
+        }).catch(() => {
             statusDiv.className = "danger";
-            statusDiv.innerHTML = `❌ Error de conexión de red.`;
+            statusDiv.innerHTML = `❌ Error crítico de red. Verifica internet.`;
         });
     }
 
-    function reiniciarTodoCloud() {
-        if (confirm(`🚨 ¿Quieres borrar la asistencia de pruebas para la ${funcionActual} en la nube?`)) {
-            const statusDiv = document.getElementById('status');
-            switchTab('tab-escaner');
-            statusDiv.className = "loading"; statusDiv.style.display = "block";
-            statusDiv.innerHTML = `🧹 Limpiando asistencias de ${funcionActual}...`;
-
-            fetch(WEB_APP_URL, {
-                method: "POST",
-                mode: "no-cors",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ accion: "limpiar", funcion: funcionActual })
-            }).then(() => {
-                boletosRegistrados.clear();
-                guardarEnMemoria();
+    function sincronizarConNube() {
+        const badge = document.getElementById('tab-count-badge');
+        badge.innerText = "...";
+        
+        fetch(WEB_APP_URL, {
+            method: "POST",
+            body: JSON.stringify({ accion: "obtener_asistencia", funcion: funcionActual })
+        })
+        .then(res => res.json())
+        .then(res => {
+            if (res.status === "success") {
+                boletosRegistrados = new Set(res.lista);
                 actualizarInterfazTaquilla();
-                statusDiv.className = "success";
-                statusDiv.innerHTML = `🧹 ¡Columnas de asistencia limpias en ${funcionActual} para la función real!`;
-            }).catch(() => {
-                alert("Hubo un problema al limpiar los datos en la nube.");
-            });
-        }
-    }
-
-    function eliminarBoletoIndividual(codigo) {
-        if(confirm(`¿Quitar [${codigo}] de la lista local?`)){
-            boletosRegistrados.delete(codigo); guardarEnMemoria(); actualizarInterfazTaquilla();
-        }
+            }
+        }).catch(() => {
+            badge.innerText = boletosRegistrados.size;
+        });
     }
 
     function actualizarInterfazTaquilla() {
-        document.getElementById('total-count').innerText = boletosRegistrados.size;
-        document.getElementById('tab-count-badge').innerText = boletosRegistrados.size;
+        let total = boletosRegistrados.size;
+        document.getElementById('total-count').innerText = total;
+        document.getElementById('tab-count-badge').innerText = total;
         const container = document.getElementById('history-container'); container.innerHTML = "";
         
-        if(boletosRegistrados.size === 0) {
+        if(total === 0) {
             container.innerHTML = `<div style="text-align:center; color:#94a3b8; padding:20px;">Nadie ha ingresado todavía a esta función 🎭</div>`;
             return;
         }
         
         boletosRegistrados.forEach(b => { 
-            container.innerHTML += `<div class="history-item"><span>✅ <b>${b}</b> - En sala</span><button class="btn-delete" onclick="eliminarBoletoIndividual('${b}')">X</button></div>`; 
+            container.innerHTML += `<div class="history-item"><span>✅ Boleto <b>#${b}</b> - En la sala</span></div>`; 
         });
+    }
+
+    function reiniciarTodoCloud() {
+        if (confirm(`🚨 ¿Limpiar todas las asistencias de la ${funcionActual} en Google Sheets?`)) {
+            fetch(WEB_APP_URL, {
+                method: "POST",
+                mode: "no-cors",
+                body: JSON.stringify({ accion: "limpiar", funcion: funcionActual })
+            }).then(() => {
+                boletosRegistrados.clear(); actualizarInterfazTaquilla();
+            });
+        }
     }
 
     function procesarBoletoManual() { const input = document.getElementById('ticket-input'); registrarBoleto(input.value); input.value = ""; input.focus(); }
     document.getElementById('ticket-input').addEventListener('keypress', function(e) { if (e.key === 'Enter') procesarBoletoManual(); });
     function reproducirSonidoError() { const ctx = new (window.AudioContext || window.webkitAudioContext)(); const osc = ctx.createOscillator(); osc.type = 'sawtooth'; osc.frequency.setValueAtTime(130, ctx.currentTime); osc.connect(ctx.destination); osc.start(); osc.stop(ctx.currentTime + 0.3); }
-    function onScanSuccess(decodedText) { if (window.html5QrcodeScanner) { html5QrcodeScanner.clear().catch(err => console.log(err)); } document.getElementById('btn-encender-camara').style.display = "block"; registrarBoleto(decodedText); }
-    function inicializarEscaner() { document.getElementById('btn-encender-camara').style.display = "none"; window.html5QrcodeScanner = new Html5QrcodeScanner("reader", { fps: 15, qrbox: { width: 250, height: 250 }, rememberLastUsedCamera: true }); html5QrcodeScanner.render(onScanSuccess, (errorMessage) => {}); }
+    
+    function onScanSuccess(decodedText) { 
+        registrarBoleto(decodedText);
+        // Pequeña pausa para evitar lecturas fantasmas seguidas en papel corto
+        setTimeout(() => { if(window.html5QrcodeScanner) { inicializarEscaner(); } }, 1200);
+    }
+
+    function inicializarEscaner() { 
+        document.getElementById('btn-encender-camara').style.display = "none"; 
+        window.html5QrcodeScanner = new Html5QrcodeScanner("reader", { 
+            fps: 30, // Mayor velocidad de procesamiento
+            qrbox: { width: 280, height: 280 }, // Recuadro más grande para enfocar de cerca papel pequeño
+            videoConstraints: {
+                width: { ideal: 1920 }, // Obligar resolución HD para máximo detalle de líneas QR
+                height: { ideal: 1080 },
+                facingMode: "environment"
+            },
+            rememberLastUsedCamera: true 
+        }); 
+        html5QrcodeScanner.render(onScanSuccess, () => {}); 
+    }
 </script>
 </body>
 </html>
