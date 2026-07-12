@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MALBROTE PRO v5.6 | Sistema de Control de Teatro Total</title>
+    <title>MALBROTE PRO v5.7 | Sistema de Control de Teatro Total</title>
     <!-- Librerías de Inyección de Render y Captura -->
     <script src="https://unpkg.com/html5-qrcode"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
@@ -28,7 +28,7 @@
         
         h1 { color: var(--texto-blanco); margin-bottom: 15px; font-size: 24px; text-transform: uppercase; letter-spacing: 1px; border-bottom: 2px solid var(--rojo-brillante); padding-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
         
-        /* DASHBOARD - ESTILO FIEL A TU DIBUJO */
+        /* DASHBOARD */
         .dashboard-view { display: block; margin-bottom: 20px; }
         .obra-list-container { display: flex; flex-direction: column; gap: 15px; margin-bottom: 25px; }
         .obra-card { display: flex; align-items: center; background: #1e293b; padding: 20px; border-radius: 14px; border-left: 6px solid var(--rojo-neon); cursor: pointer; transition: 0.2s; gap: 20px; box-shadow: 0 6px 20px rgba(0,0,0,0.3); }
@@ -64,22 +64,29 @@
         .canva-sidebar { background: #0f172a; padding: 22px; border-radius: 14px; width: 100%; max-width: 350px; display: flex; flex-direction: column; gap: 18px; border: 1px solid #1e293b; height: fit-content; }
         .canva-sidebar h4 { font-size: 13px; color: var(--accent-canva); text-transform: uppercase; letter-spacing: 1px; margin-bottom: -5px; }
 
+        /* VIEWPORT CON LÍNEAS GUÍA DE CENTRADO */
         .canva-viewport { flex-grow: 1; background: #060811; border-radius: 14px; padding: 40px; display: flex; justify-content: center; align-items: center; overflow: auto; position: relative; min-height: 550px; border: 2px dashed #334155; }
-        .canva-grid { position: absolute; top:0; left:0; width:100%; height:100%; pointer-events: none; background-image: linear-gradient(rgba(56, 189, 248, 0.02) 1px, transparent 1px), linear-gradient(90deg, rgba(56, 189, 248, 0.02) 1px, transparent 1px); background-size: 25px 25px; }
         
-        /* UNIDAD UNIFICADA ARRASTRABLE CORREGIDA TOTALMENTE TRANSPARENTE */
+        /* Cuadrícula base */
+        .canva-grid { position: absolute; top:0; left:0; width:100%; height:100%; pointer-events: none; background-image: linear-gradient(rgba(56, 189, 248, 0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(56, 189, 248, 0.03) 1px, transparent 1px); background-size: 20px 20px; }
+        
+        /* Ejes de Centrado Absolutos (Cruces de guía) */
+        .canva-viewport::before { content: ""; position: absolute; top: 50%; left: 0; width: 100%; height: 1px; border-top: 1px dashed rgba(56, 189, 248, 0.25); pointer-events: none; z-index: 10; }
+        .canva-viewport::after { content: ""; position: absolute; left: 50%; top: 0; width: 1px; height: 100%; border-left: 1px dashed rgba(56, 189, 248, 0.25); pointer-events: none; z-index: 10; }
+
+        /* UNIDAD UNIFICADA ARRASTRABLE TRANSPARENTE */
         .ticket-canvas-container { position: relative; display: inline-block; border-radius: 4px; overflow: hidden; }
         .ticket-bg-preview { display: block; max-width: 100%; height: auto; }
         
         .draggable-element { position: absolute; cursor: move; border: 1px dashed transparent; box-sizing: border-box; user-select: none; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; padding: 5px; }
         .draggable-element:hover { border-color: var(--accent-canva); background: rgba(56,189,248,0.05); }
         
-        /* Tirador Redimensionador de esquina */
+        /* Redimensionador */
         .resizer { width: 14px; height: 14px; background: var(--accent-canva); position: absolute; right: -5px; bottom: -5px; cursor: se-resize; border-radius: 50%; display: none; z-index: 50; }
         .draggable-element:hover .resizer { display: block; }
 
-        /* Estilos limpios y directos sin cajas de fondo artificiales */
-        .element-text-node { font-weight: bold; font-family: 'Segoe UI', Arial, sans-serif; text-align: center; line-height: 1.3; width: 100%; overflow: hidden; white-space: nowrap; margin-bottom: 8px; }
+        /* CORRECCIÓN: white-space: normal para evitar que se corte el texto largo */
+        .element-text-node { font-weight: bold; font-family: 'Segoe UI', Arial, sans-serif; text-align: center; line-height: 1.3; width: 100%; overflow: visible; white-space: normal; word-break: break-word; margin-bottom: 8px; }
         .element-qr-node { background: transparent; padding: 0; border-radius: 0; display: flex; align-items: center; justify-content: center; width: 100%; flex-grow: 1; overflow: hidden; }
         .element-qr-node div { width: 100% !important; height: 100% !important; display: flex; align-items: center; justify-content: center; }
         .element-qr-node img { max-width: 100%; max-height: 100%; width: auto !important; height: auto !important; }
@@ -90,7 +97,7 @@
         button { padding: 12px 20px; background: var(--rojo-brillante); color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; transition: 0.2s; text-transform: uppercase; font-size: 13px; letter-spacing: 0.5px; }
         button:hover { background: var(--rojo-neon); }
         
-        /* CONTROLES DEL ESCÁNER */
+        /* ESCÁNER Y ASISTENCIA */
         .scanner-grid { display: grid; grid-template-columns: 1fr; gap: 20px; }
         @media (min-width: 765px) { .scanner-grid { grid-template-columns: 1fr 1fr; } }
         #reader { width: 100%; border-radius: 12px; overflow: hidden; border: 2px solid var(--rojo-brillante); background: #05070a; box-shadow: 0 8px 30px rgba(0,0,0,0.5); }
@@ -109,10 +116,8 @@
     
     <!-- VISTA 1: DASHBOARD -->
     <div id="view-dashboard" class="dashboard-view">
-        <h1>🎭 CONTROL DE TEATRO (V5.6-PRO)</h1>
-        <div class="obra-list-container" id="dashboard-obras-list">
-            <!-- Cargado dinámicamente -->
-        </div>
+        <h1>🎭 CONTROL DE TEATRO (V5.7-PRO)</h1>
+        <div class="obra-list-container" id="dashboard-obras-list"></div>
         <div class="btn-add-obra" onclick="crearNuevaObra()">
             <span style="font-size: 36px;">➕</span>
             <span>Agregar Obra</span>
@@ -128,9 +133,7 @@
 
         <div class="config-bar">
             <div>🎬 Sala Activa / Función: 
-                <select id="funcion-activa-global" onchange="sincronizarSalaActivaGlobal()">
-                    <!-- Dropdown dinámico -->
-                </select>
+                <select id="funcion-activa-global" onchange="sincronizarSalaActivaGlobal()"></select>
             </div>
             <button style="background: var(--verde-exito);" onclick="guardarObraEstructuraCompleta()">💾 Guardar Obra en Memoria</button>
         </div>
@@ -141,11 +144,9 @@
             <button class="tab-btn" onclick="cambiarPestañaModulo('tab-asistencia')">📊 Control Sala / Asistencia</button>
         </div>
 
-        <!-- MODULO: DISEÑADOR PRO (TÍTULO Y QR COMPLETAMENTE FLOTANTES) -->
+        <!-- MODULO: DISEÑADOR -->
         <div id="tab-generador" class="tab-content active">
-            <div class="funciones-subtabs" id="subtabs-funciones-contenedor">
-                <!-- Se inyectan las subpestañas de funciones -->
-            </div>
+            <div class="funciones-subtabs" id="subtabs-funciones-contenedor"></div>
 
             <div class="editor-layout">
                 <div class="canva-sidebar">
@@ -157,7 +158,7 @@
                     <input type="file" id="file-bg-function" accept="image/*" style="font-size:12px; color:var(--texto-gris);">
 
                     <h4>🔤 Ajustes del Título</h4>
-                    <input type="text" id="prop-text-val" value="Boleto Oficial #001">
+                    <input type="text" id="prop-text-val" value="Boleto Oficial: SIN HOGAR-001">
                     <div style="display:flex; gap:10px; align-items:center;">
                         <label style="font-size:12px; color:var(--texto-gris);">Color Texto:</label>
                         <input type="color" id="prop-text-color" value="#ffffff" onchange="aplicarEstilosEnCaliente()">
@@ -170,12 +171,11 @@
                     <div class="canva-grid"></div>
                     
                     <div class="ticket-canvas-container" id="canvasBox">
-                        <!-- Imagen Base Fondo -->
                         <img id="canva-bg-image" class="ticket-bg-preview" src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='750' height='350'><rect width='750' height='350' fill='%23111827'/><text x='50%' y='50%' fill='%234b5563' font-family='sans-serif' font-size='16' text-anchor='middle'>Sube la imagen para este lote / función</text></svg>">
                         
-                        <!-- BLOQUE COMPUESTO UNIFICADO TRANSPARENTE (TÍTULO + QR DIRECTOS) -->
-                        <div class="draggable-element" id="el-compuesto" style="left:40px; top:40px; width:180px; height:240px;">
-                            <div class="element-text-node" id="el-texto-span" style="color: #ffffff; font-size: 14px;">Boleto Oficial #001</div>
+                        <!-- BLOQUE COMPUESTO UNIFICADO TRANSPARENTE -->
+                        <div class="draggable-element" id="el-compuesto" style="left:40px; top:40px; width:220px; height:260px;">
+                            <div class="element-text-node" id="el-texto-span" style="color: #ffffff; font-size: 14px;">Boleto Oficial: SIN HOGAR-001</div>
                             <div class="element-qr-node" id="el-qr-target"></div>
                             <div class="resizer"></div>
                         </div>
@@ -232,7 +232,6 @@
     </div>
 </div>
 
-<!-- AUDIOS -->
 <audio id="audio-success" src="https://assets.mixkit.co/active_storage/sfx/2019/2019-84.wav" preload="auto"></audio>
 <audio id="audio-error" src="https://assets.mixkit.co/active_storage/sfx/2955/2955-84.wav" preload="auto"></audio>
 
@@ -261,7 +260,6 @@
 
         DATABASE_OBRAS.forEach((obra, index) => {
             const fotoMiniatura = (obra.funciones && obra.funciones[0] && obra.funciones[0].imagenFondo) ? obra.funciones[0].imagenFondo : "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='60' height='60'><rect width='60' height='60' fill='%231e293b'/></svg>";
-            
             const card = document.createElement('div');
             card.className = 'obra-card';
             card.onclick = () => abrirEntornoTrabajoObra(index);
@@ -287,7 +285,7 @@
             prefijo: prefijoAutomatico,
             cantidadTickets: 50,
             layout: {
-                compLeft: 40, compTop: 40, compWidth: 180, compHeight: 240,
+                compLeft: 40, compTop: 40, compWidth: 220, compHeight: 260,
                 txtFontSize: 14, txtColor: '#ffffff'
             },
             funciones: [
@@ -316,8 +314,8 @@
 
         comp.style.left = (obra.layout.compLeft || 40) + 'px';
         comp.style.top = (obra.layout.compTop || 40) + 'px';
-        comp.style.width = (obra.layout.compWidth || 180) + 'px';
-        comp.style.height = (obra.layout.compHeight || 240) + 'px';
+        comp.style.width = (obra.layout.compWidth || 220) + 'px';
+        comp.style.height = (obra.layout.compHeight || 260) + 'px';
         
         txtSpan.style.fontSize = (obra.layout.txtFontSize || 14) + 'px';
         document.getElementById('prop-text-color').value = obra.layout.txtColor || '#ffffff';
@@ -352,10 +350,7 @@
         btnAgregar.innerText = "➕ Agregar Función";
         btnAgregar.onclick = () => {
             const numeroSiguiente = obra.funciones.length + 1;
-            obra.funciones.push({
-                nombre: `FUNCIÓN ${numeroSiguiente}`,
-                imagenFondo: ""
-            });
+            obra.funciones.push({ nombre: `FUNCIÓN ${numeroSiguiente}`, imagenFondo: "" });
             funcionSeleccionadaIdx = numeroSiguiente - 1;
             refrescarSubpestañasFisicas();
             actualizarSelectSalasGlobales();
@@ -449,9 +444,6 @@
                 if (w > 60) elemento.style.width = w + 'px';
                 if (h > 80) elemento.style.height = h + 'px';
                 
-                const txtNode = document.getElementById('el-texto-span');
-                txtNode.style.fontSize = Math.max(9, w * 0.08) + 'px';
-
                 redibujarInstanciaQrPrevia();
                 salvarDatosDiseñoInstantaneo();
             }
@@ -505,7 +497,7 @@
     function guardarObraEstructuraCompleta() {
         salvarDatosDiseñoInstantaneo();
         localStorage.setItem('MALBROTE_TEATRO_DB', JSON.stringify(DATABASE_OBRAS));
-        mostrarAlertaModal("💾 PROYECTO SALVADO", "Todos los cambios en las funciones, imágenes de fondo y posiciones se guardaron con éxito.");
+        mostrarAlertaModal("💾 PROYECTO SALVADO", "Todos los cambios se guardaron con éxito.");
         actualizarDashboardPantallaPrincipal();
     }
 
@@ -523,7 +515,7 @@
         }
     }
 
-    // --- EXPEDIDOR DE RENDERIZACIÓN ---
+    // --- REEMPLAZO INTELIGENTE AUTOMÁTICO DE NÚMERO ---
     function generarLoteCompleto() {
         salvarDatosDiseñoInstantaneo();
         const obra = DATABASE_OBRAS[obraSeleccionadaIdx];
@@ -532,6 +524,8 @@
         output.style.display = "grid";
 
         mostrarAlertaModal("⚙️ PROCESANDO RENDER", `Dibujando ${obra.cantidadTickets} boletos únicos...`);
+
+        const textoBaseConfigurado = document.getElementById('prop-text-val').value;
 
         for(let i = 1; i <= obra.cantidadTickets; i++) {
             const numStr = String(i).padStart(3, '0');
@@ -553,7 +547,6 @@
             bg.src = document.getElementById('canva-bg-image').src;
             canvasClone.appendChild(bg);
 
-            // Clonar Bloque Compuesto Completo Transparente
             const compClon = document.createElement('div');
             compClon.className = 'draggable-element';
             compClon.style.left = obra.layout.compLeft + 'px';
@@ -565,7 +558,16 @@
             txtNode.className = 'element-text-node';
             txtNode.style.color = obra.layout.txtColor;
             txtNode.style.fontSize = obra.layout.txtFontSize + 'px';
-            txtNode.innerText = document.getElementById('prop-text-val').value.replace("#001", "#" + numStr);
+            
+            // Reemplazo inteligente de patrones numéricos (ej: #001, 001) o adición al final
+            let textoRenderizadoFinal = textoBaseConfigurado;
+            if (/#?\d+$/.test(textoBaseConfigurado) || textoBaseConfigurado.includes("001")) {
+                textoRenderizadoFinal = textoBaseConfigurado.replace(/#?\d+$/, numStr).replace("001", numStr);
+            } else {
+                textoRenderizadoFinal = textoBaseConfigurado + "-" + numStr;
+            }
+            
+            txtNode.innerText = textoRenderizadoFinal;
             compClon.appendChild(txtNode);
 
             const qrNode = document.createElement('div');
@@ -595,14 +597,14 @@
             cardWrapper.appendChild(btnDownload);
             output.appendChild(cardWrapper);
 
-            let sizeQr = Math.min(obra.layout.compWidth, obra.layout.compHeight - (obra.layout.txtFontSize + 15)) - 10;
+            let sizeQr = Math.min(obra.layout.compWidth, obra.layout.compHeight - (obra.layout.txtFontSize + 25));
             if(sizeQr < 25) sizeQr = 25;
             new QRCode(targetQrInner, { text: payloadCifrado, width: sizeQr, height: sizeQr });
         }
         setTimeout(cerrarModalDeAlerta, 1000);
     }
 
-    // --- LÓGICA DE ESCANER ---
+    // --- ESCANER ---
     function encenderCamaraScanner() {
         if(html5QrScannerInstancia) { html5QrScannerInstancia.clear(); }
         html5QrScannerInstancia = new Html5QrcodeScanner("reader", { fps: 15, qrbox: 250 });
@@ -613,10 +615,9 @@
         try {
             const rawDecoded = atob(decodedText);
             if (!rawDecoded.startsWith("MALBROTE:")) {
-                dispararAlertaAcceso(false, "CÓDIGO INVÁLIDO", "Este QR no pertenece al sistema corporativo de Malbrote Teatro.");
+                dispararAlertaAcceso(false, "CÓDIGO INVÁLIDO", "Este QR no pertenece al sistema corporativo.");
                 return;
             }
-
             const fragmentos = rawDecoded.split(":");
             const obraNombreQR = fragmentos[1];
             const tokenID = fragmentos[2];
@@ -625,7 +626,7 @@
             const salaNombreActual = obraActual.funciones[funcionSeleccionadaIdx].nombre;
             
             if (obraNombreQR !== obraActual.nombre) {
-                dispararAlertaAcceso(false, "OBRA EQUIVOCADA", `Este boleto es para: ${obraNombreQR}. Estás en la sala de ${obraActual.nombre}.`);
+                dispararAlertaAcceso(false, "OBRA EQUIVOCADA", `Este boleto es para: ${obraNombreQR}.`);
                 return;
             }
 
@@ -640,12 +641,11 @@
             ASISTENCIA_LOCAL[llaveRegistroAsistencia].push(tokenID);
             localStorage.setItem('MALBROTE_ASISTENCIA_DB', JSON.stringify(ASISTENCIA_LOCAL));
             
-            dispararAlertaAcceso(true, "✅ ACCESO CONCEDIDO", `Boleto verificado con éxito: ${tokenID}.`);
+            dispararAlertaAcceso(true, "✅ ACCESO CONCEDIDO", `Boleto verificado: ${tokenID}.`);
             renderizarHistorialYLogsAsistencia();
             sincronizarConServidorGoogleSheets(tokenID, salaNombreActual, "ACCESO CONCEDIDO");
-
         } catch(e) {
-            dispararAlertaAcceso(false, "ERROR DE LECTURA", "No se pudo decodificar la firma digital.");
+            dispararAlertaAcceso(false, "ERROR DE LECTURA", "No se pudo decodificar.");
         }
     }
 
@@ -661,9 +661,7 @@
     function dispararAlertaAcceso(exito, titulo, msg) {
         const card = document.getElementById('modal-content-card');
         const audio = document.getElementById(exito ? 'audio-success' : 'audio-error');
-        
         if (audio) { audio.currentTime = 0; audio.play().catch(e => {}); }
-
         card.style.borderColor = exito ? "var(--verde-exito)" : "var(--rojo-neon)";
         
         document.getElementById('modal-title').innerText = titulo;
@@ -692,10 +690,9 @@
         tabla.innerHTML = "";
 
         if(listaAsistentes.length === 0) {
-            tabla.innerHTML = `<div style="text-align:center; padding:20px; color:var(--texto-gris)">Aún no hay ingresos registrados para esta función.</div>`;
+            tabla.innerHTML = `<div style="text-align:center; padding:20px; color:var(--texto-gris)">Aún no hay ingresos registrados.</div>`;
             return;
         }
-
         listaAsistentes.forEach(ticket => {
             const fila = document.createElement('div');
             fila.className = 'history-item success';
@@ -711,7 +708,7 @@
     }
 
     function forzarSincronizacionHojasCalculo() {
-        alert("Sincronización en la nube actualizada correctamente con Google Sheets.");
+        alert("Sincronización en la nube actualizada.");
     }
 
     function cambiarPestañaModulo(tabId) {
